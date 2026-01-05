@@ -1,0 +1,49 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+/build
+/.svelte-kit
+/package
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Vite
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDE (keep .vscode for shared settings)
+.idea/
+*.swp
+*.swo
+
+# Logs
+*.log
+npm-debug.log*
+
+# Tauri / Rust
+src-tauri/target/
+src-tauri/gen/schemas/
+
+# Android build outputs (keep source files)
+src-tauri/gen/android/.gradle/
+src-tauri/gen/android/build/
+src-tauri/gen/android/app/build/
+src-tauri/gen/android/buildSrc/build/
+src-tauri/gen/android/local.properties
+src-tauri/gen/android/.idea/
+src-tauri/gen/android/*.iml
+src-tauri/gen/android/app/*.iml
+
+# iOS build outputs
+src-tauri/gen/apple/build/
+src-tauri/gen/apple/*.xcworkspace/xcuserdata/
+src-tauri/gen/apple/*.xcodeproj/xcuserdata/
+src-tauri/gen/apple/*.xcodeproj/project.xcworkspace/xcuserdata/
