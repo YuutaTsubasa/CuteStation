@@ -21,9 +21,8 @@ jobs:
           cache: 'npm'
 
       - name: Setup Rust
-        uses: dtolnay/rust-action@stable
+        uses: dtolnay/rust-toolchain@stable
         with:
-          toolchain: stable
           targets: aarch64-apple-ios,x86_64-apple-ios,aarch64-apple-ios-sim
 
       - name: Rust cache
