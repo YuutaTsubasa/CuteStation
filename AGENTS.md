@@ -1,0 +1,43 @@
+# Repository Guidelines
+
+## Project Structure & Module Organization
+- `src/`: Svelte 5 frontend (routes in `src/routes/`, app shell in `src/app.html`).
+- `src-tauri/`: Rust backend and Tauri config (`src-tauri/src/`, `src-tauri/tauri.conf.json`).
+- `static/`: Static assets served by the frontend.
+- `docs/`: Game and technical design docs (`docs/GAME_DESIGN.md`, `docs/TECHNICAL_DESIGN.md`).
+
+## Build, Test, and Development Commands
+- `npm run tauri dev`: Desktop app with hot reload (Tauri + Vite).
+- `npm run dev`: Frontend-only Vite dev server.
+- `npm run tauri android dev`: Android dev build (device/emulator required).
+- `npm run tauri ios dev`: iOS dev build (macOS + simulator required).
+- `npm run build`: Frontend production build.
+- `npm run tauri build`: Desktop production bundle.
+- `npm run tauri android build`: Android APK/AAB build.
+- `npm run tauri ios build`: iOS build (local only, signed if configured).
+- `npm run check`: Svelte type checking via `svelte-check`.
+
+## Coding Style & Naming Conventions
+- Indentation: 2 spaces in Svelte/TypeScript, 4 spaces in Rust.
+- File naming: match SvelteKit conventions (`+page.svelte`, `+layout.ts`).
+- Rust commands: use `#[tauri::command]` and register in `src-tauri/src/lib.rs`.
+- No formatter or linter is configured; keep changes consistent with surrounding code.
+## Convention Checks
+- Run `npm run convention:check` to generate reports and fail on error-level issues.
+- Run `npm run convention:report` to generate reports without failing the command.
+- Reports are written to `reports/convention-report.json` and `reports/convention-report.md`.
+- Details live in `docs/conventions.md`.
+
+
+## Testing Guidelines
+- There are no automated tests yet. Use `npm run check` before PRs.
+- If you add tests, document the framework and add a runnable script in `package.json`.
+
+## Commit & Pull Request Guidelines
+- Commit messages follow a short, imperative summary (e.g., "Fix GitHub Actions: ...").
+- PRs should include: what changed, how to verify locally, and platform notes if relevant.
+- Include screenshots or screen recordings for UI changes.
+
+## Architecture Notes
+- Frontend calls Rust commands via Tauri IPC (`invoke()` in TS, `#[tauri::command]` in Rust).
+- SPA mode is enabled; SSR is off. Static build output is served by Tauri.

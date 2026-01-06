@@ -89,6 +89,21 @@ npm run tauri android dev
 npm run tauri ios dev
 ```
 
+## Conventions
+
+Run the convention checker to validate repository naming rules and asset placement.
+
+```bash
+# Fail on error-level issues
+npm run convention:check
+
+# Always exit 0 (report only)
+npm run convention:report
+```
+
+Reports are written to `reports/convention-report.json` and `reports/convention-report.md`.
+Details live in `docs/conventions.md`.
+
 ## Build
 
 ### Windows
