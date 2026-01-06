@@ -2,6 +2,11 @@
 
 A 2D platformer action game built with modern cross-platform technologies.
 
+## Documentation
+
+- [Game Design Document](docs/GAME_DESIGN.md) - 遊戲設計文件（關卡、角色、機制）
+- [Technical Design Document](docs/TECHNICAL_DESIGN.md) - 技術設計文件（架構、技術選型、開發階段）
+
 ## Tech Stack
 
 - **Tauri V2** - Cross-platform desktop and mobile application framework
