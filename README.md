@@ -11,11 +11,13 @@ A 2D platformer action game built with modern cross-platform technologies.
 
 ## Supported Platforms
 
-| Platform | Status | Output |
-|----------|--------|--------|
-| Windows | Supported | `.exe` / `.msi` |
-| Android | Supported | `.apk` / `.aab` |
-| iOS | Supported | `.ipa` (requires macOS) |
+| Platform | Status | CI Build | Output |
+|----------|--------|----------|--------|
+| Windows | Supported | ✓ | `.exe` / `.msi` |
+| Android | Supported | ✓ | `.apk` / `.aab` |
+| iOS | Supported | - | `.ipa` (requires macOS) |
+
+> **Note:** iOS builds require Apple Developer certificates and signing setup. Use `tauri ios build` locally on macOS instead of CI.
 
 ## Prerequisites
 
@@ -110,12 +112,15 @@ Output:
 
 ### iOS (macOS only)
 
+> **Note:** iOS builds are not included in CI due to certificate requirements. Build locally on macOS.
+
 ```bash
 npm run tauri ios build
 ```
 
 Output:
 - `src-tauri/gen/apple/build/arm64/*.app`
+- `src-tauri/gen/apple/build/arm64/*.ipa` (if signed)
 
 ## Project Structure
 
