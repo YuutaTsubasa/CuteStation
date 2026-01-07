@@ -1,0 +1,647 @@
+{
+  "frames": {
+    "knight_jumping_00.png": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 1024
+      }
+    },
+    "knight_jumping_01.png": {
+      "frame": {
+        "x": 1024,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 1024
+      }
+    },
+    "knight_jumping_02.png": {
+      "frame": {
+        "x": 2048,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 1024
+      }
+    },
+    "knight_jumping_03.png": {
+      "frame": {
+        "x": 3072,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 1024
+      }
+    },
+    "knight_jumping_04.png": {
+      "frame": {
+        "x": 4096,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 1024
+      }
+    },
+    "knight_jumping_05.png": {
+      "frame": {
+        "x": 5120,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 1024
+      }
+    },
+    "knight_jumping_06.png": {
+      "frame": {
+        "x": 0,
+        "y": 1024,
+        "w": 1024,
+        "h": 1024
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 1024
+      }
+    },
+    "knight_jumping_07.png": {
+      "frame": {
+        "x": 1024,
+        "y": 1024,
+        "w": 1024,
+        "h": 1024
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 1024
+      }
+    },
+    "knight_jumping_08.png": {
+      "frame": {
+        "x": 2048,
+        "y": 1024,
+        "w": 1024,
+        "h": 1024
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 1024
+      }
+    },
+    "knight_jumping_09.png": {
+      "frame": {
+        "x": 3072,
+        "y": 1024,
+        "w": 1024,
+        "h": 1024
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 1024
+      }
+    },
+    "knight_jumping_10.png": {
+      "frame": {
+        "x": 4096,
+        "y": 1024,
+        "w": 1024,
+        "h": 1024
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 1024
+      }
+    },
+    "knight_jumping_11.png": {
+      "frame": {
+        "x": 5120,
+        "y": 1024,
+        "w": 1024,
+        "h": 1024
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 1024
+      }
+    },
+    "knight_jumping_12.png": {
+      "frame": {
+        "x": 0,
+        "y": 2048,
+        "w": 1024,
+        "h": 1024
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 1024
+      }
+    },
+    "knight_jumping_13.png": {
+      "frame": {
+        "x": 1024,
+        "y": 2048,
+        "w": 1024,
+        "h": 1024
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 1024
+      }
+    },
+    "knight_jumping_14.png": {
+      "frame": {
+        "x": 2048,
+        "y": 2048,
+        "w": 1024,
+        "h": 1024
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 1024
+      }
+    },
+    "knight_jumping_15.png": {
+      "frame": {
+        "x": 3072,
+        "y": 2048,
+        "w": 1024,
+        "h": 1024
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 1024
+      }
+    },
+    "knight_jumping_16.png": {
+      "frame": {
+        "x": 4096,
+        "y": 2048,
+        "w": 1024,
+        "h": 1024
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 1024
+      }
+    },
+    "knight_jumping_17.png": {
+      "frame": {
+        "x": 5120,
+        "y": 2048,
+        "w": 1024,
+        "h": 1024
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 1024
+      }
+    },
+    "knight_jumping_18.png": {
+      "frame": {
+        "x": 0,
+        "y": 3072,
+        "w": 1024,
+        "h": 1024
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 1024
+      }
+    },
+    "knight_jumping_19.png": {
+      "frame": {
+        "x": 1024,
+        "y": 3072,
+        "w": 1024,
+        "h": 1024
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 1024
+      }
+    },
+    "knight_jumping_20.png": {
+      "frame": {
+        "x": 2048,
+        "y": 3072,
+        "w": 1024,
+        "h": 1024
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 1024
+      }
+    },
+    "knight_jumping_21.png": {
+      "frame": {
+        "x": 3072,
+        "y": 3072,
+        "w": 1024,
+        "h": 1024
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 1024
+      }
+    },
+    "knight_jumping_22.png": {
+      "frame": {
+        "x": 4096,
+        "y": 3072,
+        "w": 1024,
+        "h": 1024
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 1024
+      }
+    },
+    "knight_jumping_23.png": {
+      "frame": {
+        "x": 5120,
+        "y": 3072,
+        "w": 1024,
+        "h": 1024
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 1024
+      }
+    },
+    "knight_jumping_24.png": {
+      "frame": {
+        "x": 0,
+        "y": 4096,
+        "w": 1024,
+        "h": 1024
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 1024
+      }
+    },
+    "knight_jumping_25.png": {
+      "frame": {
+        "x": 1024,
+        "y": 4096,
+        "w": 1024,
+        "h": 1024
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 1024
+      }
+    },
+    "knight_jumping_26.png": {
+      "frame": {
+        "x": 2048,
+        "y": 4096,
+        "w": 1024,
+        "h": 1024
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 1024
+      }
+    },
+    "knight_jumping_27.png": {
+      "frame": {
+        "x": 3072,
+        "y": 4096,
+        "w": 1024,
+        "h": 1024
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 1024
+      }
+    },
+    "knight_jumping_28.png": {
+      "frame": {
+        "x": 4096,
+        "y": 4096,
+        "w": 1024,
+        "h": 1024
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 1024
+      }
+    },
+    "knight_jumping_29.png": {
+      "frame": {
+        "x": 5120,
+        "y": 4096,
+        "w": 1024,
+        "h": 1024
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 1024,
+        "h": 1024
+      },
+      "sourceSize": {
+        "w": 1024,
+        "h": 1024
+      }
+    }
+  },
+  "animations": {
+    "knight_jumping": [
+      "knight_jumping_00.png",
+      "knight_jumping_01.png",
+      "knight_jumping_02.png",
+      "knight_jumping_03.png",
+      "knight_jumping_04.png",
+      "knight_jumping_05.png",
+      "knight_jumping_06.png",
+      "knight_jumping_07.png",
+      "knight_jumping_08.png",
+      "knight_jumping_09.png",
+      "knight_jumping_10.png",
+      "knight_jumping_11.png",
+      "knight_jumping_12.png",
+      "knight_jumping_13.png",
+      "knight_jumping_14.png",
+      "knight_jumping_15.png",
+      "knight_jumping_16.png",
+      "knight_jumping_17.png",
+      "knight_jumping_18.png",
+      "knight_jumping_19.png",
+      "knight_jumping_20.png",
+      "knight_jumping_21.png",
+      "knight_jumping_22.png",
+      "knight_jumping_23.png",
+      "knight_jumping_24.png",
+      "knight_jumping_25.png",
+      "knight_jumping_26.png",
+      "knight_jumping_27.png",
+      "knight_jumping_28.png",
+      "knight_jumping_29.png"
+    ]
+  },
+  "meta": {
+    "image": "knight_jumping.png",
+    "format": "RGBA8888",
+    "size": {
+      "w": 6144,
+      "h": 5120
+    },
+    "scale": "1"
+  }
+}

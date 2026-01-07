@@ -32,3 +32,9 @@ Actions available:
 - Walking
 - Running
 - Jumping
+
+Files available:
+- `ProjectContent/Characters/knight/knight_idle.png` + `.json`
+- `ProjectContent/Characters/knight/knight_walking.png` + `.json`
+- `ProjectContent/Characters/knight/knight_running.png` + `.json`
+- `ProjectContent/Characters/knight/knight_jumping.png` + `.json`

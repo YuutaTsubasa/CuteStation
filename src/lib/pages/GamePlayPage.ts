@@ -4,12 +4,17 @@ import { type Rect } from "../game/systems/Physics";
 import { Page } from "./Page";
 
 export class GamePlayPage extends Page {
+  private readonly worldScale = 2;
+  private readonly baseFloorY = 440;
+  private readonly worldPadding = { top: 320, right: 0, bottom: 0, left: 0 };
   private app: Application | null = null;
   private host: HTMLElement | null = null;
   private player: Player | null = null;
   private world: Container | null = null;
   private platforms: Rect[] = [];
   private platformGraphics: Graphics[] = [];
+  private worldBounds: { minX: number; minY: number; maxX: number; maxY: number } | null =
+    null;
   private tickerHandler: (() => void) | null = null;
   private onRequestExit: (() => void) | null = null;
   private inputState = {
@@ -46,12 +51,20 @@ export class GamePlayPage extends Page {
     const world = new Container();
     app.stage.addChild(world);
 
-    const platforms: Rect[] = [
+    const basePlatforms: Rect[] = [
       { x: -200, y: 440, width: 1200, height: 40 },
       { x: 120, y: 340, width: 180, height: 24 },
       { x: 380, y: 280, width: 160, height: 24 },
       { x: 620, y: 220, width: 160, height: 24 },
     ];
+    const worldOffsetY = this.baseFloorY * (this.worldScale - 1);
+    const platforms = basePlatforms.map((platform) => ({
+      x: platform.x * this.worldScale,
+      y: platform.y * this.worldScale - worldOffsetY,
+      width: platform.width * this.worldScale,
+      height: platform.height * this.worldScale,
+    }));
+    this.worldBounds = this.computeWorldBounds(platforms);
 
     const platformGraphics = platforms.map((platform) => {
       const gfx = new Graphics();
@@ -62,8 +75,13 @@ export class GamePlayPage extends Page {
       return gfx;
     });
 
-    const player = new Player();
+    const player = new Player(
+      30,
+      360 - worldOffsetY / this.worldScale,
+      this.worldScale,
+    );
     player.mount(world);
+    void player.loadAssets();
 
     this.app = app;
     this.player = player;
@@ -122,8 +140,15 @@ export class GamePlayPage extends Page {
 
       if (this.world) {
         const viewCenterX = this.app.renderer.width * 0.5;
-        const targetX = -this.player.position.x + viewCenterX;
-        this.world.x += (targetX - this.world.x) * 0.08;
+        const viewCenterY = this.app.renderer.height * 0.5;
+        const playerCenterX = this.player.position.x + this.player.width * 0.5;
+        const playerCenterY = this.player.position.y + this.player.height * 0.5;
+        const targetX = -playerCenterX + viewCenterX;
+        const targetY = -playerCenterY + viewCenterY;
+        const clamped = this.clampCamera(targetX, targetY);
+
+        this.world.x += (clamped.x - this.world.x) * 0.08;
+        this.world.y += (clamped.y - this.world.y) * 0.08;
       }
     };
 
@@ -164,6 +189,7 @@ export class GamePlayPage extends Page {
       this.world.destroy({ children: false });
       this.world = null;
     }
+    this.worldBounds = null;
 
     if (this.app) {
       const canvas = this.app.canvas;
@@ -177,5 +203,48 @@ export class GamePlayPage extends Page {
 
   override update(_deltaMs: number) {
     // TODO: update gameplay once the loop is wired.
+  }
+
+  private computeWorldBounds(platforms: Rect[]) {
+    if (platforms.length === 0) {
+      return { minX: 0, minY: 0, maxX: 0, maxY: 0 };
+    }
+
+    let minX = platforms[0].x;
+    let minY = platforms[0].y;
+    let maxX = platforms[0].x + platforms[0].width;
+    let maxY = platforms[0].y + platforms[0].height;
+
+    for (const platform of platforms) {
+      minX = Math.min(minX, platform.x);
+      minY = Math.min(minY, platform.y);
+      maxX = Math.max(maxX, platform.x + platform.width);
+      maxY = Math.max(maxY, platform.y + platform.height);
+    }
+
+    return {
+      minX: minX - this.worldPadding.left,
+      minY: minY - this.worldPadding.top,
+      maxX: maxX + this.worldPadding.right,
+      maxY: maxY + this.worldPadding.bottom,
+    };
+  }
+
+  private clampCamera(targetX: number, targetY: number) {
+    if (!this.app || !this.worldBounds) {
+      return { x: targetX, y: targetY };
+    }
+
+    const viewWidth = this.app.renderer.width;
+    const viewHeight = this.app.renderer.height;
+    const minX = viewWidth - this.worldBounds.maxX;
+    const maxX = -this.worldBounds.minX;
+    const minY = viewHeight - this.worldBounds.maxY;
+    const maxY = -this.worldBounds.minY;
+
+    return {
+      x: Math.min(Math.max(targetX, minX), maxX),
+      y: Math.min(Math.max(targetY, minY), maxY),
+    };
   }
 }

@@ -34,6 +34,7 @@
 - Phase 2: GamePlayPage Pixi lifecycle, MainMenu → GamePlay flow, and placeholder render complete.
 - Phase 3: Player placeholder with keyboard movement/jump and back-to-menu escape complete.
 - Phase 4: Basic platform collisions and horizontal camera follow complete.
+- Phase 5: Knight sprites, scale pass, and camera bounds refinements complete.
 
 ## Testing Guidelines
 - There are no automated tests yet. Use `npm run check` before PRs.

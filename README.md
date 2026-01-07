@@ -115,6 +115,7 @@ Details live in `docs/conventions.md`.
 - Phase 2: GamePlay Pixi lifecycle + menu navigation done.
 - Phase 3: Player placeholder (keyboard move/jump) + escape back to menu done.
 - Phase 4: Basic platform collisions + horizontal camera follow done.
+- Phase 5: Knight sprites + platform collisions/camera refinements done.
 
 ## Build
 

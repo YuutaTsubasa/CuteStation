@@ -1,4 +1,5 @@
 import { defineConfig } from "vite";
+import path from "node:path";
 import { sveltekit } from "@sveltejs/kit/vite";
 
 // @ts-expect-error process is a nodejs global
@@ -17,6 +18,9 @@ export default defineConfig(async () => ({
     port: 1420,
     strictPort: true,
     host: host || false,
+    fs: {
+      allow: [path.resolve("ProjectContent")],
+    },
     hmr: host
       ? {
           protocol: "ws",
