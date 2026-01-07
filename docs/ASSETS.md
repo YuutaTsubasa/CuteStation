@@ -1,0 +1,34 @@
+# Assets
+
+## ProjectContent Purpose
+
+`ProjectContent/` stores exported game-ready assets (spritesheets, audio, level files). It is the canonical location checked by convention tooling and should contain content that ships with the game.
+
+## Folder Structure
+
+Use a consistent hierarchy so tools and scripts can find assets:
+
+- `ProjectContent/Characters/{characterId}/`
+  - Example: `ProjectContent/Characters/knight/`
+
+## Naming Conventions
+
+- Prefer lowerCamelCase or PascalCase for files and folders.
+- Keep names stable and action-driven (e.g., `Idle`, `Walking`, `Running`, `Jumping`).
+- Avoid hyphens and underscores.
+
+## Animation Usage Rules
+
+- `Idle`, `Walking`, `Running` are looping animations.
+- `Jumping` is non-loop or a single pose (future split: `JumpUp`, `Fall`, `Land`).
+- Use a foot-center anchor/pivot so the character stands on the same ground line across actions.
+
+## Current Character Assets
+
+### Knight
+
+Actions available:
+- Idle
+- Walking
+- Running
+- Jumping
