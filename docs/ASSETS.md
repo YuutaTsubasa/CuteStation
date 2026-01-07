@@ -20,7 +20,7 @@ Use a consistent hierarchy so tools and scripts can find assets:
 ## Animation Usage Rules
 
 - `Idle`, `Walking`, `Running` are looping animations.
-- `Jumping` is non-loop or a single pose (future split: `JumpUp`, `Fall`, `Land`).
+- `Jumping` is segmented via spritesheet JSON `animations` (e.g., `jumpUp`, `jumpHold`, `jumpFall`, `jumpLand`).
 - Use a foot-center anchor/pivot so the character stands on the same ground line across actions.
 
 ## Current Character Assets
