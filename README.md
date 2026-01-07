@@ -109,6 +109,7 @@ Details live in `docs/conventions.md`.
 - Phase 1: PixiJS integration + page system skeleton (Splash/MainMenu/GamePlay) done.
 - Phase 2: GamePlay Pixi lifecycle + menu navigation done.
 - Phase 3: Player placeholder (keyboard move/jump) + escape back to menu done.
+- Phase 4: Basic platform collisions + horizontal camera follow done.
 
 ## Build
 

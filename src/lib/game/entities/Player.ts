@@ -1,4 +1,5 @@
 import { Graphics, type Container } from "pixi.js";
+import { Physics, type Rect } from "../systems/Physics";
 
 type PlayerInput = {
   move: number;
@@ -7,27 +8,25 @@ type PlayerInput = {
 
 export class Player {
   private readonly body: Graphics;
-  private readonly startX: number;
-  private readonly startY: number;
+
+  readonly width = 48;
+  readonly height = 64;
 
   position = { x: 0, y: 0 };
   velocity = { x: 0, y: 0 };
   grounded = false;
 
   private readonly moveSpeed = 240;
-  private readonly jumpSpeed = 420;
-  private readonly gravity = 1200;
+  private readonly jumpSpeed = 520;
+  private readonly gravity = 1100;
   private readonly maxFallSpeed = 800;
-  private readonly floorY = 420;
 
-  constructor(startX = 120, startY = 0) {
-    this.startX = startX;
-    this.startY = startY || this.floorY;
-    this.position.x = this.startX;
-    this.position.y = this.startY;
+  constructor(startX = 120, startY = 360) {
+    this.position.x = startX;
+    this.position.y = startY;
 
     this.body = new Graphics();
-    this.body.rect(0, 0, 48, 64).fill(0x8fd1ff);
+    this.body.rect(0, 0, this.width, this.height).fill(0x8fd1ff);
   }
 
   mount(stage: Container) {
@@ -40,7 +39,7 @@ export class Player {
     this.body.destroy();
   }
 
-  update(deltaSeconds: number, input: PlayerInput) {
+  update(deltaSeconds: number, input: PlayerInput, solids: Rect[]) {
     const move = Math.max(-1, Math.min(1, input.move));
     this.velocity.x = move * this.moveSpeed;
 
@@ -54,16 +53,30 @@ export class Player {
       this.maxFallSpeed,
     );
 
-    this.position.x += this.velocity.x * deltaSeconds;
-    this.position.y += this.velocity.y * deltaSeconds;
+    const rect = this.getRect();
+    const safeDelta = deltaSeconds > 0 ? deltaSeconds : 1 / 60;
+    const resolved = Physics.resolve(
+      rect,
+      { x: this.velocity.x * safeDelta, y: this.velocity.y * safeDelta },
+      solids,
+    );
 
-    if (this.position.y >= this.floorY) {
-      this.position.y = this.floorY;
-      this.velocity.y = 0;
-      this.grounded = true;
-    }
+    this.position.x = resolved.x;
+    this.position.y = resolved.y;
+    this.velocity.x = resolved.vx / safeDelta;
+    this.velocity.y = resolved.vy / safeDelta;
+    this.grounded = resolved.grounded;
 
     this.syncVisual();
+  }
+
+  getRect(): Rect {
+    return {
+      x: this.position.x,
+      y: this.position.y,
+      width: this.width,
+      height: this.height,
+    };
   }
 
   private syncVisual() {

@@ -1,11 +1,15 @@
-import { Application } from "pixi.js";
+import { Application, Container, Graphics } from "pixi.js";
 import { Player } from "../game/entities/Player";
+import { type Rect } from "../game/systems/Physics";
 import { Page } from "./Page";
 
 export class GamePlayPage extends Page {
   private app: Application | null = null;
   private host: HTMLElement | null = null;
   private player: Player | null = null;
+  private world: Container | null = null;
+  private platforms: Rect[] = [];
+  private platformGraphics: Graphics[] = [];
   private tickerHandler: (() => void) | null = null;
   private onRequestExit: (() => void) | null = null;
   private inputState = {
@@ -39,11 +43,33 @@ export class GamePlayPage extends Page {
     await app.init({ background: "#0b0b0b", resizeTo: this.host });
     this.host.appendChild(app.canvas);
 
+    const world = new Container();
+    app.stage.addChild(world);
+
+    const platforms: Rect[] = [
+      { x: -200, y: 440, width: 1200, height: 40 },
+      { x: 120, y: 340, width: 180, height: 24 },
+      { x: 380, y: 280, width: 160, height: 24 },
+      { x: 620, y: 220, width: 160, height: 24 },
+    ];
+
+    const platformGraphics = platforms.map((platform) => {
+      const gfx = new Graphics();
+      gfx.rect(0, 0, platform.width, platform.height).fill(0x3c3c3c);
+      gfx.x = platform.x;
+      gfx.y = platform.y;
+      world.addChild(gfx);
+      return gfx;
+    });
+
     const player = new Player();
-    player.mount(app.stage);
+    player.mount(world);
 
     this.app = app;
     this.player = player;
+    this.world = world;
+    this.platforms = platforms;
+    this.platformGraphics = platformGraphics;
 
     this.keyDownHandler = (event) => {
       if (event.repeat) {
@@ -92,11 +118,17 @@ export class GamePlayPage extends Page {
       const deltaSeconds = this.app.ticker.deltaMS / 1000;
       this.inputState.jump = this.jumpRequested;
       this.jumpRequested = false;
-      this.player.update(deltaSeconds, this.inputState);
+      this.player.update(deltaSeconds, this.inputState, this.platforms);
+
+      if (this.world) {
+        const viewCenterX = this.app.renderer.width * 0.5;
+        const targetX = -this.player.position.x + viewCenterX;
+        this.world.x += (targetX - this.world.x) * 0.08;
+      }
     };
 
     app.ticker.add(this.tickerHandler);
-    // TODO: expand scene setup in Phase 4.
+    // TODO: expand scene setup in Phase 5.
   }
 
   override onExit() {
@@ -118,6 +150,19 @@ export class GamePlayPage extends Page {
     if (this.player) {
       this.player.destroy();
       this.player = null;
+    }
+
+    if (this.platformGraphics.length > 0) {
+      for (const gfx of this.platformGraphics) {
+        gfx.destroy();
+      }
+      this.platformGraphics = [];
+    }
+
+    if (this.world) {
+      this.world.removeFromParent();
+      this.world.destroy({ children: false });
+      this.world = null;
     }
 
     if (this.app) {
