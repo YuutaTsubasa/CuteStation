@@ -633,6 +633,44 @@
       "knight_jumping_27.png",
       "knight_jumping_28.png",
       "knight_jumping_29.png"
+    ],
+    "jumpUp": [
+      "knight_jumping_00.png",
+      "knight_jumping_01.png",
+      "knight_jumping_02.png",
+      "knight_jumping_03.png",
+      "knight_jumping_04.png",
+      "knight_jumping_05.png",
+      "knight_jumping_06.png",
+      "knight_jumping_07.png",
+      "knight_jumping_08.png",
+      "knight_jumping_09.png",
+      "knight_jumping_10.png",
+      "knight_jumping_11.png",
+      "knight_jumping_12.png",
+      "knight_jumping_13.png"
+    ],
+    "jumpHold": [
+      "knight_jumping_14.png"
+    ],
+    "jumpFall": [
+      "knight_jumping_15.png",
+      "knight_jumping_16.png",
+      "knight_jumping_17.png",
+      "knight_jumping_18.png",
+      "knight_jumping_19.png"
+    ],
+    "jumpLand": [
+      "knight_jumping_20.png",
+      "knight_jumping_21.png",
+      "knight_jumping_22.png",
+      "knight_jumping_23.png",
+      "knight_jumping_24.png",
+      "knight_jumping_25.png",
+      "knight_jumping_26.png",
+      "knight_jumping_27.png",
+      "knight_jumping_28.png",
+      "knight_jumping_29.png"
     ]
   },
   "meta": {

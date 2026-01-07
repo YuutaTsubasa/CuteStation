@@ -16,12 +16,28 @@ export class Player {
   private readonly container = new Container();
   private sprite: AnimatedSprite | null = null;
   private animations: Record<string, Texture[]> = {};
-  private currentAnimation: "idle" | "walk" | "run" | null = null;
+  private jumpFrames: {
+    jumpUp: Texture[];
+    hold: Texture[];
+    fall: Texture[];
+    land: Texture[];
+  } | null = null;
+  private currentAnimation:
+    | "idle"
+    | "walk"
+    | "run"
+    | "jumpUp"
+    | "jumpHold"
+    | "jumpFall"
+    | "jumpLand"
+    | null = null;
   private assetsReady = false;
   private readonly scale: number;
   private readonly baseScale = 144 / 1024;
   private readonly footOffset = 14;
   private facing = 1;
+  private jumpPhase: "none" | "jumpUp" | "hold" | "fall" | "land" = "none";
+  private readonly fallEps = 5;
 
   readonly width: number;
   readonly height: number;
@@ -73,12 +89,15 @@ export class Player {
     this.animations.idle = await this.loadFrames(basePath, "knight_idle");
     this.animations.walk = await this.loadFrames(basePath, "knight_walking");
     this.animations.run = await this.loadFrames(basePath, "knight_running");
+    const jumpSegments = await this.loadJumpSegments(basePath, "knight_jumping");
+    this.jumpFrames = jumpSegments;
 
     this.assetsReady = true;
-    this.setAnimation("idle");
+    this.playAnimation("idle", this.animations.idle, { loop: true });
   }
 
   update(deltaSeconds: number, input: PlayerInput, solids: Rect[]) {
+    const wasGrounded = this.grounded;
     const move = Math.max(-1, Math.min(1, input.move));
     this.velocity.x = move * this.moveSpeed;
 
@@ -106,7 +125,7 @@ export class Player {
     this.velocity.y = resolved.vy / safeDelta;
     this.grounded = resolved.grounded;
 
-    this.updateAnimation(input.move);
+    this.updateAnimation(input.move, wasGrounded);
     this.syncVisual();
   }
 
@@ -125,7 +144,7 @@ export class Player {
       this.position.y + this.height + this.footOffset * this.scale;
   }
 
-  private updateAnimation(moveInput: number) {
+  private updateAnimation(moveInput: number, wasGrounded: boolean) {
     if (!this.assetsReady) {
       return;
     }
@@ -136,20 +155,58 @@ export class Player {
     } else if (moveInput > 0.1) {
       this.facing = 1;
     }
-    const target = this.grounded
-      ? moving
-        ? this.getMoveAnimation()
-        : "idle"
-      : "idle";
 
-    this.setAnimation(target);
-
-    if (this.sprite) {
-      this.sprite.scale.set(
-        this.baseScale * this.scale * this.facing,
-        this.baseScale * this.scale,
-      );
+    if (this.jumpFrames) {
+      if (wasGrounded && !this.grounded && this.velocity.y < 0) {
+        this.jumpPhase = "jumpUp";
+        this.playAnimation("jumpUp", this.jumpFrames.jumpUp, {
+          loop: false,
+          onComplete: () => {
+            this.jumpPhase = "hold";
+            this.playAnimation("jumpHold", this.jumpFrames?.hold ?? [], {
+              loop: false,
+            });
+          },
+        });
+      } else if (!wasGrounded && this.grounded) {
+        this.jumpPhase = "land";
+        this.playAnimation("jumpLand", this.jumpFrames.land, {
+          loop: false,
+          onComplete: () => {
+            this.jumpPhase = "none";
+            this.playGroundedAnimation(moving);
+          },
+        });
+      } else if (!this.grounded && this.velocity.y > this.fallEps) {
+        if (this.jumpPhase !== "fall" && this.jumpPhase !== "land") {
+          this.jumpPhase = "fall";
+          this.playAnimation("jumpFall", this.jumpFrames.fall, {
+            loop: false,
+            holdLastFrame: true,
+          });
+        }
+      } else if (!this.grounded && this.jumpPhase === "hold") {
+        this.playAnimation("jumpHold", this.jumpFrames.hold, { loop: false });
+      }
     }
+
+    if (this.grounded) {
+      if (this.jumpPhase === "land" && moving) {
+        this.jumpPhase = "none";
+        this.playGroundedAnimation(moving);
+      } else if (this.jumpPhase === "none") {
+        this.playGroundedAnimation(moving);
+      }
+    }
+
+    this.applyFacing();
+  }
+
+  private playGroundedAnimation(moving: boolean) {
+    const target = moving ? this.getMoveAnimation() : "idle";
+    const frames = this.animations[target];
+    this.jumpPhase = "none";
+    this.playAnimation(target, frames, { loop: true });
   }
 
   private getMoveAnimation(): "walk" | "run" | "idle" {
@@ -164,12 +221,26 @@ export class Player {
     return "idle";
   }
 
-  private setAnimation(name: "idle" | "walk" | "run") {
+  private playAnimation(
+    name:
+      | "idle"
+      | "walk"
+      | "run"
+      | "jumpUp"
+      | "jumpHold"
+      | "jumpFall"
+      | "jumpLand",
+    frames: Texture[],
+    options: {
+      loop: boolean;
+      onComplete?: () => void;
+      holdLastFrame?: boolean;
+    },
+  ) {
     if (this.currentAnimation === name) {
       return;
     }
 
-    const frames = this.animations[name];
     if (!frames || frames.length === 0) {
       return;
     }
@@ -180,16 +251,28 @@ export class Player {
 
     const sprite = new AnimatedSprite(frames);
     sprite.anchor.set(0.5, 1);
-    sprite.scale.set(
-      this.baseScale * this.scale * this.facing,
-      this.baseScale * this.scale,
-    );
     sprite.animationSpeed = 0.24;
-    sprite.play();
+    sprite.loop = options.loop;
+    if (frames.length === 1) {
+      sprite.gotoAndStop(0);
+    } else if (options.loop) {
+      sprite.play();
+    } else {
+      sprite.play();
+      if (options.holdLastFrame) {
+        sprite.onComplete = () => {
+          sprite.gotoAndStop(frames.length - 1);
+          options.onComplete?.();
+        };
+      } else if (options.onComplete) {
+        sprite.onComplete = options.onComplete;
+      }
+    }
     sprite.position.set(0, 0);
 
     this.sprite = sprite;
     this.container.addChild(sprite);
+    this.applyFacing();
   }
 
   private async loadFrames(basePath: string, fileBase: string) {
@@ -210,6 +293,31 @@ export class Player {
     return [texture];
   }
 
+  private async loadJumpSegments(basePath: string, fileBase: string) {
+    const jsonPath = `${basePath}/${fileBase}.json`;
+    try {
+      const sheet = (await Assets.load(jsonPath)) as Spritesheet;
+      const animations = sheet.animations;
+      const jumpUp = animations?.jumpUp ?? animations?.JumpUp;
+      const jumpHold = animations?.jumpHold ?? animations?.JumpHold;
+      const jumpFall = animations?.jumpFall ?? animations?.JumpFall;
+      const jumpLand = animations?.jumpLand ?? animations?.JumpLand;
+
+      if (jumpUp && jumpHold && jumpFall && jumpLand) {
+        return {
+          jumpUp,
+          hold: jumpHold,
+          fall: jumpFall,
+          land: jumpLand,
+        };
+      }
+    } catch {
+      return null;
+    }
+
+    return null;
+  }
+
   private extractFrames(sheet: Spritesheet) {
     const animationKeys = Object.keys(sheet.animations);
     if (animationKeys.length > 0) {
@@ -220,5 +328,14 @@ export class Player {
     }
 
     return Object.values(sheet.textures);
+  }
+
+  private applyFacing() {
+    if (this.sprite) {
+      this.sprite.scale.set(
+        this.baseScale * this.scale * this.facing,
+        this.baseScale * this.scale,
+      );
+    }
   }
 }
