@@ -104,6 +104,12 @@ npm run convention:report
 Reports are written to `reports/convention-report.json` and `reports/convention-report.md`.
 Details live in `docs/conventions.md`.
 
+## Current MVP Progress
+
+- Phase 1: PixiJS integration + page system skeleton (Splash/MainMenu/GamePlay) done.
+- Phase 2: GamePlay Pixi lifecycle + menu navigation done.
+- Phase 3: Player placeholder (keyboard move/jump) + escape back to menu done.
+
 ## Build
 
 ### Windows

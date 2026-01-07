@@ -22,12 +22,17 @@
 - File naming: match SvelteKit conventions (`+page.svelte`, `+layout.ts`).
 - Rust commands: use `#[tauri::command]` and register in `src-tauri/src/lib.rs`.
 - No formatter or linter is configured; keep changes consistent with surrounding code.
+
 ## Convention Checks
 - Run `npm run convention:check` to generate reports and fail on error-level issues.
 - Run `npm run convention:report` to generate reports without failing the command.
 - Reports are written to `reports/convention-report.json` and `reports/convention-report.md`.
 - Details live in `docs/conventions.md`.
 
+## Current MVP Progress
+- Phase 1: PixiJS integration and page system skeleton complete.
+- Phase 2: GamePlayPage Pixi lifecycle, MainMenu → GamePlay flow, and placeholder render complete.
+- Phase 3: Player placeholder with keyboard movement/jump and back-to-menu escape complete.
 
 ## Testing Guidelines
 - There are no automated tests yet. Use `npm run check` before PRs.

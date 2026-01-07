@@ -5,6 +5,7 @@ const EXCLUDED_DIRS = new Set([
   "node_modules",
   "dist",
   "build",
+  ".svelte-kit",
   ".git",
   "target",
   "reports",

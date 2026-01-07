@@ -1,48 +1,74 @@
 <script lang="ts">
-  import { invoke } from "@tauri-apps/api/core";
+  import { onMount } from "svelte";
+  import { GamePlayPage } from "$lib/pages/GamePlayPage";
+  import { MainMenuPage } from "$lib/pages/MainMenuPage";
+  import { PageManager } from "$lib/pages/PageManager";
+  import { SplashScreenPage } from "$lib/pages/SplashScreenPage";
 
-  let name = $state("");
-  let greetMsg = $state("");
+  let status = $state("Initializing...");
+  let currentPageId = $state("None");
+  let pixiRoot: HTMLDivElement | null = null;
+  let pageManager: PageManager | null = null;
 
-  async function greet(event: Event) {
-    event.preventDefault();
-    // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-    greetMsg = await invoke("greet", { name });
+  function updateStatus() {
+    currentPageId = pageManager?.current?.id ?? "None";
+    status = `Active page: ${currentPageId}`;
   }
+
+  function goTo(id: string) {
+    pageManager?.goTo(id);
+    updateStatus();
+  }
+
+  onMount(() => {
+    const manager = new PageManager();
+    const splash = new SplashScreenPage();
+    const menu = new MainMenuPage();
+    const gameplay = new GamePlayPage();
+
+    gameplay.setHost(pixiRoot);
+    gameplay.setOnRequestExit(() => goTo("MainMenu"));
+
+    manager.register(splash);
+    manager.register(menu);
+    manager.register(gameplay);
+
+    pageManager = manager;
+    goTo("SplashScreen");
+
+    // TODO: replace with SplashScreenPage-driven timing in Phase 4.
+    const splashTimeout = window.setTimeout(() => {
+      goTo("MainMenu");
+    }, 1200);
+
+    return () => {
+      window.clearTimeout(splashTimeout);
+      gameplay.onExit();
+    };
+  });
 </script>
 
 <main class="container">
-  <h1>Welcome to Tauri + Svelte</h1>
-
-  <div class="row">
-    <a href="https://vite.dev" target="_blank">
-      <img src="/vite.svg" class="logo vite" alt="Vite Logo" />
-    </a>
-    <a href="https://tauri.app" target="_blank">
-      <img src="/tauri.svg" class="logo tauri" alt="Tauri Logo" />
-    </a>
-    <a href="https://svelte.dev" target="_blank">
-      <img src="/svelte.svg" class="logo svelte-kit" alt="SvelteKit Logo" />
-    </a>
+  <h1>CuteStation</h1>
+  <p>{status}</p>
+  <div class="stage" bind:this={pixiRoot}>
+    {#if currentPageId !== "GamePlay"}
+      <div class="stage-overlay">
+        <div class="panel">
+          <h2>{currentPageId}</h2>
+          <p>Placeholder UI for Phase 1.</p>
+          {#if currentPageId === "MainMenu"}
+            <button class="action" type="button" on:click={() => goTo("GamePlay")}
+              >Start Game</button
+            >
+          {/if}
+        </div>
+      </div>
+    {/if}
   </div>
-  <p>Click on the Tauri, Vite, and SvelteKit logos to learn more.</p>
-
-  <form class="row" onsubmit={greet}>
-    <input id="greet-input" placeholder="Enter a name..." bind:value={name} />
-    <button type="submit">Greet</button>
-  </form>
-  <p>{greetMsg}</p>
 </main>
 
 <style>
-.logo.vite:hover {
-  filter: drop-shadow(0 0 2em #747bff);
-}
-
-.logo.svelte-kit:hover {
-  filter: drop-shadow(0 0 2em #ff3e00);
-}
-
 :root {
   font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
   font-size: 16px;
@@ -68,69 +94,57 @@
   text-align: center;
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: 0.75s;
+.stage {
+  width: min(90vw, 960px);
+  height: 540px;
+  margin: 24px auto 0;
+  border: 1px solid #1f1f1f;
+  border-radius: 12px;
+  overflow: hidden;
+  position: relative;
+  background: #0b0b0b;
 }
 
-.logo.tauri:hover {
-  filter: drop-shadow(0 0 2em #24c8db);
+.stage-overlay {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
 }
 
-.row {
-  display: flex;
-  justify-content: center;
+.panel {
+  padding: 16px 20px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.88);
+  color: #111111;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+  display: grid;
+  gap: 12px;
+  pointer-events: auto;
 }
 
-a {
-  font-weight: 500;
-  color: #646cff;
-  text-decoration: inherit;
+.action {
+  padding: 8px 16px;
+  border-radius: 999px;
+  border: none;
+  background: #1f1f1f;
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
 }
 
-a:hover {
-  color: #535bf2;
+.action:hover {
+  background: #343434;
 }
 
 h1 {
   text-align: center;
 }
 
-input,
-button {
-  border-radius: 8px;
-  border: 1px solid transparent;
-  padding: 0.6em 1.2em;
-  font-size: 1em;
-  font-weight: 500;
-  font-family: inherit;
-  color: #0f0f0f;
-  background-color: #ffffff;
-  transition: border-color 0.25s;
-  box-shadow: 0 2px 2px rgba(0, 0, 0, 0.2);
-}
-
-button {
-  cursor: pointer;
-}
-
-button:hover {
-  border-color: #396cd8;
-}
-button:active {
-  border-color: #396cd8;
-  background-color: #e8e8e8;
-}
-
-input,
-button {
-  outline: none;
-}
-
-#greet-input {
-  margin-right: 5px;
+h2 {
+  margin: 0;
+  font-size: 20px;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -139,18 +153,13 @@ button {
     background-color: #2f2f2f;
   }
 
-  a:hover {
-    color: #24c8db;
+  .stage {
+    border-color: #343434;
   }
 
-  input,
-  button {
-    color: #ffffff;
-    background-color: #0f0f0f98;
-  }
-  button:active {
-    background-color: #0f0f0f69;
+  .panel {
+    background: rgba(17, 17, 17, 0.82);
+    color: #f6f6f6;
   }
 }
-
 </style>
