@@ -5,6 +5,7 @@
 - `src-tauri/`: Rust backend and Tauri config (`src-tauri/src/`, `src-tauri/tauri.conf.json`).
 - `static/`: Static assets served by the frontend.
 - `docs/`: Game and technical design docs (`docs/GAME_DESIGN.md`, `docs/TECHNICAL_DESIGN.md`).
+- `src/lib/game/view/ResolutionManager.ts`: 16:9 design resolution (960x540) constants for view sizing.
 
 ## Build, Test, and Development Commands
 - `npm run tauri dev`: Desktop app with hot reload (Tauri + Vite).
@@ -51,3 +52,4 @@
 ## Architecture Notes
 - Frontend calls Rust commands via Tauri IPC (`invoke()` in TS, `#[tauri::command]` in Rust).
 - SPA mode is enabled; SSR is off. Static build output is served by Tauri.
+- Game rendering targets a 960x540 design frame and scales to fit the window; the letterbox area uses `ProjectContent/UI/gameBackground.png`.

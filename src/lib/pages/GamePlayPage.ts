@@ -8,6 +8,7 @@ import { audioManager } from "../game/audio/AudioManager";
 import { whitePalaceBgmPath } from "../game/audio/audioPaths";
 import { type Rect } from "../game/systems/Physics";
 import { type VirtualInputState, VirtualInput } from "../game/input/VirtualInput";
+import { GAME_HEIGHT, GAME_WIDTH } from "../game/view/ResolutionManager";
 import { Page } from "./Page";
 
 export class GamePlayPage extends Page {
@@ -18,6 +19,7 @@ export class GamePlayPage extends Page {
   private readonly visualsConfigPath = "/ProjectContent/Levels/whitePalace/visuals/visuals.json";
   private app: Application | null = null;
   private host: HTMLElement | null = null;
+  private gameRoot: Container | null = null;
   private player: Player | null = null;
   private background: Container | null = null;
   private world: Container | null = null;
@@ -87,23 +89,40 @@ export class GamePlayPage extends Page {
     const token = this.enterToken;
 
     const app = new Application();
-    await app.init({ background: "#0b0b0b", resizeTo: this.host });
+    await app.init({ background: "#0b0b0b", width: GAME_WIDTH, height: GAME_HEIGHT });
     if (token !== this.enterToken) {
       app.destroy(true);
       return;
     }
     this.host.appendChild(app.canvas);
 
+    if (!this.isActive) {
+      app.destroy(true);
+      app.canvas.remove();
+      return;
+    }
+
+    const abort = () => {
+      app.destroy(true);
+      app.canvas.remove();
+      this.gameRoot = null;
+    };
+
+    const gameRoot = new Container();
+    app.stage.addChild(gameRoot);
+
+    this.gameRoot = gameRoot;
+
     const level = await loadLevel("/ProjectContent/Levels/whitePalace/1-1.json");
     if (token !== this.enterToken) {
-      app.destroy(true);
+      abort();
       return;
     }
 
     const world = new Container();
     const background = new Container();
-    app.stage.addChild(background);
-    app.stage.addChild(world);
+    gameRoot.addChild(background);
+    gameRoot.addChild(world);
 
     const runtime = new LevelRuntime(level, {
       worldScale: this.worldScale,
@@ -122,7 +141,7 @@ export class GamePlayPage extends Page {
       visualsBasePath: this.visualsBasePath,
       config: visualsConfig,
     });
-    await visuals.load(app);
+    await visuals.load(GAME_WIDTH, GAME_HEIGHT);
     visuals.attach(background, world);
 
     const spawnOffsetY = runtime.worldOffsetY / this.worldScale;
@@ -130,7 +149,7 @@ export class GamePlayPage extends Page {
     player.mount(world);
     await player.loadAssets();
     if (token !== this.enterToken) {
-      app.destroy(true);
+      abort();
       return;
     }
 
@@ -228,8 +247,8 @@ export class GamePlayPage extends Page {
       this.checkGoal();
 
       if (this.world) {
-        const viewCenterX = this.app.renderer.width * 0.5;
-        const viewCenterY = this.app.renderer.height * 0.5;
+        const viewCenterX = GAME_WIDTH * 0.5;
+        const viewCenterY = GAME_HEIGHT * 0.5;
         const playerCenterX = this.player.position.x + this.player.width * 0.5;
         const playerCenterY = this.player.position.y + this.player.height * 0.5;
         const targetX = -playerCenterX + viewCenterX;
@@ -239,7 +258,7 @@ export class GamePlayPage extends Page {
         this.world.x += (clamped.x - this.world.x) * 0.08;
         this.world.y += (clamped.y - this.world.y) * 0.08;
 
-        this.visuals?.update(this.world.x, this.world.y, this.app);
+        this.visuals?.update(this.world.x, this.world.y, GAME_WIDTH, GAME_HEIGHT);
       }
     };
 
@@ -293,6 +312,12 @@ export class GamePlayPage extends Page {
       this.world.destroy({ children: false });
       this.world = null;
     }
+
+    if (this.gameRoot) {
+      this.gameRoot.removeFromParent();
+      this.gameRoot.destroy({ children: false });
+      this.gameRoot = null;
+    }
     this.worldBounds = null;
     this.platforms = [];
     this.coins = [];
@@ -318,11 +343,9 @@ export class GamePlayPage extends Page {
       return { x: targetX, y: targetY };
     }
 
-    const viewWidth = this.app.renderer.width;
-    const viewHeight = this.app.renderer.height;
-    const minX = viewWidth - this.worldBounds.maxX;
+    const minX = GAME_WIDTH - this.worldBounds.maxX;
     const maxX = -this.worldBounds.minX;
-    const minY = viewHeight - this.worldBounds.maxY;
+    const minY = GAME_HEIGHT - this.worldBounds.maxY;
     const maxY = -this.worldBounds.minY;
 
     return {

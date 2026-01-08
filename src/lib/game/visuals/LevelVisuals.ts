@@ -1,11 +1,4 @@
-import {
-  Assets,
-  Container,
-  Sprite,
-  Texture,
-  TilingSprite,
-  type Application,
-} from "pixi.js";
+import { Assets, Container, Sprite, Texture, TilingSprite } from "pixi.js";
 import type { LevelData, LevelRect } from "../levels/LevelLoader";
 import type { LevelRuntime } from "../levels/LevelRuntime";
 import type { VisualsConfig } from "./VisualsConfig";
@@ -43,7 +36,7 @@ export class LevelVisuals {
     this.options = options;
   }
 
-  async load(app: Application) {
+  async load(viewWidth: number, viewHeight: number) {
     const base = this.options.visualsBasePath;
     const includeNear = this.options.config.layers?.nearEnabled ?? false;
     const textures = await Promise.all([
@@ -58,7 +51,7 @@ export class LevelVisuals {
     const near = textures[2] as Texture | null;
     const tile = textures[3] as Texture;
 
-    this.background = this.createBackground(app, far, mid, near);
+    this.background = this.createBackground(viewWidth, viewHeight, far, mid, near);
     this.solids = this.createSolids(tile);
   }
 
@@ -83,13 +76,11 @@ export class LevelVisuals {
     }
   }
 
-  update(cameraX: number, cameraY: number, app: Application) {
+  update(cameraX: number, cameraY: number, viewWidth: number, viewHeight: number) {
     if (!this.background) {
       return;
     }
 
-    const viewWidth = app.renderer.width;
-    const viewHeight = app.renderer.height;
     const marginX = viewWidth * 0.1;
     const marginY = viewHeight * 0.1;
     const far = this.background.far;
@@ -145,13 +136,12 @@ export class LevelVisuals {
   }
 
   private createBackground(
-    app: Application,
+    viewWidth: number,
+    viewHeight: number,
     far: Texture,
     mid: Texture,
     near: Texture | null,
   ) {
-    const viewWidth = app.renderer.width;
-    const viewHeight = app.renderer.height;
     const marginX = viewWidth * 0.1;
     const marginY = viewHeight * 0.1;
 

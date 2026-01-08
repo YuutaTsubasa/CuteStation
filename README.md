@@ -126,6 +126,11 @@ Details live in `docs/conventions.md`.
 - Keyboard: Arrow keys / A-D to move, Space to jump, Escape to return to the menu.
 - Touch: Left virtual joystick for horizontal movement, right jump button for jumping.
 
+## Rendering
+
+- The game uses a 960x540 design resolution (16:9) and scales to fit the window.
+- Letterbox space is filled with `ProjectContent/UI/gameBackground.png`.
+
 ## Build
 
 ### Windows

@@ -2,6 +2,7 @@ import { Application, Container, Graphics, Rectangle } from "pixi.js";
 import { audioManager } from "../game/audio/AudioManager";
 import { loadLevel, type LevelPoint, type LevelRect } from "../game/levels/LevelLoader";
 import { LevelRuntime } from "../game/levels/LevelRuntime";
+import { GAME_HEIGHT, GAME_WIDTH } from "../game/view/ResolutionManager";
 import { Page } from "./Page";
 
 type Selection =
@@ -25,6 +26,8 @@ export class LevelEditorPage extends Page {
   private readonly worldPadding = { top: 320, right: 0, bottom: 0, left: 0 };
   private app: Application | null = null;
   private host: HTMLElement | null = null;
+  private gameRoot: Container | null = null;
+  private screenUiLayer: Container | null = null;
   private world: Container | null = null;
   private runtime: LevelRuntime | null = null;
   private selection: Selection = { type: "none" };
@@ -70,21 +73,42 @@ export class LevelEditorPage extends Page {
     const token = this.enterToken;
 
     const app = new Application();
-    await app.init({ background: "#101010", resizeTo: this.host });
+    await app.init({ background: "#101010", width: GAME_WIDTH, height: GAME_HEIGHT });
     if (token !== this.enterToken) {
       app.destroy(true);
       return;
     }
     this.host.appendChild(app.canvas);
 
+    if (!this.isActive) {
+      app.destroy(true);
+      app.canvas.remove();
+      return;
+    }
+
+    const abort = () => {
+      app.destroy(true);
+      app.canvas.remove();
+      this.gameRoot = null;
+      this.screenUiLayer = null;
+    };
+
+    const gameRoot = new Container();
+    const screenUiLayer = new Container();
+    app.stage.addChild(gameRoot);
+    app.stage.addChild(screenUiLayer);
+    app.stage.hitArea = new Rectangle(0, 0, GAME_WIDTH, GAME_HEIGHT);
+    this.gameRoot = gameRoot;
+    this.screenUiLayer = screenUiLayer;
+
     const level = await loadLevel("/ProjectContent/Levels/whitePalace/1-1.json");
     if (token !== this.enterToken) {
-      app.destroy(true);
+      abort();
       return;
     }
 
     const world = new Container();
-    app.stage.addChild(world);
+    gameRoot.addChild(world);
 
     const runtime = new LevelRuntime(level, {
       worldScale: this.worldScale,
@@ -126,8 +150,10 @@ export class LevelEditorPage extends Page {
         return;
       }
       const rect = this.app.canvas.getBoundingClientRect();
-      const x = event.clientX - rect.left;
-      const y = event.clientY - rect.top;
+      const scaleX = GAME_WIDTH / rect.width;
+      const scaleY = GAME_HEIGHT / rect.height;
+      const x = (event.clientX - rect.left) * scaleX;
+      const y = (event.clientY - rect.top) * scaleY;
       const worldPoint = this.getWorldPoint(x, y);
       this.lastPointerWorld = worldPoint;
       if (this.panState && this.world) {
@@ -216,6 +242,13 @@ export class LevelEditorPage extends Page {
       this.world.destroy({ children: false });
       this.world = null;
     }
+
+    if (this.gameRoot) {
+      this.gameRoot.removeFromParent();
+      this.gameRoot.destroy({ children: false });
+      this.gameRoot = null;
+    }
+    this.screenUiLayer = null;
 
     if (this.app) {
       const canvas = this.app.canvas;
@@ -494,11 +527,9 @@ export class LevelEditorPage extends Page {
     if (!bounds) {
       return { x, y };
     }
-    const viewWidth = this.app.renderer.width;
-    const viewHeight = this.app.renderer.height;
-    const minX = viewWidth - bounds.maxX;
+    const minX = GAME_WIDTH - bounds.maxX;
     const maxX = -bounds.minX;
-    const minY = viewHeight - bounds.maxY;
+    const minY = GAME_HEIGHT - bounds.maxY;
     const maxY = -bounds.minY;
     return {
       x: Math.min(Math.max(x, minX), maxX),
@@ -530,6 +561,7 @@ export class LevelEditorPage extends Page {
     const dy = a.y - b.y;
     return Math.hypot(dx, dy);
   }
+
 
   private snapValue(value: number) {
     if (!this.snapEnabled) {

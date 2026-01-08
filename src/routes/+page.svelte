@@ -12,6 +12,8 @@
   let currentPageId = $state("None");
   let pixiRoot: HTMLDivElement | null = null;
   let pageManager: PageManager | null = null;
+  let gameplay: GamePlayPage | null = null;
+  let pixiFrame: HTMLDivElement | null = null;
   let coinCount = $state(0);
   let coinTotal = $state(0);
   let levelClear = $state(false);
@@ -23,6 +25,27 @@
   let gameLoading = $state(false);
   let showVirtualControls = $state(true);
   const virtualInput = new VirtualInput();
+
+  let uiScale = $state(1);
+  let uiOffsetX = $state(0);
+  let uiOffsetY = $state(0);
+  let uiTransform = $state("");
+  const frameWidth = 960;
+  const frameHeight = 540;
+
+  function updateUiLayout() {
+    if (!pixiRoot) {
+      return;
+    }
+    const rect = pixiRoot.getBoundingClientRect();
+    const scale = Math.min(rect.width / frameWidth, rect.height / frameHeight);
+    const viewW = frameWidth * scale;
+    const viewH = frameHeight * scale;
+    uiScale = scale;
+    uiOffsetX = (rect.width - viewW) / 2;
+    uiOffsetY = (rect.height - viewH) / 2;
+    uiTransform = `translate(${uiOffsetX}px, ${uiOffsetY}px) scale(${uiScale})`;
+  }
 
   function updateStatus() {
     currentPageId = pageManager?.current?.id ?? "None";
@@ -51,6 +74,7 @@
     }
     pageManager?.goTo(id);
     updateStatus();
+    updateUiLayout();
   }
 
   function exportLevel() {
@@ -69,12 +93,14 @@
     const manager = new PageManager();
     const splash = new SplashScreenPage();
     const menu = new MainMenuPage();
-    const gameplay = new GamePlayPage();
+    gameplay = new GamePlayPage();
     const levelEditor = new LevelEditorPage();
 
     menuEntries = menu.entries;
 
-    gameplay.setHost(pixiRoot);
+    splash.setHost(pixiFrame);
+    menu.setHost(pixiFrame);
+    gameplay.setHost(pixiFrame);
     gameplay.setOnRequestExit(() => goTo("MainMenu"));
     gameplay.setOnCoinChange((count, total) => {
       coinCount = count;
@@ -92,7 +118,7 @@
     });
     gameplay.setVirtualInput(virtualInput);
 
-    levelEditor.setHost(pixiRoot);
+    levelEditor.setHost(pixiFrame);
     levelEditor.setOnRequestExit(() => goTo("MainMenu"));
     editor = levelEditor;
 
@@ -103,6 +129,9 @@
 
     pageManager = manager;
     goTo("SplashScreen");
+    updateUiLayout();
+    const resizeHandler = () => updateUiLayout();
+    window.addEventListener("resize", resizeHandler);
 
     // TODO: replace with SplashScreenPage-driven timing in Phase 4.
     const splashTimeout = window.setTimeout(() => {
@@ -126,95 +155,98 @@
 
     return () => {
       window.clearTimeout(splashTimeout);
+      window.removeEventListener("resize", resizeHandler);
       window.removeEventListener("keydown", handleKeydown);
       window.removeEventListener("pointerdown", handlePointerDown);
       resetGameplayHud();
-      gameplay.setVirtualInput(null);
-      gameplay.onExit();
+      gameplay?.setVirtualInput(null);
+      gameplay?.onExit();
       levelEditor.onExit();
     };
   });
 </script>
 
 <main class="container">
-  <h1>CuteStation</h1>
-  <p>{status}</p>
   <div class="stage" bind:this={pixiRoot}>
-    {#if currentPageId === "GamePlay"}
-      <div class="hud">Coins {coinCount}/{coinTotal}</div>
-      {#if showVirtualControls}
-        <VirtualControls input={virtualInput} />
-      {/if}
-      {#if gameLoading}
+    <div class="stage-frame" bind:this={pixiFrame} style={`transform: ${uiTransform};`}></div>
+    <div class="stage-ui" style={`transform: ${uiTransform};`}>
+      {#if currentPageId === "GamePlay"}
+        <div class="hud">Coins {coinCount}/{coinTotal}</div>
+        {#if gameLoading}
+          <div class="stage-overlay">
+            <div class="panel">Loading...</div>
+          </div>
+        {/if}
+        {#if levelClear}
+          <div class="stage-overlay">
+            <div class="panel">Level Clear</div>
+          </div>
+        {/if}
+      {:else if currentPageId === "LevelEditor"}
+        <div class="editor-toolbar">
+          <button class="action" type="button" on:click={() => editor?.addSolid()}
+            >Add Solid</button
+          >
+          <button class="action" type="button" on:click={() => editor?.addCoin()}
+            >Add Coin</button
+          >
+          <button class="action" type="button" on:click={() => editor?.deleteSelected()}
+            >Delete</button
+          >
+          <button
+            class="action"
+            type="button"
+            data-active={gridEnabled}
+            on:click={toggleGrid}
+            >Grid</button
+          >
+          <button
+            class="action"
+            type="button"
+            data-active={snapEnabled}
+            on:click={toggleSnap}
+            >Snap</button
+          >
+          <button class="action" type="button" on:click={() => editor?.resizeWorld(200, 0)}
+            >Width +</button
+          >
+          <button class="action" type="button" on:click={() => editor?.resizeWorld(-200, 0)}
+            >Width -</button
+          >
+          <button class="action" type="button" on:click={() => editor?.resizeWorld(0, 200)}
+            >Height +</button
+          >
+          <button class="action" type="button" on:click={() => editor?.resizeWorld(0, -200)}
+            >Height -</button
+          >
+          <button class="action" type="button" on:click={exportLevel}
+            >Export Level</button
+          >
+          <button class="action" type="button" on:click={() => goTo("MainMenu")}
+            >Back</button
+          >
+        </div>
+        <div class="editor-hint">
+          Drag to move. Shift + drag to resize. Space/right click + drag to pan. Grid/Snap
+          toggles.
+        </div>
+      {:else}
         <div class="stage-overlay">
-          <div class="panel">Loading...</div>
+          <div class="panel">
+            <h2>{currentPageId}</h2>
+            {#if currentPageId === "MainMenu"}
+              {#each menuEntries as entry}
+                <button class="action" type="button" on:click={() => goTo(entry.id)}
+                  >{entry.label}</button
+                >
+              {/each}
+            {/if}
+          </div>
         </div>
       {/if}
-      {#if levelClear}
-        <div class="stage-overlay">
-          <div class="panel">Level Clear</div>
-        </div>
-      {/if}
-    {:else if currentPageId === "LevelEditor"}
-      <div class="editor-toolbar">
-        <button class="action" type="button" on:click={() => editor?.addSolid()}
-          >Add Solid</button
-        >
-        <button class="action" type="button" on:click={() => editor?.addCoin()}
-          >Add Coin</button
-        >
-        <button class="action" type="button" on:click={() => editor?.deleteSelected()}
-          >Delete</button
-        >
-        <button
-          class="action"
-          type="button"
-          data-active={gridEnabled}
-          on:click={toggleGrid}
-          >Grid</button
-        >
-        <button
-          class="action"
-          type="button"
-          data-active={snapEnabled}
-          on:click={toggleSnap}
-          >Snap</button
-        >
-        <button class="action" type="button" on:click={() => editor?.resizeWorld(200, 0)}
-          >Width +</button
-        >
-        <button class="action" type="button" on:click={() => editor?.resizeWorld(-200, 0)}
-          >Width -</button
-        >
-        <button class="action" type="button" on:click={() => editor?.resizeWorld(0, 200)}
-          >Height +</button
-        >
-        <button class="action" type="button" on:click={() => editor?.resizeWorld(0, -200)}
-          >Height -</button
-        >
-        <button class="action" type="button" on:click={exportLevel}
-          >Export Level</button
-        >
-        <button class="action" type="button" on:click={() => goTo("MainMenu")}
-          >Back</button
-        >
-      </div>
-      <div class="editor-hint">
-        Drag to move. Shift + drag to resize. Space/right click + drag to pan. Grid/Snap toggles.
-      </div>
-    {:else}
-      <div class="stage-overlay">
-        <div class="panel">
-          <h2>{currentPageId}</h2>
-          {#if currentPageId === "MainMenu"}
-            {#each menuEntries as entry}
-              <button class="action" type="button" on:click={() => goTo(entry.id)}
-                >{entry.label}</button
-              >
-            {/each}
-          {/if}
-        </div>
-      </div>
+    </div>
+    {#if currentPageId === "GamePlay" && showVirtualControls}
+      <VirtualControls input={virtualInput} />
     {/if}
   </div>
 </main>
@@ -238,22 +270,49 @@
 
 .container {
   margin: 0;
-  padding-top: 10vh;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  text-align: center;
+  width: 100%;
+  height: 100vh;
 }
 
 .stage {
-  width: min(90vw, 960px);
-  height: 540px;
-  margin: 24px auto 0;
-  border: 1px solid #1f1f1f;
-  border-radius: 12px;
+  width: 100%;
+  height: 100%;
+  margin: 0;
   overflow: hidden;
   position: relative;
   background: #0b0b0b;
+  background-image: url("/ProjectContent/UI/gameBackground.png");
+  background-size: cover;
+  background-position: center;
+}
+
+.stage-frame {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 960px;
+  height: 540px;
+  transform-origin: top left;
+  background: #0b0b0b;
+  border: 1px solid #1f1f1f;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.stage-frame :global(canvas) {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.stage-ui {
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 960px;
+  height: 540px;
+  transform-origin: top left;
+  pointer-events: none;
 }
 
 .hud {
@@ -274,6 +333,7 @@
   display: flex;
   gap: 8px;
   flex-wrap: wrap;
+  pointer-events: auto;
 }
 
 .editor-hint {
@@ -285,6 +345,7 @@
   background: rgba(0, 0, 0, 0.55);
   color: #ffffff;
   font-size: 12px;
+  pointer-events: auto;
 }
 
 .stage-overlay {
@@ -314,6 +375,7 @@
   color: #ffffff;
   font-weight: 600;
   cursor: pointer;
+  pointer-events: auto;
 }
 
 .action[data-active="true"] {
@@ -328,10 +390,6 @@
   background: #343434;
 }
 
-h1 {
-  text-align: center;
-}
-
 h2 {
   margin: 0;
   font-size: 20px;
@@ -343,7 +401,7 @@ h2 {
     background-color: #2f2f2f;
   }
 
-  .stage {
+  .stage-frame {
     border-color: #343434;
   }
 
@@ -351,5 +409,18 @@ h2 {
     background: rgba(17, 17, 17, 0.82);
     color: #f6f6f6;
   }
+}
+
+:global(html),
+:global(body) {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+}
+
+:global(#svelte) {
+  width: 100%;
+  height: 100%;
 }
 </style>
