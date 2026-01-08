@@ -234,8 +234,48 @@
 </main>
 
 <style>
+@font-face {
+  font-family: "Gabarito";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/ProjectContent/Fonts/Gabarito-Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Gabarito";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/ProjectContent/Fonts/Gabarito-Bold.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Noto Sans TC";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/ProjectContent/Fonts/NotoSansTC-Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Noto Sans TC";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/ProjectContent/Fonts/NotoSansTC-Bold.ttf") format("truetype");
+}
+
+:global(body),
+:global(button),
+:global(input),
+:global(textarea),
+:global(select) {
+  font-family: "Gabarito", "Noto Sans TC", sans-serif;
+}
+
 :root {
-  font-family: Inter, Avenir, Helvetica, Arial, sans-serif;
+  font-family: "Gabarito", "Noto Sans TC", sans-serif;
   font-size: 16px;
   line-height: 24px;
   font-weight: 400;
@@ -279,12 +319,15 @@
   border: 2px solid #1f1f1f;
   box-sizing: border-box;
   overflow: hidden;
+  z-index: 2;
 }
 
 .stage-frame :global(canvas) {
   width: 100%;
   height: 100%;
   display: block;
+  position: relative;
+  z-index: 2;
 }
 
 .stage-ui {
@@ -295,6 +338,47 @@
   height: 1080px;
   transform-origin: top left;
   pointer-events: none;
+  z-index: 3;
+}
+
+:global(.pressStart) {
+  position: absolute;
+  left: 50%;
+  bottom: 18%;
+  transform: translateX(-50%);
+  background: #0007cd;
+  color: #ffffff;
+  width: 80%;
+  text-align: center;
+  font-weight: 700;
+  line-height: 0.9;
+  font-size: 1.6rem;
+  padding: 12px 0;
+  border-radius: 0;
+  letter-spacing: 2px;
+  transition: opacity 0.35s ease;
+  z-index: 4;
+}
+
+:global(.pressStartHidden) {
+  opacity: 0;
+  pointer-events: none;
+}
+
+:global(.slowFlicker) {
+  animation: slowFlicker 2.5s ease-in-out infinite;
+}
+
+@keyframes slowFlicker {
+  0% {
+    opacity: 0.7;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0.7;
+  }
 }
 
 .hud {

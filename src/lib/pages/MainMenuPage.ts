@@ -30,13 +30,13 @@ export class MainMenuPage extends Page {
   private readonly transitionSeconds = 0.35;
   private app: Application | null = null;
   private host: HTMLElement | null = null;
-  private screenBgLayer: Container | null = null;
   private screenUiLayer: Container | null = null;
   private pressLayer: Container | null = null;
   private optionsLayer: Container | null = null;
   private videoElement: HTMLVideoElement | null = null;
-  private videoTexture: Texture | null = null;
-  private videoSprite: Sprite | null = null;
+  private videoOverlay: HTMLDivElement | null = null;
+  private backgroundHost: HTMLElement | null = null;
+  private pressStartElement: HTMLDivElement | null = null;
   private tickerHandler: (() => void) | null = null;
   private keyHandler: ((event: KeyboardEvent) => void) | null = null;
   private pointerHandler: ((event: PointerEvent) => void) | null = null;
@@ -66,7 +66,12 @@ export class MainMenuPage extends Page {
     }
 
     const app = new Application();
-    await app.init({ background: "#0b0b0b", width: GAME_WIDTH, height: GAME_HEIGHT });
+    await app.init({
+      background: "#000000",
+      backgroundAlpha: 0,
+      width: GAME_WIDTH,
+      height: GAME_HEIGHT,
+    });
     this.host.appendChild(app.canvas);
 
     if (!this.isActive) {
@@ -75,19 +80,16 @@ export class MainMenuPage extends Page {
       return;
     }
 
-    const screenBgLayer = new Container();
     const screenUiLayer = new Container();
     const pressLayer = new Container();
     const optionsLayer = new Container();
     optionsLayer.alpha = 0;
     optionsLayer.visible = false;
     optionsLayer.interactiveChildren = false;
-    app.stage.addChild(screenBgLayer);
     app.stage.addChild(screenUiLayer);
     screenUiLayer.addChild(pressLayer);
     screenUiLayer.addChild(optionsLayer);
 
-    this.screenBgLayer = screenBgLayer;
     this.screenUiLayer = screenUiLayer;
     this.pressLayer = pressLayer;
     this.optionsLayer = optionsLayer;
@@ -97,15 +99,8 @@ export class MainMenuPage extends Page {
     app.stage.eventMode = "static";
     app.stage.hitArea = app.screen;
 
-    const { videoElement, videoSprite, videoTexture } = this.createVideoBackground();
-    screenBgLayer.addChild(videoSprite);
-    const overlay = new Graphics();
-    overlay.rect(0, 0, GAME_WIDTH, GAME_HEIGHT).fill({ color: 0x000000, alpha: this.overlayAlpha });
-    screenBgLayer.addChild(overlay);
-
-    this.videoElement = videoElement;
-    this.videoTexture = videoTexture;
-    this.videoSprite = videoSprite;
+    this.backgroundHost = this.host;
+    this.createVideoBackgroundDom();
 
     const logoTexture = await Assets.load<Texture>(this.logoPath);
     if (!this.isActive) {
@@ -119,36 +114,13 @@ export class MainMenuPage extends Page {
     logo.position.set(GAME_WIDTH * 0.5, GAME_HEIGHT * 0.28);
     this.scaleLogo(logo);
     pressLayer.addChild(logo);
-
-    const pressBarWidth = GAME_WIDTH * 0.7;
-    const pressBarHeight = GAME_HEIGHT * 0.08;
-    const pressBar = new Graphics();
-    pressBar
-      .roundRect(0, 0, pressBarWidth, pressBarHeight, pressBarHeight * 0.5)
-      .fill(0x2f64d2);
-    pressBar.position.set((GAME_WIDTH - pressBarWidth) * 0.5, GAME_HEIGHT * 0.68);
-    pressLayer.addChild(pressBar);
-
-    const pressText = new Text({
-      text: "PRESS ANYTHING TO START",
-      style: new TextStyle({
-        fill: 0xffffff,
-        fontSize: pressBarHeight * 0.42,
-        fontWeight: "700",
-        letterSpacing: 3,
-      }),
-    });
-    pressText.anchor.set(0.5);
-    pressText.position.set(
-      GAME_WIDTH * 0.5,
-      pressBar.position.y + pressBarHeight * 0.5,
-    );
-    pressLayer.addChild(pressText);
+    this.createPressStart();
 
     const buttonStyle = new TextStyle({
       fill: 0xffffff,
       fontSize: 48,
       fontWeight: "700",
+      fontFamily: "Gabarito, Noto Sans TC, sans-serif",
       letterSpacing: 2,
     });
     const buttonWidth = 520;
@@ -224,16 +196,20 @@ export class MainMenuPage extends Page {
       this.videoElement.pause();
       this.videoElement.removeAttribute("src");
       this.videoElement.load();
+      this.videoElement.remove();
       this.videoElement = null;
     }
+    if (this.videoOverlay) {
+      this.videoOverlay.remove();
+      this.videoOverlay = null;
+    }
+    if (this.pressStartElement) {
+      this.pressStartElement.remove();
+      this.pressStartElement = null;
+    }
+    this.backgroundHost = null;
 
-    this.videoSprite?.destroy();
-    this.videoSprite = null;
-    this.videoTexture?.destroy(true);
-    this.videoTexture = null;
-    this.screenBgLayer?.destroy({ children: true });
     this.screenUiLayer?.destroy({ children: true });
-    this.screenBgLayer = null;
     this.screenUiLayer = null;
     this.pressLayer = null;
     this.optionsLayer = null;
@@ -252,49 +228,85 @@ export class MainMenuPage extends Page {
     if (this.enteringState !== "press") {
       return;
     }
+    if (this.videoElement?.paused) {
+      void this.videoElement.play().catch(() => {
+        // Ignore if still blocked.
+      });
+    }
     this.enteringState = "options";
     this.transitionElapsed = 0;
     if (this.optionsLayer) {
       this.optionsLayer.visible = true;
     }
+    if (this.pressStartElement) {
+      const element = this.pressStartElement;
+      element.classList.add("pressStartHidden");
+      window.setTimeout(() => {
+        if (element.isConnected) {
+          element.remove();
+        }
+      }, Math.round(this.transitionSeconds * 1000) + 50);
+    }
   }
 
-  private createVideoBackground() {
+  private createVideoBackgroundDom() {
+    if (!this.backgroundHost) {
+      return;
+    }
+
     const video = document.createElement("video");
-    video.src = this.videoPath;
+    const resolvedUrl = new URL(this.videoPath, window.location.href).toString();
+    video.src = resolvedUrl;
     video.loop = true;
     video.muted = true;
     video.playsInline = true;
+    video.setAttribute("playsinline", "true");
     video.preload = "auto";
+    video.style.position = "absolute";
+    video.style.inset = "0";
+    video.style.width = "100%";
+    video.style.height = "100%";
+    video.style.objectFit = "cover";
+    video.style.zIndex = "0";
+    this.backgroundHost.appendChild(video);
 
-    const texture = Texture.from(video);
-    const sprite = new Sprite(texture);
-    sprite.anchor.set(0.5);
+    const overlay = document.createElement("div");
+    overlay.style.position = "absolute";
+    overlay.style.inset = "0";
+    overlay.style.background = `rgba(0, 0, 0, ${this.overlayAlpha})`;
+    overlay.style.zIndex = "1";
+    this.backgroundHost.appendChild(overlay);
 
-    const updateCover = () => {
-      if (!video.videoWidth || !video.videoHeight) {
+    video.load();
+    let started = false;
+    const tryStart = () => {
+      if (started || video.paused === false) {
         return;
       }
-      const scale = Math.max(
-        GAME_WIDTH / video.videoWidth,
-        GAME_HEIGHT / video.videoHeight,
-      );
-      sprite.width = video.videoWidth * scale;
-      sprite.height = video.videoHeight * scale;
-      sprite.position.set(GAME_WIDTH * 0.5, GAME_HEIGHT * 0.5);
+      started = true;
+      void video.play().catch(() => {
+        started = false;
+      });
     };
-
-    if (video.readyState >= 1) {
-      updateCover();
+    if (video.readyState >= 2) {
+      tryStart();
     } else {
-      video.addEventListener("loadedmetadata", updateCover, { once: true });
+      video.addEventListener("canplay", tryStart, { once: true });
     }
 
-    void video.play().catch(() => {
-      // Autoplay may be blocked until user interaction.
-    });
+    this.videoElement = video;
+    this.videoOverlay = overlay;
+  }
 
-    return { videoElement: video, videoTexture: texture, videoSprite: sprite };
+  private createPressStart() {
+    if (!this.backgroundHost) {
+      return;
+    }
+    const pressStart = document.createElement("div");
+    pressStart.className = "pressStart slowFlicker";
+    pressStart.textContent = "PRESS TO START";
+    this.backgroundHost.appendChild(pressStart);
+    this.pressStartElement = pressStart;
   }
 
   private scaleLogo(logo: Sprite) {

@@ -4,6 +4,7 @@
   "description": "",
   "type": "module",
   "scripts": {
+    "predev": "node scripts/copyProjectContent.mjs",
     "dev": "vite dev",
     "build": "node scripts/copyProjectContent.mjs && vite build",
     "preview": "vite preview",
@@ -11,6 +12,7 @@
     "check:watch": "svelte-kit sync && svelte-check --tsconfig ./tsconfig.json --watch",
     "convention:check": "tsx scripts/conventionCheck.ts --mode=check",
     "convention:report": "tsx scripts/conventionCheck.ts --mode=report",
+    "pretauri": "node scripts/copyProjectContent.mjs",
     "tauri": "tauri"
   },
   "license": "MIT",
