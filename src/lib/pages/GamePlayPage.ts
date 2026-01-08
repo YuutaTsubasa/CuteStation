@@ -1,6 +1,8 @@
 import { Application, Container } from "pixi.js";
 import { loadLevel, type LevelPoint } from "../game/levels/LevelLoader";
 import { LevelRuntime } from "../game/levels/LevelRuntime";
+import { LevelVisuals } from "../game/visuals/LevelVisuals";
+import { normalizeVisualsConfig, type VisualsConfig } from "../game/visuals/VisualsConfig";
 import { Player } from "../game/entities/Player";
 import { type Rect } from "../game/systems/Physics";
 import { Page } from "./Page";
@@ -9,11 +11,15 @@ export class GamePlayPage extends Page {
   private readonly worldScale = 2;
   private readonly baseFloorY = 440;
   private readonly worldPadding = { top: 320, right: 0, bottom: 0, left: 0 };
+  private readonly visualsBasePath = "/ProjectContent/Levels/whitePalace/visuals";
+  private readonly visualsConfigPath = "/ProjectContent/Levels/whitePalace/visuals/visuals.json";
   private app: Application | null = null;
   private host: HTMLElement | null = null;
   private player: Player | null = null;
+  private background: Container | null = null;
   private world: Container | null = null;
   private runtime: LevelRuntime | null = null;
+  private visuals: LevelVisuals | null = null;
   private platforms: Rect[] = [];
   private worldBounds: { minX: number; minY: number; maxX: number; maxY: number } | null =
     null;
@@ -24,6 +30,7 @@ export class GamePlayPage extends Page {
   private onRequestExit: (() => void) | null = null;
   private onCoinChange: ((count: number, total: number) => void) | null = null;
   private onLevelClear: (() => void) | null = null;
+  private onReady: (() => void) | null = null;
   private inputState = {
     move: 0,
     jump: false,
@@ -53,6 +60,10 @@ export class GamePlayPage extends Page {
     this.onLevelClear = handler;
   }
 
+  setOnReady(handler: (() => void) | null) {
+    this.onReady = handler;
+  }
+
   override async onEnter() {
     super.onEnter();
 
@@ -78,34 +89,52 @@ export class GamePlayPage extends Page {
     }
 
     const world = new Container();
+    const background = new Container();
+    app.stage.addChild(background);
     app.stage.addChild(world);
 
     const runtime = new LevelRuntime(level, {
       worldScale: this.worldScale,
       baseFloorY: this.baseFloorY,
       worldPadding: this.worldPadding,
-      showSolids: true,
+      showSolids: false,
       showCoins: true,
       showGoal: true,
       showSpawn: false,
     });
     runtime.attach(world);
 
+    const visualsConfig = await this.loadVisualsConfig();
+    const visuals = new LevelVisuals(level, runtime, {
+      worldScale: this.worldScale,
+      visualsBasePath: this.visualsBasePath,
+      config: visualsConfig,
+    });
+    await visuals.load(app);
+    visuals.attach(background, world);
+
     const spawnOffsetY = runtime.worldOffsetY / this.worldScale;
     const player = new Player(level.spawn.x, level.spawn.y - spawnOffsetY, this.worldScale);
     player.mount(world);
-    void player.loadAssets();
+    await player.loadAssets();
+    if (token !== this.enterToken) {
+      app.destroy(true);
+      return;
+    }
 
     this.app = app;
     this.player = player;
+    this.background = background;
     this.world = world;
     this.runtime = runtime;
+    this.visuals = visuals;
     this.platforms = runtime.getSolidsWorld();
     this.worldBounds = runtime.getWorldBounds();
     this.coins = level.coins;
     this.collectedCoins.clear();
     this.levelCleared = false;
     this.onCoinChange?.(0, this.coins.length);
+    this.onReady?.();
 
     this.keyDownHandler = (event) => {
       if (event.repeat) {
@@ -170,6 +199,8 @@ export class GamePlayPage extends Page {
 
         this.world.x += (clamped.x - this.world.x) * 0.08;
         this.world.y += (clamped.y - this.world.y) * 0.08;
+
+        this.visuals?.update(this.world.x, this.world.y, this.app);
       }
     };
 
@@ -203,6 +234,17 @@ export class GamePlayPage extends Page {
     if (this.runtime) {
       this.runtime.destroy();
       this.runtime = null;
+    }
+
+    if (this.visuals) {
+      this.visuals.destroy();
+      this.visuals = null;
+    }
+
+    if (this.background) {
+      this.background.removeFromParent();
+      this.background.destroy({ children: false });
+      this.background = null;
     }
 
     if (this.world) {
@@ -308,5 +350,14 @@ export class GamePlayPage extends Page {
     const dx = circle.x - closestX;
     const dy = circle.y - closestY;
     return dx * dx + dy * dy <= circle.r * circle.r;
+  }
+
+  private async loadVisualsConfig(): Promise<VisualsConfig> {
+    const response = await fetch(this.visualsConfigPath);
+    if (!response.ok) {
+      throw new Error(`Failed to load visuals config: ${this.visualsConfigPath}`);
+    }
+    const config = (await response.json()) as VisualsConfig;
+    return normalizeVisualsConfig(config);
   }
 }

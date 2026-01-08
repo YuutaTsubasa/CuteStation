@@ -18,6 +18,7 @@
   let editor: LevelEditorPage | null = null;
   let gridEnabled = $state(true);
   let snapEnabled = $state(true);
+  let gameLoading = $state(false);
 
   function updateStatus() {
     currentPageId = pageManager?.current?.id ?? "None";
@@ -28,6 +29,7 @@
     coinCount = 0;
     coinTotal = 0;
     levelClear = false;
+    gameLoading = true;
     if (levelClearTimeout) {
       window.clearTimeout(levelClearTimeout);
       levelClearTimeout = null;
@@ -80,6 +82,9 @@
         goTo("MainMenu");
       }, 1400);
     });
+    gameplay.setOnReady(() => {
+      gameLoading = false;
+    });
 
     levelEditor.setHost(pixiRoot);
     levelEditor.setOnRequestExit(() => goTo("MainMenu"));
@@ -113,6 +118,11 @@
   <div class="stage" bind:this={pixiRoot}>
     {#if currentPageId === "GamePlay"}
       <div class="hud">Coins {coinCount}/{coinTotal}</div>
+      {#if gameLoading}
+        <div class="stage-overlay">
+          <div class="panel">Loading...</div>
+        </div>
+      {/if}
       {#if levelClear}
         <div class="stage-overlay">
           <div class="panel">Level Clear</div>
@@ -169,7 +179,6 @@
       <div class="stage-overlay">
         <div class="panel">
           <h2>{currentPageId}</h2>
-          <p>Placeholder UI for Phase 1.</p>
           {#if currentPageId === "MainMenu"}
             {#each menuEntries as entry}
               <button class="action" type="button" on:click={() => goTo(entry.id)}

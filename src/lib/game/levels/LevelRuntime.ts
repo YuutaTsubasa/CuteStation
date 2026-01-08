@@ -268,8 +268,8 @@ export class LevelRuntime {
       return;
     }
 
+    this.solidsWorld = this.level.solids.map((solid) => this.toWorldRect(solid));
     if (this.showSolids) {
-      this.solidsWorld = this.level.solids.map((solid) => this.toWorldRect(solid));
       this.solidGraphics = this.solidsWorld.map((solid) => this.drawSolid(solid));
     }
 

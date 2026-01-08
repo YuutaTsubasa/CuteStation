@@ -1,0 +1,12 @@
+{
+  "groundHeight": 300,
+  "parallax": {
+    "far": 0.2,
+    "mid": 0.5,
+    "near": 0.8,
+    "midYScale": 2
+  },
+  "layers": {
+    "nearEnabled": false
+  }
+}

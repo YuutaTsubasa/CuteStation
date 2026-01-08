@@ -11,6 +11,7 @@ A 2D platformer action game built with modern cross-platform technologies.
 
 - [Asset Guidelines](docs/ASSETS.md)
 - [Knight Assets](ProjectContent/Characters/knight/README.md)
+- [White Palace Visuals](ProjectContent/Levels/whitePalace/README.md)
 
 ## Tech Stack
 

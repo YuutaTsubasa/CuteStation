@@ -12,11 +12,30 @@ Use a consistent hierarchy so tools and scripts can find assets:
   - Example: `ProjectContent/Characters/knight/`
 - `ProjectContent/Levels/{world}/{levelId}.json`
   - Example: `ProjectContent/Levels/whitePalace/1-1.json`
+- `ProjectContent/Levels/{world}/visuals/`
+  - Example: `ProjectContent/Levels/whitePalace/visuals/`
 
 ## Level Data v0 Notes
 
 - `world.width`/`world.height` define the editable bounds (used by editor grid and camera clamps).
 - `spawn`, `solids`, `coins`, `goal` positions are expressed in level coordinates.
+
+## Level Visuals
+
+Level visuals live under `ProjectContent/Levels/{world}/visuals/`.
+
+### Parallax Backgrounds
+
+- `background/far.png`: furthest layer, non-tiled, subtle parallax (e.g., 0.2).
+- `background/mid.png`: mid layer, tiled, medium parallax (e.g., 0.5).
+- `background/near.png`: near layer, tiled, stronger parallax (optional).
+- Toggle near with `visuals/visuals.json` (`layers.nearEnabled`).
+- Configure parallax factors and `groundHeight` in `visuals/visuals.json`.
+
+### Terrain Tiles
+
+- `terrain/platformTile.png`: tiled to fill solid rectangles.
+- `visuals/visuals.json`: per-level visuals settings (e.g., groundHeight, parallax).
 
 ## Naming Conventions
 
