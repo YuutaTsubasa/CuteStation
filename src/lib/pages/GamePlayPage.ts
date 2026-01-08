@@ -266,7 +266,6 @@ export class GamePlayPage extends Page {
     }
 
     this.virtualInput?.reset();
-    this.virtualInput = null;
 
     if (this.player) {
       this.player.destroy();
