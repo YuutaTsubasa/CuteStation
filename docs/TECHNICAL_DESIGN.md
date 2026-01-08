@@ -21,6 +21,7 @@ src/
 │   │   │   ├── Game.ts     # 主遊戲迴圈
 │   │   │   ├── Scene.ts    # 場景管理
 │   │   │   └── Input.ts    # 輸入管理（鍵盤/觸控/手把）
+│   │   ├── input/          # 輸入來源（虛擬搖桿）
 │   │   ├── entities/       # 遊戲物件
 │   │   │   ├── Player.ts   # 玩家角色
 │   │   │   ├── Enemy.ts    # 敵人基底類別

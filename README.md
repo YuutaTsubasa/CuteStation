@@ -119,6 +119,12 @@ Details live in `docs/conventions.md`.
 - Phase 5: Knight sprites + platform collisions/camera refinements done.
 - Phase 6: JSON level data (solids/coins/goal) wired into gameplay done.
 - Phase 7: Level Editor v0 (grid/snap/pan + export) done.
+- Phase 8: Mobile virtual controls (joystick + jump) overlay done.
+
+## Controls
+
+- Keyboard: Arrow keys / A-D to move, Space to jump, Escape to return to the menu.
+- Touch: Left virtual joystick for horizontal movement, right jump button for jumping.
 
 ## Build
 

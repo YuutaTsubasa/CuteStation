@@ -5,6 +5,8 @@
   import { MainMenuPage } from "$lib/pages/MainMenuPage";
   import { PageManager } from "$lib/pages/PageManager";
   import { SplashScreenPage } from "$lib/pages/SplashScreenPage";
+  import VirtualControls from "$lib/components/VirtualControls.svelte";
+  import { VirtualInput } from "$lib/game/input/VirtualInput";
 
   let status = $state("Initializing...");
   let currentPageId = $state("None");
@@ -19,6 +21,7 @@
   let gridEnabled = $state(true);
   let snapEnabled = $state(true);
   let gameLoading = $state(false);
+  const virtualInput = new VirtualInput();
 
   function updateStatus() {
     currentPageId = pageManager?.current?.id ?? "None";
@@ -85,6 +88,7 @@
     gameplay.setOnReady(() => {
       gameLoading = false;
     });
+    gameplay.setVirtualInput(virtualInput);
 
     levelEditor.setHost(pixiRoot);
     levelEditor.setOnRequestExit(() => goTo("MainMenu"));
@@ -106,6 +110,7 @@
     return () => {
       window.clearTimeout(splashTimeout);
       resetGameplayHud();
+      gameplay.setVirtualInput(null);
       gameplay.onExit();
       levelEditor.onExit();
     };
@@ -118,6 +123,7 @@
   <div class="stage" bind:this={pixiRoot}>
     {#if currentPageId === "GamePlay"}
       <div class="hud">Coins {coinCount}/{coinTotal}</div>
+      <VirtualControls input={virtualInput} />
       {#if gameLoading}
         <div class="stage-overlay">
           <div class="panel">Loading...</div>
