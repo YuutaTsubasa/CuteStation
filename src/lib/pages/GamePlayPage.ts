@@ -13,8 +13,8 @@ import { Page } from "./Page";
 
 export class GamePlayPage extends Page {
   private readonly worldScale = 4;
-  private readonly baseFloorY = 880;
-  private readonly worldPadding = { top: 640, right: 0, bottom: 0, left: 0 };
+  private readonly baseFloorY = 400;
+  private readonly worldPadding = { top: 320, right: 0, bottom: 0, left: 0 };
   private readonly visualsBasePath = "/ProjectContent/Levels/whitePalace/visuals";
   private readonly visualsConfigPath = "/ProjectContent/Levels/whitePalace/visuals/visuals.json";
   private app: Application | null = null;
