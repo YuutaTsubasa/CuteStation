@@ -1,3 +1,5 @@
+import { audioManager } from "../game/audio/AudioManager";
+import { menuBgmPath } from "../game/audio/audioPaths";
 import { Page } from "./Page";
 
 type MenuEntry = {
@@ -17,11 +19,11 @@ export class MainMenuPage extends Page {
 
   override onEnter() {
     super.onEnter();
-    // TODO: add menu layout and interactions in Phase 2.
+    audioManager.stopBgm({ fadeOutMs: 200 });
+    void audioManager.playBgm(menuBgmPath, { loop: true, crossfadeMs: 400 });
   }
 
   override onExit() {
-    // TODO: cleanup menu resources in Phase 2.
     super.onExit();
   }
 }

@@ -4,6 +4,8 @@ import { LevelRuntime } from "../game/levels/LevelRuntime";
 import { LevelVisuals } from "../game/visuals/LevelVisuals";
 import { normalizeVisualsConfig, type VisualsConfig } from "../game/visuals/VisualsConfig";
 import { Player } from "../game/entities/Player";
+import { audioManager } from "../game/audio/AudioManager";
+import { whitePalaceBgmPath } from "../game/audio/audioPaths";
 import { type Rect } from "../game/systems/Physics";
 import { Page } from "./Page";
 
@@ -87,6 +89,11 @@ export class GamePlayPage extends Page {
       app.destroy(true);
       return;
     }
+
+    void audioManager.crossfadeBgm(whitePalaceBgmPath, {
+      durationMs: 500,
+      loop: true,
+    });
 
     const world = new Container();
     const background = new Container();

@@ -1,3 +1,4 @@
+import { audioManager } from "../game/audio/AudioManager";
 import { Page } from "./Page";
 
 export class SplashScreenPage extends Page {
@@ -7,6 +8,7 @@ export class SplashScreenPage extends Page {
 
   override onEnter() {
     super.onEnter();
+    audioManager.stopBgm({ fadeOutMs: 200 });
     // TODO: add splash screen visuals and timing in Phase 2.
   }
 

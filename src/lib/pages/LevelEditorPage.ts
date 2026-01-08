@@ -1,4 +1,5 @@
 import { Application, Container, Graphics, Rectangle } from "pixi.js";
+import { audioManager } from "../game/audio/AudioManager";
 import { loadLevel, type LevelPoint, type LevelRect } from "../game/levels/LevelLoader";
 import { LevelRuntime } from "../game/levels/LevelRuntime";
 import { Page } from "./Page";
@@ -62,6 +63,8 @@ export class LevelEditorPage extends Page {
     if (!this.host || this.app) {
       return;
     }
+
+    audioManager.stopBgm({ fadeOutMs: 300 });
 
     this.enterToken += 1;
     const token = this.enterToken;

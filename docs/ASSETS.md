@@ -37,6 +37,15 @@ Level visuals live under `ProjectContent/Levels/{world}/visuals/`.
 - `terrain/platformTile.png`: tiled to fill solid rectangles.
 - `visuals/visuals.json`: per-level visuals settings (e.g., groundHeight, parallax).
 
+## Audio Conventions
+
+- `ProjectContent/Audio/BGM/`: background music grouped by category (e.g., `Levels/whitePalace/default.mp3`).
+- `ProjectContent/Audio/SFX/`: sound effects grouped by usage (e.g., `UI/`, `Player/`, `Enemies/`).
+
+## Web Build Notes
+
+- Frontend builds copy `ProjectContent/` into `static/ProjectContent/` so assets resolve on Netlify.
+
 ## Naming Conventions
 
 - Prefer lowerCamelCase or PascalCase for files and folders.
