@@ -21,6 +21,7 @@
   let gridEnabled = $state(true);
   let snapEnabled = $state(true);
   let gameLoading = $state(false);
+  let showVirtualControls = $state(true);
   const virtualInput = new VirtualInput();
 
   function updateStatus() {
@@ -33,6 +34,7 @@
     coinTotal = 0;
     levelClear = false;
     gameLoading = true;
+    showVirtualControls = true;
     if (levelClearTimeout) {
       window.clearTimeout(levelClearTimeout);
       levelClearTimeout = null;
@@ -107,8 +109,25 @@
       goTo("MainMenu");
     }, 1200);
 
+    const handleKeydown = () => {
+      if (currentPageId === "GamePlay") {
+        showVirtualControls = false;
+      }
+    };
+
+    const handlePointerDown = () => {
+      if (currentPageId === "GamePlay") {
+        showVirtualControls = true;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeydown);
+    window.addEventListener("pointerdown", handlePointerDown);
+
     return () => {
       window.clearTimeout(splashTimeout);
+      window.removeEventListener("keydown", handleKeydown);
+      window.removeEventListener("pointerdown", handlePointerDown);
       resetGameplayHud();
       gameplay.setVirtualInput(null);
       gameplay.onExit();
@@ -123,7 +142,9 @@
   <div class="stage" bind:this={pixiRoot}>
     {#if currentPageId === "GamePlay"}
       <div class="hud">Coins {coinCount}/{coinTotal}</div>
-      <VirtualControls input={virtualInput} />
+      {#if showVirtualControls}
+        <VirtualControls input={virtualInput} />
+      {/if}
       {#if gameLoading}
         <div class="stage-overlay">
           <div class="panel">Loading...</div>
