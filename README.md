@@ -128,7 +128,7 @@ Details live in `docs/conventions.md`.
 
 ## Rendering
 
-- The game uses a 960x540 design resolution (16:9) and scales to fit the window.
+- The game uses a 1920x1080 design resolution (16:9) and scales to fit the window.
 - Letterbox space is filled with `ProjectContent/UI/gameBackground.png`.
 
 ## Build

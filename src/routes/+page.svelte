@@ -30,8 +30,8 @@
   let uiOffsetX = $state(0);
   let uiOffsetY = $state(0);
   let uiTransform = $state("");
-  const frameWidth = 960;
-  const frameHeight = 540;
+  const frameWidth = 1920;
+  const frameHeight = 1080;
 
   function updateUiLayout() {
     if (!pixiRoot) {
@@ -290,11 +290,11 @@
   position: absolute;
   left: 0;
   top: 0;
-  width: 960px;
-  height: 540px;
+  width: 1920px;
+  height: 1080px;
   transform-origin: top left;
   background: #0b0b0b;
-  border: 1px solid #1f1f1f;
+  border: 2px solid #1f1f1f;
   box-sizing: border-box;
   overflow: hidden;
 }
@@ -309,42 +309,42 @@
   position: absolute;
   left: 0;
   top: 0;
-  width: 960px;
-  height: 540px;
+  width: 1920px;
+  height: 1080px;
   transform-origin: top left;
   pointer-events: none;
 }
 
 .hud {
   position: absolute;
-  top: 12px;
-  left: 12px;
-  padding: 6px 10px;
-  border-radius: 8px;
+  top: 24px;
+  left: 24px;
+  padding: 12px 20px;
+  border-radius: 16px;
   background: rgba(0, 0, 0, 0.55);
   color: #ffffff;
-  font-size: 14px;
+  font-size: 28px;
 }
 
 .editor-toolbar {
   position: absolute;
-  top: 12px;
-  left: 12px;
+  top: 24px;
+  left: 24px;
   display: flex;
-  gap: 8px;
+  gap: 16px;
   flex-wrap: wrap;
   pointer-events: auto;
 }
 
 .editor-hint {
   position: absolute;
-  bottom: 12px;
-  left: 12px;
-  padding: 6px 10px;
-  border-radius: 8px;
+  bottom: 24px;
+  left: 24px;
+  padding: 12px 20px;
+  border-radius: 16px;
   background: rgba(0, 0, 0, 0.55);
   color: #ffffff;
-  font-size: 12px;
+  font-size: 24px;
   pointer-events: auto;
 }
 
@@ -357,23 +357,24 @@
 }
 
 .panel {
-  padding: 16px 20px;
-  border-radius: 12px;
+  padding: 32px 40px;
+  border-radius: 24px;
   background: rgba(255, 255, 255, 0.88);
   color: #111111;
-  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 24px 56px rgba(0, 0, 0, 0.2);
   display: grid;
-  gap: 12px;
+  gap: 24px;
   pointer-events: auto;
 }
 
 .action {
-  padding: 8px 16px;
+  padding: 16px 32px;
   border-radius: 999px;
   border: none;
   background: #1f1f1f;
   color: #ffffff;
   font-weight: 600;
+  font-size: 28px;
   cursor: pointer;
   pointer-events: auto;
 }
@@ -392,7 +393,7 @@
 
 h2 {
   margin: 0;
-  font-size: 20px;
+  font-size: 40px;
 }
 
 @media (prefers-color-scheme: dark) {
