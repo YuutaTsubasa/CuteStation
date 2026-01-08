@@ -5,11 +5,14 @@
   import { MainMenuPage } from "$lib/pages/MainMenuPage";
   import { PageManager } from "$lib/pages/PageManager";
   import { SplashScreenPage } from "$lib/pages/SplashScreenPage";
+  import VirtualControls from "$lib/components/VirtualControls.svelte";
+  import { VirtualInput } from "$lib/game/input/VirtualInput";
 
   let status = $state("Initializing...");
   let currentPageId = $state("None");
   let pixiRoot: HTMLDivElement | null = null;
   let pageManager: PageManager | null = null;
+  let gameplay: GamePlayPage | null = null;
   let coinCount = $state(0);
   let coinTotal = $state(0);
   let levelClear = $state(false);
@@ -19,6 +22,8 @@
   let gridEnabled = $state(true);
   let snapEnabled = $state(true);
   let gameLoading = $state(false);
+  let showVirtualControls = $state(false);
+  const virtualInput = new VirtualInput();
 
   function updateStatus() {
     currentPageId = pageManager?.current?.id ?? "None";
@@ -39,6 +44,7 @@
   function goTo(id: string) {
     if (id === "GamePlay") {
       resetGameplayHud();
+      gameplay?.setVirtualInput(virtualInput);
     }
     if (id === "LevelEditor") {
       gridEnabled = true;
@@ -64,27 +70,29 @@
     const manager = new PageManager();
     const splash = new SplashScreenPage();
     const menu = new MainMenuPage();
-    const gameplay = new GamePlayPage();
+    const gameplayPage = new GamePlayPage();
     const levelEditor = new LevelEditorPage();
 
     menuEntries = menu.entries;
 
-    gameplay.setHost(pixiRoot);
-    gameplay.setOnRequestExit(() => goTo("MainMenu"));
-    gameplay.setOnCoinChange((count, total) => {
+    gameplay = gameplayPage;
+    gameplayPage.setHost(pixiRoot);
+    gameplayPage.setOnRequestExit(() => goTo("MainMenu"));
+    gameplayPage.setOnCoinChange((count, total) => {
       coinCount = count;
       coinTotal = total;
     });
-    gameplay.setOnLevelClear(() => {
+    gameplayPage.setOnLevelClear(() => {
       levelClear = true;
       status = "Level Clear";
       levelClearTimeout = window.setTimeout(() => {
         goTo("MainMenu");
       }, 1400);
     });
-    gameplay.setOnReady(() => {
+    gameplayPage.setOnReady(() => {
       gameLoading = false;
     });
+    gameplayPage.setVirtualInput(virtualInput);
 
     levelEditor.setHost(pixiRoot);
     levelEditor.setOnRequestExit(() => goTo("MainMenu"));
@@ -92,7 +100,7 @@
 
     manager.register(splash);
     manager.register(menu);
-    manager.register(gameplay);
+    manager.register(gameplayPage);
     manager.register(levelEditor);
 
     pageManager = manager;
@@ -103,12 +111,33 @@
       goTo("MainMenu");
     }, 1200);
 
+    const handlePointerDown = (event: PointerEvent) => {
+      if (event.pointerType === "touch") {
+        showVirtualControls = true;
+      }
+    };
+
+    const handleKeyDown = () => {
+      showVirtualControls = false;
+    };
+
+    window.addEventListener("pointerdown", handlePointerDown);
+    window.addEventListener("keydown", handleKeyDown);
+
     return () => {
       window.clearTimeout(splashTimeout);
       resetGameplayHud();
-      gameplay.onExit();
+      gameplayPage.onExit();
       levelEditor.onExit();
+      window.removeEventListener("pointerdown", handlePointerDown);
+      window.removeEventListener("keydown", handleKeyDown);
     };
+  });
+
+  $effect(() => {
+    if (currentPageId !== "GamePlay") {
+      showVirtualControls = false;
+    }
   });
 </script>
 
@@ -118,6 +147,9 @@
   <div class="stage" bind:this={pixiRoot}>
     {#if currentPageId === "GamePlay"}
       <div class="hud">Coins {coinCount}/{coinTotal}</div>
+      {#if showVirtualControls}
+        <VirtualControls input={virtualInput} />
+      {/if}
       {#if gameLoading}
         <div class="stage-overlay">
           <div class="panel">Loading...</div>

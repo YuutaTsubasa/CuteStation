@@ -7,6 +7,7 @@ import { Player } from "../game/entities/Player";
 import { audioManager } from "../game/audio/AudioManager";
 import { whitePalaceBgmPath } from "../game/audio/audioPaths";
 import { type Rect } from "../game/systems/Physics";
+import { type VirtualInputState, VirtualInput } from "../game/input/VirtualInput";
 import { Page } from "./Page";
 
 export class GamePlayPage extends Page {
@@ -37,7 +38,12 @@ export class GamePlayPage extends Page {
     move: 0,
     jump: false,
   };
-  private jumpRequested = false;
+  private keyboardInput: VirtualInputState = {
+    moveX: 0,
+    jumpDown: false,
+    jumpHeld: false,
+  };
+  private virtualInput: VirtualInput | null = null;
   private keyDownHandler: ((event: KeyboardEvent) => void) | null = null;
   private keyUpHandler: ((event: KeyboardEvent) => void) | null = null;
   private enterToken = 0;
@@ -64,6 +70,11 @@ export class GamePlayPage extends Page {
 
   setOnReady(handler: (() => void) | null) {
     this.onReady = handler;
+  }
+
+  setVirtualInput(input: VirtualInput | null) {
+    this.virtualInput = input;
+    this.virtualInput?.reset();
   }
 
   override async onEnter() {
@@ -149,15 +160,18 @@ export class GamePlayPage extends Page {
       }
 
       if (event.key === "ArrowLeft" || event.key.toLowerCase() === "a") {
-        this.inputState.move = -1;
+        this.keyboardInput.moveX = -1;
       }
 
       if (event.key === "ArrowRight" || event.key.toLowerCase() === "d") {
-        this.inputState.move = 1;
+        this.keyboardInput.moveX = 1;
       }
 
       if (event.key === " ") {
-        this.jumpRequested = true;
+        if (!this.keyboardInput.jumpHeld) {
+          this.keyboardInput.jumpDown = true;
+        }
+        this.keyboardInput.jumpHeld = true;
       }
 
       if (event.key === "Escape") {
@@ -167,15 +181,19 @@ export class GamePlayPage extends Page {
 
     this.keyUpHandler = (event) => {
       if (event.key === "ArrowLeft" || event.key.toLowerCase() === "a") {
-        if (this.inputState.move < 0) {
-          this.inputState.move = 0;
+        if (this.keyboardInput.moveX < 0) {
+          this.keyboardInput.moveX = 0;
         }
       }
 
       if (event.key === "ArrowRight" || event.key.toLowerCase() === "d") {
-        if (this.inputState.move > 0) {
-          this.inputState.move = 0;
+        if (this.keyboardInput.moveX > 0) {
+          this.keyboardInput.moveX = 0;
         }
+      }
+
+      if (event.key === " ") {
+        this.keyboardInput.jumpHeld = false;
       }
     };
 
@@ -188,8 +206,23 @@ export class GamePlayPage extends Page {
       }
 
       const deltaSeconds = this.app.ticker.deltaMS / 1000;
-      this.inputState.jump = this.jumpRequested;
-      this.jumpRequested = false;
+      const virtualState = this.virtualInput?.consumeFrame() ?? {
+        moveX: 0,
+        jumpDown: false,
+        jumpHeld: false,
+      };
+      const mergedInput: VirtualInputState = {
+        moveX:
+          Math.abs(virtualState.moveX) > Math.abs(this.keyboardInput.moveX)
+            ? virtualState.moveX
+            : this.keyboardInput.moveX,
+        jumpDown: this.keyboardInput.jumpDown || virtualState.jumpDown,
+        jumpHeld: this.keyboardInput.jumpHeld || virtualState.jumpHeld,
+      };
+
+      this.keyboardInput.jumpDown = false;
+      this.inputState.move = mergedInput.moveX;
+      this.inputState.jump = mergedInput.jumpDown;
       this.player.update(deltaSeconds, this.inputState, this.platforms);
 
       this.checkCoins();
@@ -232,6 +265,8 @@ export class GamePlayPage extends Page {
       window.removeEventListener("keyup", this.keyUpHandler);
       this.keyUpHandler = null;
     }
+
+    this.virtualInput?.reset();
 
     if (this.player) {
       this.player.destroy();
