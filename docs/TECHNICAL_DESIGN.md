@@ -68,8 +68,8 @@ SplashScreen → MainMenu → GamePlay
 ### 頁面說明
 | 頁面 | 功能 |
 |------|------|
-| SplashScreenPage | 開場 Logo/動畫，自動或點擊進入主選單 |
-| MainMenuPage | 開始遊戲、角色選擇、設定（未來）、離開 |
+| SplashScreenPage | 開場 Logo/動畫，淡入淡出後自動進入主選單 |
+| MainMenuPage | 影片背景、Press to Start 門檻、開始遊戲/關卡編輯 |
 | GamePlayPage | 實際遊戲畫面，載入關卡並執行遊戲邏輯 |
 
 ### 未來可擴充頁面
@@ -77,6 +77,11 @@ SplashScreen → MainMenu → GamePlay
 - SettingsPage（設定）
 - PausePage（暫停選單）
 - ResultPage（過關結算）
+
+### Splash / MainMenu 視覺與流程
+- SplashScreen：白底 + producer logo，使用固定時間淡入/停留/淡出。
+- MainMenu：DOM 影片背景（cover），加黑色半透明遮罩；初次進入顯示 Press to Start，任意輸入後切換顯示選單。
+- MainMenu UI 皆在 screen-space 層，避免受 16:9 縮放影響。
 
 ## MVP 目標（第一版）
 
