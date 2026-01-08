@@ -14,6 +14,10 @@ Use a consistent hierarchy so tools and scripts can find assets:
   - Example: `ProjectContent/Levels/whitePalace/1-1.json`
 - `ProjectContent/Levels/{world}/visuals/`
   - Example: `ProjectContent/Levels/whitePalace/visuals/`
+- `ProjectContent/UI/`
+  - Example: `ProjectContent/UI/gameBackground.png`
+- `ProjectContent/Fonts/`
+  - Example: `ProjectContent/Fonts/Gabarito-Regular.ttf`
 
 ## Level Data v0 Notes
 
@@ -36,6 +40,20 @@ Level visuals live under `ProjectContent/Levels/{world}/visuals/`.
 
 - `terrain/platformTile.png`: tiled to fill solid rectangles.
 - `visuals/visuals.json`: per-level visuals settings (e.g., groundHeight, parallax).
+
+## UI Assets
+
+- `ProjectContent/UI/gameBackground.png`: letterbox background image.
+- `ProjectContent/UI/producerLogo.png`: splash logo.
+- `ProjectContent/UI/gameLogo.png`: main menu logo.
+- `ProjectContent/UI/mainMenuBackground.mp4`: looping main menu background video.
+
+## Fonts
+
+- `ProjectContent/Fonts/Gabarito-Regular.ttf`
+- `ProjectContent/Fonts/Gabarito-Bold.ttf`
+- `ProjectContent/Fonts/NotoSansTC-Regular.ttf`
+- `ProjectContent/Fonts/NotoSansTC-Bold.ttf`
 
 ## Audio Conventions
 
