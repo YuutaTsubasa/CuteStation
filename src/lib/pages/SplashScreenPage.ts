@@ -5,9 +5,9 @@ import { Page } from "./Page";
 
 export class SplashScreenPage extends Page {
   private readonly logoPath = "/ProjectContent/UI/creatorLogo.png";
-  private readonly fadeInSeconds = 3;
-  private readonly holdSeconds = 5;
-  private readonly fadeOutSeconds = 3;
+  private readonly fadeInSeconds = 1;
+  private readonly holdSeconds = 2.5;
+  private readonly fadeOutSeconds = 1;
   private app: Application | null = null;
   private host: HTMLElement | null = null;
   private root: Container | null = null;
@@ -67,6 +67,11 @@ export class SplashScreenPage extends Page {
     const logo = new Sprite(logoTexture);
     logo.anchor.set(0.5);
     logo.position.set(GAME_WIDTH * 0.5, GAME_HEIGHT * 0.5);
+    const maxLogoWidth = GAME_WIDTH / 3;
+    if (logo.width > 0) {
+      const scale = Math.min(1, maxLogoWidth / logo.width);
+      logo.scale.set(scale);
+    }
     root.addChild(logo);
 
     this.elapsedSeconds = 0;

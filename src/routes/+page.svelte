@@ -18,7 +18,6 @@
   let coinTotal = $state(0);
   let levelClear = $state(false);
   let levelClearTimeout: number | null = null;
-  let menuEntries = $state<{ id: string; label: string }[]>([]);
   let editor: LevelEditorPage | null = null;
   let gridEnabled = $state(true);
   let snapEnabled = $state(true);
@@ -96,11 +95,10 @@
     gameplay = new GamePlayPage();
     const levelEditor = new LevelEditorPage();
 
-    menuEntries = menu.entries;
-
     splash.setHost(pixiFrame);
     splash.setOnComplete(() => goTo("MainMenu"));
     menu.setHost(pixiFrame);
+    menu.setOnNavigate((id) => goTo(id));
     gameplay.setHost(pixiFrame);
     gameplay.setOnRequestExit(() => goTo("MainMenu"));
     gameplay.setOnCoinChange((count, total) => {
@@ -226,18 +224,7 @@
           toggles.
         </div>
       {:else}
-        <div class="stage-overlay">
-          <div class="panel">
-            <h2>{currentPageId}</h2>
-            {#if currentPageId === "MainMenu"}
-              {#each menuEntries as entry}
-                <button class="action" type="button" on:click={() => goTo(entry.id)}
-                  >{entry.label}</button
-                >
-              {/each}
-            {/if}
-          </div>
-        </div>
+        <!-- Main menu UI is rendered by MainMenuPage in Pixi. -->
       {/if}
     </div>
     {#if currentPageId === "GamePlay" && showVirtualControls}
