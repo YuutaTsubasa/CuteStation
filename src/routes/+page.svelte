@@ -99,6 +99,7 @@
     menuEntries = menu.entries;
 
     splash.setHost(pixiFrame);
+    splash.setOnComplete(() => goTo("MainMenu"));
     menu.setHost(pixiFrame);
     gameplay.setHost(pixiFrame);
     gameplay.setOnRequestExit(() => goTo("MainMenu"));
@@ -133,11 +134,6 @@
     const resizeHandler = () => updateUiLayout();
     window.addEventListener("resize", resizeHandler);
 
-    // TODO: replace with SplashScreenPage-driven timing in Phase 4.
-    const splashTimeout = window.setTimeout(() => {
-      goTo("MainMenu");
-    }, 1200);
-
     const handleKeydown = () => {
       if (currentPageId === "GamePlay") {
         showVirtualControls = false;
@@ -154,7 +150,6 @@
     window.addEventListener("pointerdown", handlePointerDown);
 
     return () => {
-      window.clearTimeout(splashTimeout);
       window.removeEventListener("resize", resizeHandler);
       window.removeEventListener("keydown", handleKeydown);
       window.removeEventListener("pointerdown", handlePointerDown);
