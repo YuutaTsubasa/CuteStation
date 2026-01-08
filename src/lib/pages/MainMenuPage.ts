@@ -1,6 +1,16 @@
 import { Page } from "./Page";
 
+type MenuEntry = {
+  id: string;
+  label: string;
+};
+
 export class MainMenuPage extends Page {
+  readonly entries: MenuEntry[] = [
+    { id: "GamePlay", label: "Start Game" },
+    { id: "LevelEditor", label: "Level Editor" },
+  ];
+
   constructor() {
     super("MainMenu");
   }

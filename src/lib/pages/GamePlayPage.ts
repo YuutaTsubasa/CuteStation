@@ -1,4 +1,6 @@
-import { Application, Container, Graphics } from "pixi.js";
+import { Application, Container } from "pixi.js";
+import { loadLevel, type LevelPoint } from "../game/levels/LevelLoader";
+import { LevelRuntime } from "../game/levels/LevelRuntime";
 import { Player } from "../game/entities/Player";
 import { type Rect } from "../game/systems/Physics";
 import { Page } from "./Page";
@@ -11,12 +13,17 @@ export class GamePlayPage extends Page {
   private host: HTMLElement | null = null;
   private player: Player | null = null;
   private world: Container | null = null;
+  private runtime: LevelRuntime | null = null;
   private platforms: Rect[] = [];
-  private platformGraphics: Graphics[] = [];
   private worldBounds: { minX: number; minY: number; maxX: number; maxY: number } | null =
     null;
+  private coins: LevelPoint[] = [];
+  private collectedCoins = new Set<string>();
+  private levelCleared = false;
   private tickerHandler: (() => void) | null = null;
   private onRequestExit: (() => void) | null = null;
+  private onCoinChange: ((count: number, total: number) => void) | null = null;
+  private onLevelClear: (() => void) | null = null;
   private inputState = {
     move: 0,
     jump: false,
@@ -24,6 +31,7 @@ export class GamePlayPage extends Page {
   private jumpRequested = false;
   private keyDownHandler: ((event: KeyboardEvent) => void) | null = null;
   private keyUpHandler: ((event: KeyboardEvent) => void) | null = null;
+  private enterToken = 0;
 
   constructor() {
     super("GamePlay");
@@ -37,6 +45,14 @@ export class GamePlayPage extends Page {
     this.onRequestExit = handler;
   }
 
+  setOnCoinChange(handler: ((count: number, total: number) => void) | null) {
+    this.onCoinChange = handler;
+  }
+
+  setOnLevelClear(handler: (() => void) | null) {
+    this.onLevelClear = handler;
+  }
+
   override async onEnter() {
     super.onEnter();
 
@@ -44,50 +60,52 @@ export class GamePlayPage extends Page {
       return;
     }
 
+    this.enterToken += 1;
+    const token = this.enterToken;
+
     const app = new Application();
     await app.init({ background: "#0b0b0b", resizeTo: this.host });
+    if (token !== this.enterToken) {
+      app.destroy(true);
+      return;
+    }
     this.host.appendChild(app.canvas);
+
+    const level = await loadLevel("/ProjectContent/Levels/whitePalace/1-1.json");
+    if (token !== this.enterToken) {
+      app.destroy(true);
+      return;
+    }
 
     const world = new Container();
     app.stage.addChild(world);
 
-    const basePlatforms: Rect[] = [
-      { x: -200, y: 440, width: 1200, height: 40 },
-      { x: 120, y: 340, width: 180, height: 24 },
-      { x: 380, y: 280, width: 160, height: 24 },
-      { x: 620, y: 220, width: 160, height: 24 },
-    ];
-    const worldOffsetY = this.baseFloorY * (this.worldScale - 1);
-    const platforms = basePlatforms.map((platform) => ({
-      x: platform.x * this.worldScale,
-      y: platform.y * this.worldScale - worldOffsetY,
-      width: platform.width * this.worldScale,
-      height: platform.height * this.worldScale,
-    }));
-    this.worldBounds = this.computeWorldBounds(platforms);
-
-    const platformGraphics = platforms.map((platform) => {
-      const gfx = new Graphics();
-      gfx.rect(0, 0, platform.width, platform.height).fill(0x3c3c3c);
-      gfx.x = platform.x;
-      gfx.y = platform.y;
-      world.addChild(gfx);
-      return gfx;
+    const runtime = new LevelRuntime(level, {
+      worldScale: this.worldScale,
+      baseFloorY: this.baseFloorY,
+      worldPadding: this.worldPadding,
+      showSolids: true,
+      showCoins: true,
+      showGoal: true,
+      showSpawn: false,
     });
+    runtime.attach(world);
 
-    const player = new Player(
-      30,
-      360 - worldOffsetY / this.worldScale,
-      this.worldScale,
-    );
+    const spawnOffsetY = runtime.worldOffsetY / this.worldScale;
+    const player = new Player(level.spawn.x, level.spawn.y - spawnOffsetY, this.worldScale);
     player.mount(world);
     void player.loadAssets();
 
     this.app = app;
     this.player = player;
     this.world = world;
-    this.platforms = platforms;
-    this.platformGraphics = platformGraphics;
+    this.runtime = runtime;
+    this.platforms = runtime.getSolidsWorld();
+    this.worldBounds = runtime.getWorldBounds();
+    this.coins = level.coins;
+    this.collectedCoins.clear();
+    this.levelCleared = false;
+    this.onCoinChange?.(0, this.coins.length);
 
     this.keyDownHandler = (event) => {
       if (event.repeat) {
@@ -138,6 +156,9 @@ export class GamePlayPage extends Page {
       this.jumpRequested = false;
       this.player.update(deltaSeconds, this.inputState, this.platforms);
 
+      this.checkCoins();
+      this.checkGoal();
+
       if (this.world) {
         const viewCenterX = this.app.renderer.width * 0.5;
         const viewCenterY = this.app.renderer.height * 0.5;
@@ -157,6 +178,8 @@ export class GamePlayPage extends Page {
   }
 
   override onExit() {
+    this.enterToken += 1;
+
     if (this.app && this.tickerHandler) {
       this.app.ticker.remove(this.tickerHandler);
       this.tickerHandler = null;
@@ -177,11 +200,9 @@ export class GamePlayPage extends Page {
       this.player = null;
     }
 
-    if (this.platformGraphics.length > 0) {
-      for (const gfx of this.platformGraphics) {
-        gfx.destroy();
-      }
-      this.platformGraphics = [];
+    if (this.runtime) {
+      this.runtime.destroy();
+      this.runtime = null;
     }
 
     if (this.world) {
@@ -190,6 +211,10 @@ export class GamePlayPage extends Page {
       this.world = null;
     }
     this.worldBounds = null;
+    this.platforms = [];
+    this.coins = [];
+    this.collectedCoins.clear();
+    this.levelCleared = false;
 
     if (this.app) {
       const canvas = this.app.canvas;
@@ -203,31 +228,6 @@ export class GamePlayPage extends Page {
 
   override update(_deltaMs: number) {
     // TODO: update gameplay once the loop is wired.
-  }
-
-  private computeWorldBounds(platforms: Rect[]) {
-    if (platforms.length === 0) {
-      return { minX: 0, minY: 0, maxX: 0, maxY: 0 };
-    }
-
-    let minX = platforms[0].x;
-    let minY = platforms[0].y;
-    let maxX = platforms[0].x + platforms[0].width;
-    let maxY = platforms[0].y + platforms[0].height;
-
-    for (const platform of platforms) {
-      minX = Math.min(minX, platform.x);
-      minY = Math.min(minY, platform.y);
-      maxX = Math.max(maxX, platform.x + platform.width);
-      maxY = Math.max(maxY, platform.y + platform.height);
-    }
-
-    return {
-      minX: minX - this.worldPadding.left,
-      minY: minY - this.worldPadding.top,
-      maxX: maxX + this.worldPadding.right,
-      maxY: maxY + this.worldPadding.bottom,
-    };
   }
 
   private clampCamera(targetX: number, targetY: number) {
@@ -246,5 +246,67 @@ export class GamePlayPage extends Page {
       x: Math.min(Math.max(targetX, minX), maxX),
       y: Math.min(Math.max(targetY, minY), maxY),
     };
+  }
+
+  private checkCoins() {
+    if (!this.player || !this.runtime) {
+      return;
+    }
+
+    const rect = this.player.getRect();
+    const radius = 16 * this.worldScale;
+    for (const coin of this.coins) {
+      if (this.collectedCoins.has(coin.id)) {
+        continue;
+      }
+
+      const worldPoint = this.runtime.toWorldPoint(coin);
+      const hit = this.rectCircleOverlap(
+        rect,
+        { x: worldPoint.x, y: worldPoint.y, r: radius },
+      );
+
+      if (hit) {
+        this.collectedCoins.add(coin.id);
+        this.runtime.collectCoin(coin.id);
+        this.onCoinChange?.(this.collectedCoins.size, this.coins.length);
+      }
+    }
+  }
+
+  private checkGoal() {
+    if (!this.player || !this.runtime || this.levelCleared) {
+      return;
+    }
+
+    const goalRect = this.runtime.getGoalWorld();
+    if (!goalRect) {
+      return;
+    }
+
+    if (this.rectsOverlap(this.player.getRect(), goalRect)) {
+      this.levelCleared = true;
+      this.onLevelClear?.();
+    }
+  }
+
+  private rectsOverlap(a: Rect, b: Rect) {
+    return (
+      a.x < b.x + b.width &&
+      a.x + a.width > b.x &&
+      a.y < b.y + b.height &&
+      a.y + a.height > b.y
+    );
+  }
+
+  private rectCircleOverlap(
+    rect: Rect,
+    circle: { x: number; y: number; r: number },
+  ) {
+    const closestX = Math.max(rect.x, Math.min(circle.x, rect.x + rect.width));
+    const closestY = Math.max(rect.y, Math.min(circle.y, rect.y + rect.height));
+    const dx = circle.x - closestX;
+    const dy = circle.y - closestY;
+    return dx * dx + dy * dy <= circle.r * circle.r;
   }
 }

@@ -10,6 +10,13 @@ Use a consistent hierarchy so tools and scripts can find assets:
 
 - `ProjectContent/Characters/{characterId}/`
   - Example: `ProjectContent/Characters/knight/`
+- `ProjectContent/Levels/{world}/{levelId}.json`
+  - Example: `ProjectContent/Levels/whitePalace/1-1.json`
+
+## Level Data v0 Notes
+
+- `world.width`/`world.height` define the editable bounds (used by editor grid and camera clamps).
+- `spawn`, `solids`, `coins`, `goal` positions are expressed in level coordinates.
 
 ## Naming Conventions
 

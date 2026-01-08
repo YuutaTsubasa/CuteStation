@@ -116,6 +116,8 @@ Details live in `docs/conventions.md`.
 - Phase 3: Player placeholder (keyboard move/jump) + escape back to menu done.
 - Phase 4: Basic platform collisions + horizontal camera follow done.
 - Phase 5: Knight sprites + platform collisions/camera refinements done.
+- Phase 6: JSON level data (solids/coins/goal) wired into gameplay done.
+- Phase 7: Level Editor v0 (grid/snap/pan + export) done.
 
 ## Build
 
