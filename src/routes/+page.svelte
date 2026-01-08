@@ -101,6 +101,7 @@
     menu.setOnNavigate((id) => goTo(id));
     gameplay.setHost(pixiFrame);
     gameplay.setOnRequestExit(() => goTo("MainMenu"));
+    gameplay.setOnRequestPlaytestExit(() => goTo("LevelEditor"));
     gameplay.setOnCoinChange((count, total) => {
       coinCount = count;
       coinTotal = total;
@@ -119,6 +120,7 @@
 
     levelEditor.setHost(pixiFrame);
     levelEditor.setOnRequestExit(() => goTo("MainMenu"));
+    levelEditor.setOnRequestPlaytest(() => goTo("GamePlay"));
     editor = levelEditor;
 
     manager.register(splash);
@@ -211,6 +213,9 @@
           >
           <button class="action" type="button" on:click={() => editor?.resizeWorld(0, -200)}
             >Height -</button
+          >
+          <button class="action" type="button" on:click={() => editor?.playTest()}
+            >Play Test</button
           >
           <button class="action" type="button" on:click={exportLevel}
             >Export Level</button

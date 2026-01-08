@@ -1,6 +1,8 @@
 import { Application, Container, Graphics, Rectangle } from "pixi.js";
 import { audioManager } from "../game/audio/AudioManager";
 import { loadLevel, type LevelPoint, type LevelRect } from "../game/levels/LevelLoader";
+import { EditorSession } from "../game/levels/EditorSession";
+import { LevelSession } from "../game/levels/LevelSession";
 import { LevelRuntime } from "../game/levels/LevelRuntime";
 import { GAME_HEIGHT, GAME_WIDTH } from "../game/view/ResolutionManager";
 import { Page } from "./Page";
@@ -41,6 +43,7 @@ export class LevelEditorPage extends Page {
   private gridVisible = true;
   private snapEnabled = true;
   private onRequestExit: (() => void) | null = null;
+  private onRequestPlaytest: (() => void) | null = null;
   private pointerMoveHandler: ((event: PointerEvent) => void) | null = null;
   private pointerUpHandler: (() => void) | null = null;
   private keyDownHandler: ((event: KeyboardEvent) => void) | null = null;
@@ -58,6 +61,10 @@ export class LevelEditorPage extends Page {
 
   setOnRequestExit(handler: (() => void) | null) {
     this.onRequestExit = handler;
+  }
+
+  setOnRequestPlaytest(handler: (() => void) | null) {
+    this.onRequestPlaytest = handler;
   }
 
   override async onEnter() {
@@ -101,7 +108,9 @@ export class LevelEditorPage extends Page {
     this.gameRoot = gameRoot;
     this.screenUiLayer = screenUiLayer;
 
-    const level = await loadLevel("/ProjectContent/Levels/whitePalace/1-1.json");
+    const sessionLevel = EditorSession.getEditorLevel();
+    const level =
+      sessionLevel ?? (await loadLevel("/ProjectContent/Levels/whitePalace/1-1.json"));
     if (token !== this.enterToken) {
       abort();
       return;
@@ -204,6 +213,10 @@ export class LevelEditorPage extends Page {
 
   override onExit() {
     this.enterToken += 1;
+
+    if (this.runtime) {
+      EditorSession.setEditorLevel(this.runtime.getLevelData());
+    }
 
     if (this.pointerMoveHandler) {
       window.removeEventListener("pointermove", this.pointerMoveHandler);
@@ -316,6 +329,15 @@ export class LevelEditorPage extends Page {
     } catch {
       console.log(payload);
     }
+  }
+
+  playTest() {
+    if (!this.runtime) {
+      return;
+    }
+
+    LevelSession.setPreviewLevel(this.runtime.getLevelData());
+    this.onRequestPlaytest?.();
   }
 
   resizeWorld(deltaWidth: number, deltaHeight: number) {

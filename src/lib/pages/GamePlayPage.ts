@@ -9,6 +9,7 @@ import { whitePalaceBgmPath } from "../game/audio/audioPaths";
 import { type Rect } from "../game/systems/Physics";
 import { type VirtualInputState, VirtualInput } from "../game/input/VirtualInput";
 import { GAME_HEIGHT, GAME_WIDTH } from "../game/view/ResolutionManager";
+import { LevelSession } from "../game/levels/LevelSession";
 import { Page } from "./Page";
 
 export class GamePlayPage extends Page {
@@ -36,6 +37,8 @@ export class GamePlayPage extends Page {
   private onCoinChange: ((count: number, total: number) => void) | null = null;
   private onLevelClear: (() => void) | null = null;
   private onReady: (() => void) | null = null;
+  private onRequestPlaytestExit: (() => void) | null = null;
+  private isPlaytest = false;
   private inputState = {
     move: 0,
     jump: false,
@@ -70,6 +73,10 @@ export class GamePlayPage extends Page {
     this.onLevelClear = handler;
   }
 
+  setOnRequestPlaytestExit(handler: (() => void) | null) {
+    this.onRequestPlaytestExit = handler;
+  }
+
   setOnReady(handler: (() => void) | null) {
     this.onReady = handler;
   }
@@ -84,6 +91,8 @@ export class GamePlayPage extends Page {
     if (!this.host || this.app) {
       return;
     }
+    this.keyboardInput = { moveX: 0, jumpDown: false, jumpHeld: false };
+    this.inputState = { move: 0, jump: false };
 
     this.enterToken += 1;
     const token = this.enterToken;
@@ -114,7 +123,9 @@ export class GamePlayPage extends Page {
 
     this.gameRoot = gameRoot;
 
-    const level = await loadLevel("/ProjectContent/Levels/whitePalace/1-1.json");
+    const previewLevel = LevelSession.getPreviewLevel();
+    this.isPlaytest = Boolean(previewLevel);
+    const level = previewLevel ?? (await loadLevel("/ProjectContent/Levels/whitePalace/1-1.json"));
     if (token !== this.enterToken) {
       abort();
       return;
@@ -197,7 +208,11 @@ export class GamePlayPage extends Page {
       }
 
       if (event.key === "Escape") {
-        this.onRequestExit?.();
+        if (this.isPlaytest) {
+          this.exitPlaytest();
+        } else {
+          this.onRequestExit?.();
+        }
       }
     };
 
@@ -338,6 +353,14 @@ export class GamePlayPage extends Page {
       canvas.remove();
     }
 
+    this.keyboardInput = { moveX: 0, jumpDown: false, jumpHeld: false };
+    this.inputState = { move: 0, jump: false };
+
+    if (this.isPlaytest) {
+      LevelSession.clearPreviewLevel();
+      this.isPlaytest = false;
+    }
+
     super.onExit();
   }
 
@@ -415,8 +438,17 @@ export class GamePlayPage extends Page {
 
     if (this.rectsOverlap(this.player.getRect(), goalRect)) {
       this.levelCleared = true;
+      if (this.isPlaytest) {
+        this.exitPlaytest();
+        return;
+      }
       this.onLevelClear?.();
     }
+  }
+
+  private exitPlaytest() {
+    LevelSession.clearPreviewLevel();
+    this.onRequestPlaytestExit?.();
   }
 
   private rectsOverlap(a: Rect, b: Rect) {
