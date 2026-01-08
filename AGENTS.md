@@ -6,6 +6,7 @@
 - `static/`: Static assets served by the frontend.
 - `docs/`: Game and technical design docs (`docs/GAME_DESIGN.md`, `docs/TECHNICAL_DESIGN.md`).
 - `src/lib/game/view/ResolutionManager.ts`: 16:9 design resolution (1920x1080) constants for view sizing.
+- `ProjectContent/Fonts/`: UI fonts used by the Svelte overlays and Pixi text.
 
 ## Build, Test, and Development Commands
 - `npm run tauri dev`: Desktop app with hot reload (Tauri + Vite).
@@ -54,3 +55,4 @@
 - SPA mode is enabled; SSR is off. Static build output is served by Tauri.
 - Game rendering targets a 1920x1080 design frame and scales to fit the window; the letterbox area uses `ProjectContent/UI/gameBackground.png`.
 - GamePlay centers the camera at player spawn and hides the world until player assets finish loading.
+- Main menu video background and Press-to-Start prompt are DOM overlays inside the stage frame.

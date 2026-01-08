@@ -133,6 +133,14 @@ Details live in `docs/conventions.md`.
 - Gameplay initializes the camera at the player spawn and reveals the world after player assets load.
 - Splash uses a timed fade sequence, and the main menu uses a looping video background with a Press-to-Start gate.
 
+## Audio
+
+- Background music is managed by `AudioManager` (HTMLAudio) with per-page transitions.
+
+## Asset Pipeline
+
+- `npm run build` copies `ProjectContent/` into `static/ProjectContent/` via `scripts/copyProjectContent.mjs`.
+
 ## Build
 
 ### Windows

@@ -71,6 +71,7 @@ SplashScreen → MainMenu → GamePlay
 | SplashScreenPage | 開場 Logo/動畫，淡入淡出後自動進入主選單 |
 | MainMenuPage | 影片背景、Press to Start 門檻、開始遊戲/關卡編輯 |
 | GamePlayPage | 實際遊戲畫面，載入關卡並執行遊戲邏輯 |
+| LevelEditorPage | 關卡編輯器（網格、吸附、平移、匯出 JSON） |
 
 ### 未來可擴充頁面
 - LevelSelectPage（關卡選擇）
@@ -82,6 +83,20 @@ SplashScreen → MainMenu → GamePlay
 - SplashScreen：白底 + producer logo，使用固定時間淡入/停留/淡出。
 - MainMenu：DOM 影片背景（cover），加黑色半透明遮罩；初次進入顯示 Press to Start，任意輸入後切換顯示選單。
 - MainMenu UI 皆在 screen-space 層，避免受 16:9 縮放影響。
+
+## UI 與輸入
+
+- 16:9 畫面以 `ResolutionManager` 管理，world 在縮放容器內，UI 使用 screen-space 層。
+- 虛擬搖桿為 DOM 覆蓋層，錨定視窗邊緣，避免受遊戲畫面縮放影響。
+
+## 音訊
+
+- `AudioManager` 以 HTMLAudio 管理 BGM，支援跨頁面切換與淡入淡出。
+
+## 關卡資料與視覺
+
+- `LevelRuntime` 讀取 JSON 關卡資料，提供碰撞與目標資訊。
+- `LevelVisuals` 讀取 `visuals/visuals.json`，提供 parallax 與 groundHeight 等設定。
 
 ## MVP 目標（第一版）
 
