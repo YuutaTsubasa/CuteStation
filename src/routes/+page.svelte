@@ -361,6 +361,7 @@
   border-radius: 24px;
   background: rgba(255, 255, 255, 0.88);
   color: #111111;
+  font-size: 28px;
   box-shadow: 0 24px 56px rgba(0, 0, 0, 0.2);
   display: grid;
   gap: 24px;
