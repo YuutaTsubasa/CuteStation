@@ -138,13 +138,15 @@ export class AudioManager {
     onComplete?: () => void,
   ) {
     this.clearFade(audio);
-    const startVolume = audio.volume;
-    const delta = targetVolume - startVolume;
+    const clampedTarget = Math.max(0, Math.min(1, targetVolume));
+    const startVolume = Math.max(0, Math.min(1, audio.volume));
+    const delta = clampedTarget - startVolume;
     const start = performance.now();
 
     const tick = (now: number) => {
       const progress = Math.min((now - start) / durationMs, 1);
-      audio.volume = startVolume + delta * progress;
+      const nextVolume = startVolume + delta * progress;
+      audio.volume = Math.max(0, Math.min(1, nextVolume));
       if (progress >= 1) {
         this.clearFade(audio);
         if (onComplete) {

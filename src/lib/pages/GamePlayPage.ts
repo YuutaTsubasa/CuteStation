@@ -90,11 +90,6 @@ export class GamePlayPage extends Page {
       return;
     }
 
-    void audioManager.crossfadeBgm(whitePalaceBgmPath, {
-      durationMs: 500,
-      loop: true,
-    });
-
     const world = new Container();
     const background = new Container();
     app.stage.addChild(background);
@@ -128,6 +123,11 @@ export class GamePlayPage extends Page {
       app.destroy(true);
       return;
     }
+
+    void audioManager.crossfadeBgm(whitePalaceBgmPath, {
+      durationMs: 500,
+      loop: true,
+    });
 
     this.app = app;
     this.player = player;
