@@ -53,3 +53,4 @@
 - Frontend calls Rust commands via Tauri IPC (`invoke()` in TS, `#[tauri::command]` in Rust).
 - SPA mode is enabled; SSR is off. Static build output is served by Tauri.
 - Game rendering targets a 1920x1080 design frame and scales to fit the window; the letterbox area uses `ProjectContent/UI/gameBackground.png`.
+- GamePlay centers the camera at player spawn and hides the world until player assets finish loading.

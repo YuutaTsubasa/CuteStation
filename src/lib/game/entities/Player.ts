@@ -129,6 +129,27 @@ export class Player {
     this.syncVisual();
   }
 
+  clampToBounds(bounds: { minX: number; minY: number; maxX: number; maxY: number }) {
+    const maxX = bounds.maxX - this.width;
+    const maxY = bounds.maxY - this.height;
+    let clampedX = Math.min(Math.max(this.position.x, bounds.minX), maxX);
+    let clampedY = Math.min(Math.max(this.position.y, bounds.minY), maxY);
+
+    if (clampedX !== this.position.x) {
+      this.position.x = clampedX;
+      this.velocity.x = 0;
+    }
+
+    if (clampedY !== this.position.y) {
+      this.position.y = clampedY;
+      if (this.velocity.y > 0) {
+        this.velocity.y = 0;
+      }
+    }
+
+    this.syncVisual();
+  }
+
   getRect(): Rect {
     return {
       x: this.position.x,

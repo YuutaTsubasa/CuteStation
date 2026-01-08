@@ -110,6 +110,7 @@ export class GamePlayPage extends Page {
 
     const gameRoot = new Container();
     app.stage.addChild(gameRoot);
+    gameRoot.visible = false;
 
     this.gameRoot = gameRoot;
 
@@ -123,6 +124,8 @@ export class GamePlayPage extends Page {
     const background = new Container();
     gameRoot.addChild(background);
     gameRoot.addChild(world);
+    this.background = background;
+    this.world = world;
 
     const runtime = new LevelRuntime(level, {
       worldScale: this.worldScale,
@@ -134,6 +137,9 @@ export class GamePlayPage extends Page {
       showSpawn: false,
     });
     runtime.attach(world);
+    this.runtime = runtime;
+    this.platforms = runtime.getSolidsWorld();
+    this.worldBounds = runtime.getWorldBounds();
 
     const visualsConfig = await this.loadVisualsConfig();
     const visuals = new LevelVisuals(level, runtime, {
@@ -143,10 +149,13 @@ export class GamePlayPage extends Page {
     });
     await visuals.load(GAME_WIDTH, GAME_HEIGHT);
     visuals.attach(background, world);
+    this.visuals = visuals;
 
     const spawnOffsetY = runtime.worldOffsetY / this.worldScale;
     const player = new Player(level.spawn.x, level.spawn.y - spawnOffsetY, this.worldScale);
     player.mount(world);
+    this.player = player;
+    this.centerCameraOnPlayer();
     await player.loadAssets();
     if (token !== this.enterToken) {
       abort();
@@ -159,16 +168,11 @@ export class GamePlayPage extends Page {
     });
 
     this.app = app;
-    this.player = player;
-    this.background = background;
-    this.world = world;
-    this.runtime = runtime;
-    this.visuals = visuals;
-    this.platforms = runtime.getSolidsWorld();
-    this.worldBounds = runtime.getWorldBounds();
     this.coins = level.coins;
     this.collectedCoins.clear();
     this.levelCleared = false;
+    this.centerCameraOnPlayer();
+    this.gameRoot.visible = true;
     this.onCoinChange?.(0, this.coins.length);
     this.onReady?.();
 
@@ -242,6 +246,9 @@ export class GamePlayPage extends Page {
       this.inputState.move = mergedInput.moveX;
       this.inputState.jump = mergedInput.jumpDown;
       this.player.update(deltaSeconds, this.inputState, this.platforms);
+      if (this.worldBounds) {
+        this.player.clampToBounds(this.worldBounds);
+      }
 
       this.checkCoins();
       this.checkGoal();
@@ -352,6 +359,22 @@ export class GamePlayPage extends Page {
       x: Math.min(Math.max(targetX, minX), maxX),
       y: Math.min(Math.max(targetY, minY), maxY),
     };
+  }
+
+  private centerCameraOnPlayer() {
+    if (!this.world || !this.player) {
+      return;
+    }
+    const viewCenterX = GAME_WIDTH * 0.5;
+    const viewCenterY = GAME_HEIGHT * 0.5;
+    const playerCenterX = this.player.position.x + this.player.width * 0.5;
+    const playerCenterY = this.player.position.y + this.player.height * 0.5;
+    const targetX = -playerCenterX + viewCenterX;
+    const targetY = -playerCenterY + viewCenterY;
+    const clamped = this.clampCamera(targetX, targetY);
+    this.world.x = clamped.x;
+    this.world.y = clamped.y;
+    this.visuals?.update(this.world.x, this.world.y, GAME_WIDTH, GAME_HEIGHT);
   }
 
   private checkCoins() {
