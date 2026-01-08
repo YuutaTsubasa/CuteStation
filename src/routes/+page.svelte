@@ -356,7 +356,7 @@
   padding: 12px 0;
   border-radius: 0;
   letter-spacing: 2px;
-  transition: opacity 0.35s ease;
+  transition: opacity 0.2s ease;
   z-index: 4;
 }
 

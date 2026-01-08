@@ -27,7 +27,7 @@ export class MainMenuPage extends Page {
   private readonly logoPath = "/ProjectContent/UI/gameLogo.png";
   private readonly videoPath = "/ProjectContent/UI/mainMenuBackground.mp4";
   private readonly overlayAlpha = 0.45;
-  private readonly transitionSeconds = 0.35;
+  private readonly transitionSeconds = 0.2;
   private app: Application | null = null;
   private host: HTMLElement | null = null;
   private screenUiLayer: Container | null = null;
@@ -240,12 +240,8 @@ export class MainMenuPage extends Page {
     }
     if (this.pressStartElement) {
       const element = this.pressStartElement;
-      element.classList.add("pressStartHidden");
-      window.setTimeout(() => {
-        if (element.isConnected) {
-          element.remove();
-        }
-      }, Math.round(this.transitionSeconds * 1000) + 50);
+      element.remove();
+      this.pressStartElement = null;
     }
   }
 
