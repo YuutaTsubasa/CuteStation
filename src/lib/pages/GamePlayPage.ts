@@ -711,10 +711,13 @@ export class GamePlayPage extends Page {
     const targetCenterY = rect.y + rect.height * 0.5;
     const playerCenterX = this.player.position.x + this.player.width * 0.5;
     const direction = targetCenterX >= playerCenterX ? 1 : -1;
-    const offset = rect.width * 0.5 + this.player.width * 0.6;
+    const lateralOffset = this.player.width * 0.3;
+    const verticalOffset = this.player.height * 0.05;
     this.player.setFacingDirection(direction);
-    this.player.position.x = targetCenterX + direction * offset - this.player.width * 0.5;
-    this.player.position.y = targetCenterY - this.player.height * 0.5;
+    this.player.position.x =
+      targetCenterX - direction * lateralOffset - this.player.width * 0.5;
+    this.player.position.y =
+      targetCenterY + verticalOffset - this.player.height * 0.5;
     this.player.velocity.x = 0;
     this.player.velocity.y = -this.player.getHomingBounceSpeed();
   }
