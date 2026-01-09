@@ -35,5 +35,12 @@ export async function loadLevel(path: string): Promise<LevelData> {
     throw new Error(`Failed to load level: ${response.status} ${path}`);
   }
 
-  return (await response.json()) as LevelData;
+  const data = (await response.json()) as LevelData;
+  if (!data.coins) {
+    data.coins = [];
+  }
+  if (!data.enemies) {
+    data.enemies = [];
+  }
+  return data;
 }

@@ -9,6 +9,12 @@ export class Enemy {
   private readonly maxFallSpeed: number;
   private readonly knockbackDamp = 10;
   private hurtTimer = 0;
+  private idleTimer = 0;
+  private readonly idleDuration = 0.5;
+  private readonly patrolSpeed: number;
+  private readonly patrolMinX: number;
+  private readonly patrolMaxX: number;
+  private patrolDirection = 1;
 
   readonly width: number;
   readonly height: number;
@@ -16,7 +22,7 @@ export class Enemy {
   position = { x: 0, y: 0 };
   velocity = { x: 0, y: 0 };
   health: number;
-  state: "idle" | "hurt" | "dead" = "idle";
+  state: "idle" | "patrol" | "hurt" | "dead" = "idle";
 
   constructor(startX: number, startY: number, scale = 1) {
     this.scale = scale;
@@ -24,9 +30,14 @@ export class Enemy {
     this.height = 64 * this.scale;
     this.gravity = 1000 * this.scale;
     this.maxFallSpeed = 900 * this.scale;
+    this.patrolSpeed = 80 * this.scale;
     this.position.x = startX * this.scale;
     this.position.y = startY * this.scale;
+    const patrolRange = 96 * this.scale;
+    this.patrolMinX = this.position.x - patrolRange;
+    this.patrolMaxX = this.position.x + patrolRange;
     this.health = 3;
+    this.idleTimer = this.idleDuration;
 
     this.body.rect(0, 0, this.width, this.height).fill(0xd14545);
     this.container.addChild(this.body);
@@ -52,15 +63,20 @@ export class Enemy {
       this.hurtTimer = Math.max(0, this.hurtTimer - deltaSeconds);
       if (this.hurtTimer === 0 && this.state === "hurt") {
         this.state = "idle";
+        this.idleTimer = this.idleDuration;
         this.body.tint = 0xffffff;
       }
     }
+
+    this.updateBehavior(deltaSeconds);
 
     this.velocity.y = Math.min(
       this.velocity.y + this.gravity * deltaSeconds,
       this.maxFallSpeed,
     );
-    this.velocity.x += -this.velocity.x * Math.min(deltaSeconds * this.knockbackDamp, 1);
+    if (this.state === "hurt") {
+      this.velocity.x += -this.velocity.x * Math.min(deltaSeconds * this.knockbackDamp, 1);
+    }
 
     const rect = this.getRect();
     const safeDelta = deltaSeconds > 0 ? deltaSeconds : 1 / 60;
@@ -74,6 +90,20 @@ export class Enemy {
     this.position.y = resolved.y;
     this.velocity.x = resolved.vx / safeDelta;
     this.velocity.y = resolved.vy / safeDelta;
+
+    if (this.state === "patrol" && Math.abs(resolved.vx) <= 0.01) {
+      this.setPatrolDirection(this.patrolDirection * -1, true);
+    }
+
+    if (this.state === "patrol") {
+      if (this.position.x <= this.patrolMinX) {
+        this.position.x = this.patrolMinX;
+        this.setPatrolDirection(1, true);
+      } else if (this.position.x >= this.patrolMaxX) {
+        this.position.x = this.patrolMaxX;
+        this.setPatrolDirection(-1, true);
+      }
+    }
 
     this.syncVisual();
   }
@@ -104,6 +134,34 @@ export class Enemy {
 
   isDead() {
     return this.state === "dead";
+  }
+
+  private updateBehavior(deltaSeconds: number) {
+    if (this.state === "dead" || this.state === "hurt") {
+      return;
+    }
+
+    if (this.state === "idle") {
+      this.idleTimer = Math.max(0, this.idleTimer - deltaSeconds);
+      this.velocity.x = 0;
+      if (this.idleTimer === 0) {
+        this.state = "patrol";
+      }
+      return;
+    }
+
+    if (this.state === "patrol") {
+      this.velocity.x = this.patrolSpeed * this.patrolDirection;
+    }
+  }
+
+  private setPatrolDirection(direction: number, pause: boolean) {
+    this.patrolDirection = direction >= 0 ? 1 : -1;
+    if (pause) {
+      this.state = "idle";
+      this.idleTimer = this.idleDuration;
+      this.velocity.x = 0;
+    }
   }
 
   private syncVisual() {

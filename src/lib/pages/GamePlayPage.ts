@@ -1,10 +1,11 @@
 import { Application, Container, Graphics } from "pixi.js";
-import { loadLevel, type LevelPoint } from "../game/levels/LevelLoader";
+import { loadLevel } from "../game/levels/LevelLoader";
 import { LevelRuntime } from "../game/levels/LevelRuntime";
 import { LevelVisuals } from "../game/visuals/LevelVisuals";
 import { normalizeVisualsConfig, type VisualsConfig } from "../game/visuals/VisualsConfig";
 import { Player } from "../game/entities/Player";
 import { Enemy } from "../game/entities/Enemy";
+import { Collectible } from "../game/entities/Collectible";
 import { Combat, type CombatHit } from "../game/systems/Combat";
 import { audioManager } from "../game/audio/AudioManager";
 import { whitePalaceBgmPath } from "../game/audio/audioPaths";
@@ -41,9 +42,9 @@ export class GamePlayPage extends Page {
   private homingReticle: Graphics | null = null;
   private worldBounds: { minX: number; minY: number; maxX: number; maxY: number } | null =
     null;
-  private coins: LevelPoint[] = [];
-  private collectedCoins = new Set<string>();
+  private collectibles: Collectible | null = null;
   private levelCleared = false;
+  private enemyContactTimer = 0;
   private tickerHandler: (() => void) | null = null;
   private onRequestExit: (() => void) | null = null;
   private onCoinChange: ((count: number, total: number) => void) | null = null;
@@ -220,12 +221,14 @@ export class GamePlayPage extends Page {
     });
 
     this.app = app;
-    this.coins = level.coins;
-    this.collectedCoins.clear();
+    this.collectibles = new Collectible(runtime, {
+      worldScale: this.worldScale,
+      onCollect: (count, total) => this.onCoinChange?.(count, total),
+    });
+    this.collectibles.setCoins(level.coins);
     this.levelCleared = false;
     this.centerCameraOnPlayer();
     this.gameRoot.visible = true;
-    this.onCoinChange?.(0, this.coins.length);
     this.onReady?.();
 
     this.keyDownHandler = (event) => {
@@ -346,13 +349,14 @@ export class GamePlayPage extends Page {
         this.player.clampToBounds(this.worldBounds);
       }
 
+      this.resolveEnemyContacts(deltaSeconds);
       if (mergedInput.attackDown && !this.player.grounded && this.homingTarget) {
         this.executeHomingAttack(this.homingTarget);
       }
 
       this.resolveCombat();
-      this.checkCoins();
-      this.checkGoal();
+      this.collectibles?.update(this.player.getRect());
+      this.checkLevelCompletion();
       this.updateHitEffects(deltaSeconds);
 
       if (this.world) {
@@ -442,12 +446,13 @@ export class GamePlayPage extends Page {
     }
     this.worldBounds = null;
     this.platforms = [];
-    this.coins = [];
-    this.collectedCoins.clear();
+    this.collectibles?.destroy();
+    this.collectibles = null;
     this.levelCleared = false;
     this.hitEffects = [];
     this.hitStopTimer = 0;
     this.homingTarget = null;
+    this.enemyContactTimer = 0;
 
     if (this.app) {
       const canvas = this.app.canvas;
@@ -514,43 +519,15 @@ export class GamePlayPage extends Page {
     this.visuals?.update(this.world.x, this.world.y, GAME_WIDTH, GAME_HEIGHT);
   }
 
-  private checkCoins() {
-    if (!this.player || !this.runtime) {
-      return;
-    }
-
-    const rect = this.player.getRect();
-    const radius = 16 * this.worldScale;
-    for (const coin of this.coins) {
-      if (this.collectedCoins.has(coin.id)) {
-        continue;
-      }
-
-      const worldPoint = this.runtime.toWorldPoint(coin);
-      const hit = this.rectCircleOverlap(
-        rect,
-        { x: worldPoint.x, y: worldPoint.y, r: radius },
-      );
-
-      if (hit) {
-        this.collectedCoins.add(coin.id);
-        this.runtime.collectCoin(coin.id);
-        this.onCoinChange?.(this.collectedCoins.size, this.coins.length);
-      }
-    }
-  }
-
-  private checkGoal() {
+  private checkLevelCompletion() {
     if (!this.player || !this.runtime || this.levelCleared) {
       return;
     }
 
     const goalRect = this.runtime.getGoalWorld();
-    if (!goalRect) {
-      return;
-    }
-
-    if (this.rectsOverlap(this.player.getRect(), goalRect)) {
+    const reachedGoal = goalRect ? this.rectsOverlap(this.player.getRect(), goalRect) : false;
+    const collectedAllCoins = this.collectibles?.hasCollectedAll() ?? false;
+    if (reachedGoal || collectedAllCoins) {
       this.levelCleared = true;
       if (this.isPlaytest) {
         this.exitPlaytest();
@@ -595,6 +572,39 @@ export class GamePlayPage extends Page {
     gfx.y = hit.position.y;
     this.effectsLayer.addChild(gfx);
     this.hitEffects.push({ graphic: gfx, ttl: 0.25, duration: 0.25 });
+  }
+
+  private resolveEnemyContacts(deltaSeconds: number) {
+    if (!this.player || this.enemies.length === 0) {
+      return;
+    }
+
+    if (this.enemyContactTimer > 0) {
+      this.enemyContactTimer = Math.max(0, this.enemyContactTimer - deltaSeconds);
+      return;
+    }
+
+    const playerRect = this.player.getRect();
+    for (const enemy of this.enemies) {
+      if (enemy.isDead()) {
+        continue;
+      }
+      const enemyRect = enemy.getRect();
+      if (!this.rectsOverlap(playerRect, enemyRect)) {
+        continue;
+      }
+
+      const playerCenterX = playerRect.x + playerRect.width * 0.5;
+      const enemyCenterX = enemyRect.x + enemyRect.width * 0.5;
+      const direction = playerCenterX < enemyCenterX ? -1 : 1;
+      this.player.position.x =
+        direction < 0 ? enemyRect.x - playerRect.width : enemyRect.x + enemyRect.width;
+      this.player.velocity.x = direction * playerRect.width * 6;
+      this.player.velocity.y = -this.player.getHomingBounceSpeed() * 0.6;
+      this.player.grounded = false;
+      this.enemyContactTimer = 0.35;
+      break;
+    }
   }
 
   private updateHitEffects(deltaSeconds: number) {
@@ -766,17 +776,6 @@ export class GamePlayPage extends Page {
       a.y < b.y + b.height &&
       a.y + a.height > b.y
     );
-  }
-
-  private rectCircleOverlap(
-    rect: Rect,
-    circle: { x: number; y: number; r: number },
-  ) {
-    const closestX = Math.max(rect.x, Math.min(circle.x, rect.x + rect.width));
-    const closestY = Math.max(rect.y, Math.min(circle.y, rect.y + rect.height));
-    const dx = circle.x - closestX;
-    const dy = circle.y - closestY;
-    return dx * dx + dy * dy <= circle.r * circle.r;
   }
 
   private async loadVisualsConfig(): Promise<VisualsConfig> {
