@@ -8,7 +8,7 @@ import { Enemy } from "../game/entities/Enemy";
 import { Combat, type CombatHit } from "../game/systems/Combat";
 import { audioManager } from "../game/audio/AudioManager";
 import { whitePalaceBgmPath } from "../game/audio/audioPaths";
-import { type Rect } from "../game/systems/Physics";
+import { Physics, type Rect } from "../game/systems/Physics";
 import { Input } from "../game/core/Input";
 import { type VirtualInputState, VirtualInput } from "../game/input/VirtualInput";
 import { GAME_HEIGHT, GAME_WIDTH } from "../game/view/ResolutionManager";
@@ -721,8 +721,25 @@ export class GamePlayPage extends Page {
       floorTop !== null ? Math.max(enemyBottom, floorTop) : enemyBottom;
     this.player.position.x = desiredX;
     this.player.position.y = desiredBottom - this.player.height;
+    this.resolvePlayerHomingOverlap();
     this.player.velocity.x = 0;
     this.player.velocity.y = -this.player.getHomingBounceSpeed();
+  }
+
+  private resolvePlayerHomingOverlap() {
+    if (!this.player) {
+      return;
+    }
+
+    const maxIterations = 10;
+    for (let step = 0; step < maxIterations; step += 1) {
+      const rect = this.player.getRect();
+      const overlap = this.platforms.find((solid) => Physics.overlaps(rect, solid));
+      if (!overlap) {
+        break;
+      }
+      this.player.position.y = overlap.y - this.player.height;
+    }
   }
 
   private getFloorTopAt(xStart: number, xEnd: number) {
