@@ -47,6 +47,7 @@ export class Player {
   private readonly attackCooldown = 0.3;
   private readonly homingDuration = 0.28;
   private readonly homingCooldown = 0.4;
+  private readonly homingInvincibility = 0.45;
   private invincibleTimer = 0;
   private flickerTimer = 0;
   private flickerOn = false;
@@ -201,11 +202,15 @@ export class Player {
   }
 
   getHomingAttackBounceSpeed() {
-    return this.jumpSpeed * 1.4;
+    return this.jumpSpeed * 1.05;
   }
 
   isInvincible() {
     return this.invincibleTimer > 0;
+  }
+
+  isHomingAttackActive() {
+    return this.attackState === "homing";
   }
 
   triggerInvincibility(durationSeconds = 1) {
@@ -215,6 +220,10 @@ export class Player {
       this.flickerOn = false;
     }
     this.applyInvincibilityTint();
+  }
+
+  triggerHomingInvincibility() {
+    this.triggerInvincibility(this.homingInvincibility);
   }
 
   updateAttackTimers(deltaSeconds: number, pressed: boolean) {

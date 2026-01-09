@@ -43,6 +43,7 @@ export class GamePlayPage extends Page {
   private worldBounds: { minX: number; minY: number; maxX: number; maxY: number } | null =
     null;
   private readonly enemyContactKnockbackSpeed = 420;
+  private readonly enemyContactKnockbackOffset = 12;
   private collectibles: Collectible | null = null;
   private levelCleared = false;
   private enemyContactTimer = 0;
@@ -588,7 +589,7 @@ export class GamePlayPage extends Page {
       return;
     }
 
-    if (this.player.isInvincible()) {
+    if (this.player.isInvincible() || this.player.isHomingAttackActive()) {
       return;
     }
 
@@ -610,8 +611,11 @@ export class GamePlayPage extends Page {
       const playerCenterX = playerRect.x + playerRect.width * 0.5;
       const enemyCenterX = enemyRect.x + enemyRect.width * 0.5;
       const direction = playerCenterX < enemyCenterX ? -1 : 1;
+      const knockbackOffset = this.enemyContactKnockbackOffset * this.worldScale;
       const desiredX =
-        direction < 0 ? enemyRect.x - playerRect.width : enemyRect.x + enemyRect.width;
+        direction < 0
+          ? enemyRect.x - playerRect.width - knockbackOffset
+          : enemyRect.x + enemyRect.width + knockbackOffset;
       const resolved = Physics.resolve(
         playerRect,
         { x: desiredX - playerRect.x, y: 0 },
@@ -758,6 +762,7 @@ export class GamePlayPage extends Page {
     this.resolvePlayerHomingOverlap();
     this.player.velocity.x = 0;
     this.player.velocity.y = -this.player.getHomingAttackBounceSpeed();
+    this.player.triggerHomingInvincibility();
   }
 
   private resolvePlayerHomingOverlap() {
