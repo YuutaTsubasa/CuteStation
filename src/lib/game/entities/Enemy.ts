@@ -16,6 +16,7 @@ export class Enemy {
   private readonly patrolMaxX: number;
   private patrolDirection = 1;
   private readonly behavior: "idle" | "patrol";
+  private readonly patrolStepTolerance: number;
 
   readonly width: number;
   readonly height: number;
@@ -51,6 +52,7 @@ export class Enemy {
     this.health = 3;
     this.idleDuration = options.idleDuration ?? 0.5;
     this.idleTimer = this.idleDuration;
+    this.patrolStepTolerance = 8 * this.scale;
     if (this.behavior === "patrol" && this.idleDuration <= 0) {
       this.state = "patrol";
     }
@@ -110,6 +112,10 @@ export class Enemy {
 
     if (this.state === "patrol") {
       let hitBounds = false;
+      if (this.shouldTurnAtEdge(solids)) {
+        this.setPatrolDirection(this.patrolDirection * -1, true);
+        hitBounds = true;
+      }
       if (this.position.x <= this.patrolMinX) {
         this.position.x = this.patrolMinX;
         this.setPatrolDirection(1, true);
@@ -201,5 +207,36 @@ export class Enemy {
   private syncVisual() {
     this.container.x = this.position.x;
     this.container.y = this.position.y;
+  }
+
+  private shouldTurnAtEdge(solids: Rect[]) {
+    const footY = this.position.y + this.height;
+    const floorTop = this.getFloorTopAt(this.position.x, this.position.x + this.width, solids);
+    if (floorTop === null || Math.abs(footY - floorTop) > 1) {
+      return false;
+    }
+
+    const lookAhead = this.width * 0.5 * this.patrolDirection;
+    const aheadX = this.position.x + lookAhead;
+    const aheadTop = this.getFloorTopAt(aheadX, aheadX + this.width, solids);
+    if (aheadTop === null) {
+      return true;
+    }
+
+    return Math.abs(aheadTop - floorTop) > this.patrolStepTolerance;
+  }
+
+  private getFloorTopAt(xStart: number, xEnd: number, solids: Rect[]) {
+    let best: number | null = null;
+    for (const solid of solids) {
+      const overlap = xStart < solid.x + solid.width && xEnd > solid.x;
+      if (!overlap) {
+        continue;
+      }
+      if (best === null || solid.y > best) {
+        best = solid.y;
+      }
+    }
+    return best;
   }
 }

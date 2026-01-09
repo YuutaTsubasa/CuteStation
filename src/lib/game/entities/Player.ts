@@ -52,6 +52,7 @@ export class Player {
   private flickerTimer = 0;
   private flickerOn = false;
   private readonly flickerInterval = 0.08;
+  private invincibleFlicker = false;
 
   readonly width: number;
   readonly height: number;
@@ -213,17 +214,23 @@ export class Player {
     return this.attackState === "homing";
   }
 
-  triggerInvincibility(durationSeconds = 1) {
+  triggerInvincibility(durationSeconds = 1, flicker = true) {
     this.invincibleTimer = Math.max(this.invincibleTimer, durationSeconds);
-    if (this.flickerTimer <= 0) {
-      this.flickerTimer = this.flickerInterval;
+    this.invincibleFlicker = flicker;
+    if (this.invincibleFlicker) {
+      if (this.flickerTimer <= 0) {
+        this.flickerTimer = this.flickerInterval;
+        this.flickerOn = false;
+      }
+    } else {
+      this.flickerTimer = 0;
       this.flickerOn = false;
     }
     this.applyInvincibilityTint();
   }
 
   triggerHomingInvincibility() {
-    this.triggerInvincibility(this.homingInvincibility);
+    this.triggerInvincibility(this.homingInvincibility, false);
   }
 
   updateAttackTimers(deltaSeconds: number, pressed: boolean) {
@@ -268,16 +275,23 @@ export class Player {
     }
 
     this.invincibleTimer = Math.max(0, this.invincibleTimer - deltaSeconds);
-    this.flickerTimer = Math.max(0, this.flickerTimer - deltaSeconds);
-    if (this.flickerTimer === 0) {
-      this.flickerOn = !this.flickerOn;
-      this.flickerTimer = this.flickerInterval;
+    if (this.invincibleFlicker) {
+      this.flickerTimer = Math.max(0, this.flickerTimer - deltaSeconds);
+      if (this.flickerTimer === 0) {
+        this.flickerOn = !this.flickerOn;
+        this.flickerTimer = this.flickerInterval;
+        this.applyInvincibilityTint();
+      }
+    } else {
+      this.flickerTimer = 0;
+      this.flickerOn = false;
       this.applyInvincibilityTint();
     }
 
     if (this.invincibleTimer === 0) {
       this.flickerOn = false;
       this.flickerTimer = 0;
+      this.invincibleFlicker = false;
       this.applyInvincibilityTint();
     }
   }
@@ -287,7 +301,7 @@ export class Player {
       return;
     }
     if (this.invincibleTimer > 0) {
-      this.sprite.tint = this.flickerOn ? 0xffb3b3 : 0xffffff;
+      this.sprite.tint = this.invincibleFlicker && this.flickerOn ? 0xffb3b3 : 0xffffff;
       return;
     }
     this.sprite.tint = 0xffffff;
