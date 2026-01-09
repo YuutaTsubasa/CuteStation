@@ -18,6 +18,7 @@ export class Enemy {
   private readonly behavior: "idle" | "patrol";
   private readonly patrolStepTolerance: number;
   private readonly groundTolerance: number;
+  private readonly edgeProbeOffset: number;
 
   readonly width: number;
   readonly height: number;
@@ -56,6 +57,7 @@ export class Enemy {
     this.idleTimer = this.idleDuration;
     this.patrolStepTolerance = 8 * this.scale;
     this.groundTolerance = 4 * this.scale;
+    this.edgeProbeOffset = 4 * this.scale;
     if (this.behavior === "patrol" && this.idleDuration <= 0) {
       this.state = "patrol";
     }
@@ -239,6 +241,11 @@ export class Enemy {
       return false;
     }
 
+    const centerX = baseX + this.width * 0.5;
+    if (!this.hasSolidBelow(centerX, footY + this.edgeProbeOffset, solids)) {
+      return true;
+    }
+
     const halfWidth = this.width * 0.5;
     const frontStart = this.patrolDirection > 0 ? baseX + halfWidth : baseX;
     const frontEnd = this.patrolDirection > 0 ? baseX + this.width : baseX + halfWidth;
@@ -272,5 +279,15 @@ export class Enemy {
       }
     }
     return best;
+  }
+
+  private hasSolidBelow(x: number, y: number, solids: Rect[]) {
+    return solids.some(
+      (solid) =>
+        x >= solid.x &&
+        x <= solid.x + solid.width &&
+        y >= solid.y &&
+        y <= solid.y + solid.height,
+    );
   }
 }
