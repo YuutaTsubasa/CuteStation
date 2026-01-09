@@ -87,10 +87,14 @@ export class Enemy {
     }
 
     this.updateBehavior(deltaSeconds);
+    const safeDelta = deltaSeconds > 0 ? deltaSeconds : 1 / 60;
     let preTurned = false;
-    if (this.state === "patrol" && this.shouldTurnAtEdge(solids)) {
-      this.setPatrolDirection(this.patrolDirection * -1, true);
-      preTurned = true;
+    if (this.state === "patrol") {
+      const projectedX = this.position.x + this.velocity.x * safeDelta;
+      if (this.shouldTurnAtEdge(solids, projectedX)) {
+        this.setPatrolDirection(this.patrolDirection * -1, true);
+        preTurned = true;
+      }
     }
 
     this.velocity.y = Math.min(
@@ -103,7 +107,6 @@ export class Enemy {
 
     const rect = this.getRect();
     const desiredVx = this.velocity.x;
-    const safeDelta = deltaSeconds > 0 ? deltaSeconds : 1 / 60;
     const resolved = Physics.resolve(
       rect,
       { x: this.velocity.x * safeDelta, y: this.velocity.y * safeDelta },
@@ -213,15 +216,15 @@ export class Enemy {
     this.container.y = this.position.y;
   }
 
-  private shouldTurnAtEdge(solids: Rect[]) {
+  private shouldTurnAtEdge(solids: Rect[], baseX: number) {
     const footY = this.position.y + this.height;
-    const floorTop = this.getFloorTopAt(this.position.x, this.position.x + this.width, solids);
+    const floorTop = this.getFloorTopAt(baseX, baseX + this.width, solids);
     if (floorTop === null || Math.abs(footY - floorTop) > 1) {
       return false;
     }
 
     const lookAhead = this.width * 0.5 * this.patrolDirection;
-    const aheadX = this.position.x + lookAhead;
+    const aheadX = baseX + lookAhead;
     const aheadTop = this.getFloorTopAt(aheadX, aheadX + this.width, solids);
     if (aheadTop === null) {
       return true;

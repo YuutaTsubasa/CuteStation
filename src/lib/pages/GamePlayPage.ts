@@ -17,7 +17,7 @@ import { LevelSession } from "../game/levels/LevelSession";
 import { Page } from "./Page";
 
 export class GamePlayPage extends Page {
-  private readonly worldScale = 4;
+  private readonly worldScale = 3;
   private readonly baseFloorY = 400;
   private readonly worldPadding = { top: 320, right: 0, bottom: 0, left: 0 };
   private readonly visualsBasePath = "/ProjectContent/Levels/whitePalace/visuals";
