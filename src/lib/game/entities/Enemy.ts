@@ -87,6 +87,11 @@ export class Enemy {
     }
 
     this.updateBehavior(deltaSeconds);
+    let preTurned = false;
+    if (this.state === "patrol" && this.shouldTurnAtEdge(solids)) {
+      this.setPatrolDirection(this.patrolDirection * -1, true);
+      preTurned = true;
+    }
 
     this.velocity.y = Math.min(
       this.velocity.y + this.gravity * deltaSeconds,
@@ -112,8 +117,7 @@ export class Enemy {
 
     if (this.state === "patrol") {
       let hitBounds = false;
-      if (this.shouldTurnAtEdge(solids)) {
-        this.setPatrolDirection(this.patrolDirection * -1, true);
+      if (preTurned) {
         hitBounds = true;
       }
       if (this.position.x <= this.patrolMinX) {
