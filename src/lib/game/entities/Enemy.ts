@@ -57,7 +57,7 @@ export class Enemy {
     this.idleTimer = this.idleDuration;
     this.patrolStepTolerance = 8 * this.scale;
     this.groundTolerance = 4 * this.scale;
-    this.edgeProbeOffset = 4 * this.scale;
+    this.edgeProbeOffset = 0.01 * this.scale;
     if (this.behavior === "patrol" && this.idleDuration <= 0) {
       this.state = "patrol";
     }
