@@ -382,6 +382,16 @@ export class MainMenuPage extends Page {
 
     container.position.set((GAME_WIDTH - width) * 0.5, y);
     container.on("pointertap", onClick);
+    container.on("pointerover", () => {
+      if (this.enteringState !== "options") {
+        return;
+      }
+      const index = this.menuButtons.findIndex((button) => button.container === container);
+      if (index >= 0) {
+        this.selectedIndex = index;
+        this.applyMenuSelection();
+      }
+    });
     return { container, background: bg, onClick, width, height };
   }
 
