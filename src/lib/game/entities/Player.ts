@@ -47,6 +47,12 @@ export class Player {
   private readonly attackCooldown = 0.3;
   private readonly homingDuration = 0.28;
   private readonly homingCooldown = 0.4;
+  private readonly homingInvincibility = 0.45;
+  private invincibleTimer = 0;
+  private flickerTimer = 0;
+  private flickerOn = false;
+  private readonly flickerInterval = 0.08;
+  private invincibleFlicker = false;
 
   readonly width: number;
   readonly height: number;
@@ -111,6 +117,7 @@ export class Player {
     this.velocity.x = move * this.moveSpeed;
 
     this.updateAttackTimers(deltaSeconds, input.attack);
+    this.updateInvincibility(deltaSeconds);
 
     if (this.grounded && input.jump) {
       this.velocity.y = -this.jumpSpeed;
@@ -195,6 +202,37 @@ export class Player {
     return this.jumpSpeed * 0.7;
   }
 
+  getHomingAttackBounceSpeed() {
+    return this.jumpSpeed * 1.05;
+  }
+
+  isInvincible() {
+    return this.invincibleTimer > 0;
+  }
+
+  isHomingAttackActive() {
+    return this.attackState === "homing";
+  }
+
+  triggerInvincibility(durationSeconds = 1, flicker = true) {
+    this.invincibleTimer = Math.max(this.invincibleTimer, durationSeconds);
+    this.invincibleFlicker = flicker;
+    if (this.invincibleFlicker) {
+      if (this.flickerTimer <= 0) {
+        this.flickerTimer = this.flickerInterval;
+        this.flickerOn = false;
+      }
+    } else {
+      this.flickerTimer = 0;
+      this.flickerOn = false;
+    }
+    this.applyInvincibilityTint();
+  }
+
+  triggerHomingInvincibility() {
+    this.triggerInvincibility(this.homingInvincibility, false);
+  }
+
   updateAttackTimers(deltaSeconds: number, pressed: boolean) {
     if (this.attackActiveTimer > 0) {
       this.attackActiveTimer = Math.max(0, this.attackActiveTimer - deltaSeconds);
@@ -224,6 +262,49 @@ export class Player {
     this.container.x = this.position.x + this.width * 0.5;
     this.container.y =
       this.position.y + this.height + this.footOffset * this.scale;
+  }
+
+  private updateInvincibility(deltaSeconds: number) {
+    if (this.invincibleTimer <= 0) {
+      if (this.flickerOn || this.flickerTimer > 0) {
+        this.flickerOn = false;
+        this.flickerTimer = 0;
+        this.applyInvincibilityTint();
+      }
+      return;
+    }
+
+    this.invincibleTimer = Math.max(0, this.invincibleTimer - deltaSeconds);
+    if (this.invincibleFlicker) {
+      this.flickerTimer = Math.max(0, this.flickerTimer - deltaSeconds);
+      if (this.flickerTimer === 0) {
+        this.flickerOn = !this.flickerOn;
+        this.flickerTimer = this.flickerInterval;
+        this.applyInvincibilityTint();
+      }
+    } else {
+      this.flickerTimer = 0;
+      this.flickerOn = false;
+      this.applyInvincibilityTint();
+    }
+
+    if (this.invincibleTimer === 0) {
+      this.flickerOn = false;
+      this.flickerTimer = 0;
+      this.invincibleFlicker = false;
+      this.applyInvincibilityTint();
+    }
+  }
+
+  private applyInvincibilityTint() {
+    if (!this.sprite) {
+      return;
+    }
+    if (this.invincibleTimer > 0) {
+      this.sprite.tint = this.invincibleFlicker && this.flickerOn ? 0xffb3b3 : 0xffffff;
+      return;
+    }
+    this.sprite.tint = 0xffffff;
   }
 
   private updateAnimation(moveInput: number, wasGrounded: boolean) {
