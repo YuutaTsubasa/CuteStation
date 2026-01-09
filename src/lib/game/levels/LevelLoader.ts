@@ -43,11 +43,10 @@ export async function loadLevel(path: string): Promise<LevelData> {
   }
 
   const data = (await response.json()) as LevelData;
-  if (!data.coins) {
-    data.coins = [];
-  }
-  if (!data.enemies) {
-    data.enemies = [];
-  }
-  return data;
+  const normalizedData: LevelData = {
+    ...data,
+    coins: data.coins ?? [],
+    enemies: data.enemies ?? [],
+  };
+  return normalizedData;
 }

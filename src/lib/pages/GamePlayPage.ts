@@ -42,6 +42,7 @@ export class GamePlayPage extends Page {
   private homingReticle: Graphics | null = null;
   private worldBounds: { minX: number; minY: number; maxX: number; maxY: number } | null =
     null;
+  private readonly enemyContactKnockbackSpeed = 420;
   private collectibles: Collectible | null = null;
   private levelCleared = false;
   private enemyContactTimer = 0;
@@ -532,7 +533,10 @@ export class GamePlayPage extends Page {
     }
 
     const goalRect = this.runtime.getGoalWorld();
-    if (goalRect && this.rectsOverlap(this.player.getRect(), goalRect)) {
+    if (!goalRect) {
+      return;
+    }
+    if (this.rectsOverlap(this.player.getRect(), goalRect)) {
       this.levelCleared = true;
       if (this.isPlaytest) {
         this.exitPlaytest();
@@ -602,9 +606,16 @@ export class GamePlayPage extends Page {
       const playerCenterX = playerRect.x + playerRect.width * 0.5;
       const enemyCenterX = enemyRect.x + enemyRect.width * 0.5;
       const direction = playerCenterX < enemyCenterX ? -1 : 1;
-      this.player.position.x =
+      const desiredX =
         direction < 0 ? enemyRect.x - playerRect.width : enemyRect.x + enemyRect.width;
-      this.player.velocity.x = direction * playerRect.width * 6;
+      const resolved = Physics.resolve(
+        playerRect,
+        { x: desiredX - playerRect.x, y: 0 },
+        this.platforms,
+      );
+      this.player.position.x = resolved.x;
+      this.player.position.y = resolved.y;
+      this.player.velocity.x = direction * this.enemyContactKnockbackSpeed * this.worldScale;
       this.player.velocity.y = -this.player.getHomingBounceSpeed() * 0.6;
       this.player.grounded = false;
       this.enemyContactTimer = 0.35;

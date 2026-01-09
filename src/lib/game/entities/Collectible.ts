@@ -4,6 +4,7 @@ import type { Rect } from "../systems/Physics";
 
 type CollectibleOptions = {
   worldScale: number;
+  // Radius is in level units (pre-scale) to match JSON coordinates.
   pickupRadius?: number;
   onCollect?: (count: number, total: number) => void;
 };
@@ -40,7 +41,7 @@ export class Collectible {
   }
 
   hasCollectedAll() {
-    return this.coins.length > 0 && this.collected.size >= this.coins.length;
+    return this.collected.size >= this.coins.length;
   }
 
   update(playerRect: Rect) {
@@ -92,7 +93,7 @@ export class Collectible {
 
   private playPickupSound() {
     const now = performance.now();
-    if (now - this.lastPickupAt < 60) {
+    if (now - this.lastPickupAt < 120) {
       return;
     }
     this.lastPickupAt = now;

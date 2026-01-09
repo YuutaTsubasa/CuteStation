@@ -95,6 +95,7 @@ export class Enemy {
     }
 
     const rect = this.getRect();
+    const desiredVx = this.velocity.x;
     const safeDelta = deltaSeconds > 0 ? deltaSeconds : 1 / 60;
     const resolved = Physics.resolve(
       rect,
@@ -107,17 +108,19 @@ export class Enemy {
     this.velocity.x = resolved.vx / safeDelta;
     this.velocity.y = resolved.vy / safeDelta;
 
-    if (this.state === "patrol" && Math.abs(resolved.vx) <= 0.01) {
-      this.setPatrolDirection(this.patrolDirection * -1, true);
-    }
-
     if (this.state === "patrol") {
+      let hitBounds = false;
       if (this.position.x <= this.patrolMinX) {
         this.position.x = this.patrolMinX;
         this.setPatrolDirection(1, true);
+        hitBounds = true;
       } else if (this.position.x >= this.patrolMaxX) {
         this.position.x = this.patrolMaxX;
         this.setPatrolDirection(-1, true);
+        hitBounds = true;
+      }
+      if (!hitBounds && Math.abs(resolved.vx) <= 0.01 && Math.abs(desiredVx) > 0.01) {
+        this.setPatrolDirection(this.patrolDirection * -1, true);
       }
     }
 
