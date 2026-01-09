@@ -197,13 +197,16 @@ export class GamePlayPage extends Page {
     const player = new Player(level.spawn.x, level.spawn.y - spawnOffsetY, this.worldScale);
     player.mount(world);
     this.player = player;
-    const enemy = new Enemy(
-      level.spawn.x + 160,
-      level.spawn.y - spawnOffsetY,
-      this.worldScale,
-    );
-    enemy.mount(world);
-    this.enemies = [enemy];
+    const enemies = level.enemies ?? [];
+    this.enemies = enemies.map((enemyPoint) => {
+      const enemy = new Enemy(
+        enemyPoint.x,
+        enemyPoint.y - spawnOffsetY,
+        this.worldScale,
+      );
+      enemy.mount(world);
+      return enemy;
+    });
     this.centerCameraOnPlayer();
     await player.loadAssets();
     if (token !== this.enterToken) {

@@ -26,6 +26,7 @@ export type LevelData = {
   solids: LevelRect[];
   goal: LevelRect;
   coins: LevelPoint[];
+  enemies?: LevelPoint[];
 };
 
 export async function loadLevel(path: string): Promise<LevelData> {
