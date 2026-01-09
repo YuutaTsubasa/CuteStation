@@ -56,7 +56,7 @@
     coinTotal = 0;
     levelClear = false;
     gameLoading = true;
-    showVirtualControls = true;
+    showVirtualControls = false;
     if (levelClearTimeout) {
       window.clearTimeout(levelClearTimeout);
       levelClearTimeout = null;

@@ -11,12 +11,21 @@ import {
 } from "pixi.js";
 import { audioManager } from "../game/audio/AudioManager";
 import { menuBgmPath } from "../game/audio/audioPaths";
+import { GamepadTracker } from "../game/input/GamepadTracker";
 import { GAME_HEIGHT, GAME_WIDTH } from "../game/view/ResolutionManager";
 import { Page } from "./Page";
 
 type MenuEntry = {
   id: string;
   label: string;
+};
+
+type MenuButton = {
+  container: Container;
+  background: Graphics;
+  onClick: () => void;
+  width: number;
+  height: number;
 };
 
 export class MainMenuPage extends Page {
@@ -43,6 +52,11 @@ export class MainMenuPage extends Page {
   private onNavigate: ((id: string) => void) | null = null;
   private enteringState: "press" | "options" = "press";
   private transitionElapsed = 0;
+  private menuButtons: MenuButton[] = [];
+  private selectedIndex = 0;
+  private gamepadInput: GamepadTracker | null = null;
+  private lastGamepadNav = 0;
+  private readonly gamepadNavCooldownMs = 180;
 
   constructor() {
     super("MainMenu");
@@ -95,6 +109,9 @@ export class MainMenuPage extends Page {
     this.optionsLayer = optionsLayer;
     this.enteringState = "press";
     this.transitionElapsed = 0;
+    this.menuButtons = [];
+    this.selectedIndex = 0;
+    this.gamepadInput = new GamepadTracker();
 
     app.stage.eventMode = "static";
     app.stage.hitArea = app.screen;
@@ -141,10 +158,25 @@ export class MainMenuPage extends Page {
       buttonStyle,
       () => this.onNavigate?.("LevelEditor"),
     );
-    optionsLayer.addChild(startButton, editorButton);
+    this.menuButtons = [startButton, editorButton];
+    optionsLayer.addChild(startButton.container, editorButton.container);
+    this.applyMenuSelection();
 
-    this.keyHandler = () => {
-      this.handlePressToStart();
+    this.keyHandler = (event) => {
+      if (this.enteringState === "press") {
+        this.handlePressToStart();
+        return;
+      }
+      if (event.key === "ArrowUp") {
+        event.preventDefault();
+        this.moveSelection(-1);
+      } else if (event.key === "ArrowDown") {
+        event.preventDefault();
+        this.moveSelection(1);
+      } else if (event.key === "Enter" || event.key === " ") {
+        event.preventDefault();
+        this.activateSelection();
+      }
     };
     this.pointerHandler = () => {
       this.handlePressToStart();
@@ -157,8 +189,17 @@ export class MainMenuPage extends Page {
         return;
       }
 
+      const gamepadState = this.gamepadInput?.poll();
+
       if (this.enteringState === "press") {
+        if (gamepadState?.anyButtonDown) {
+          this.handlePressToStart();
+        }
         return;
+      }
+
+      if (gamepadState) {
+        this.handleGamepadMenuInput(gamepadState);
       }
 
       if (this.transitionElapsed < this.transitionSeconds) {
@@ -208,6 +249,8 @@ export class MainMenuPage extends Page {
       this.pressStartElement = null;
     }
     this.backgroundHost = null;
+    this.menuButtons = [];
+    this.gamepadInput = null;
 
     this.screenUiLayer?.destroy({ children: true });
     this.screenUiLayer = null;
@@ -237,6 +280,7 @@ export class MainMenuPage extends Page {
     this.transitionElapsed = 0;
     if (this.optionsLayer) {
       this.optionsLayer.visible = true;
+      this.applyMenuSelection();
     }
     if (this.pressStartElement) {
       const element = this.pressStartElement;
@@ -338,6 +382,53 @@ export class MainMenuPage extends Page {
 
     container.position.set((GAME_WIDTH - width) * 0.5, y);
     container.on("pointertap", onClick);
-    return container;
+    return { container, background: bg, onClick, width, height };
+  }
+
+  private applyMenuSelection() {
+    this.menuButtons.forEach((button, index) => {
+      const selected = index === this.selectedIndex;
+      button.background.clear();
+      button.background
+        .roundRect(0, 0, button.width, button.height, 44)
+        .fill(selected ? 0x3b7cff : 0x1f1f1f);
+    });
+  }
+
+  private moveSelection(direction: number) {
+    if (this.menuButtons.length === 0) {
+      return;
+    }
+    this.selectedIndex = Math.max(
+      0,
+      Math.min(this.menuButtons.length - 1, this.selectedIndex + direction),
+    );
+    this.applyMenuSelection();
+  }
+
+  private activateSelection() {
+    const button = this.menuButtons[this.selectedIndex];
+    if (!button) {
+      return;
+    }
+    button.onClick();
+  }
+
+  private handleGamepadMenuInput(
+    state: NonNullable<ReturnType<GamepadTracker["poll"]>>,
+  ) {
+    const now = performance.now();
+    if (now - this.lastGamepadNav > this.gamepadNavCooldownMs) {
+      if (state.moveY < -0.6) {
+        this.moveSelection(-1);
+        this.lastGamepadNav = now;
+      } else if (state.moveY > 0.6) {
+        this.moveSelection(1);
+        this.lastGamepadNav = now;
+      }
+    }
+    if (state.buttonsDown[0]) {
+      this.activateSelection();
+    }
   }
 }

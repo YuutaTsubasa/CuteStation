@@ -7,6 +7,7 @@ import { Player } from "../game/entities/Player";
 import { audioManager } from "../game/audio/AudioManager";
 import { whitePalaceBgmPath } from "../game/audio/audioPaths";
 import { type Rect } from "../game/systems/Physics";
+import { GamepadTracker } from "../game/input/GamepadTracker";
 import { type VirtualInputState, VirtualInput } from "../game/input/VirtualInput";
 import { GAME_HEIGHT, GAME_WIDTH } from "../game/view/ResolutionManager";
 import { LevelSession } from "../game/levels/LevelSession";
@@ -48,6 +49,7 @@ export class GamePlayPage extends Page {
     jumpDown: false,
     jumpHeld: false,
   };
+  private gamepadInput: GamepadTracker | null = null;
   private virtualInput: VirtualInput | null = null;
   private keyDownHandler: ((event: KeyboardEvent) => void) | null = null;
   private keyUpHandler: ((event: KeyboardEvent) => void) | null = null;
@@ -93,6 +95,7 @@ export class GamePlayPage extends Page {
     }
     this.keyboardInput = { moveX: 0, jumpDown: false, jumpHeld: false };
     this.inputState = { move: 0, jump: false };
+    this.gamepadInput = new GamepadTracker();
 
     this.enterToken += 1;
     const token = this.enterToken;
@@ -248,14 +251,25 @@ export class GamePlayPage extends Page {
         jumpDown: false,
         jumpHeld: false,
       };
+      const gamepadState = this.gamepadInput?.poll();
+      const gamepadInput: VirtualInputState = {
+        moveX: gamepadState?.moveX ?? 0,
+        jumpDown: gamepadState?.buttonsDown[0] ?? false,
+        jumpHeld: gamepadState?.buttonsHeld[0] ?? false,
+      };
       const mergedInput: VirtualInputState = {
         moveX:
           Math.abs(virtualState.moveX) > Math.abs(this.keyboardInput.moveX)
             ? virtualState.moveX
             : this.keyboardInput.moveX,
-        jumpDown: this.keyboardInput.jumpDown || virtualState.jumpDown,
-        jumpHeld: this.keyboardInput.jumpHeld || virtualState.jumpHeld,
+        jumpDown:
+          this.keyboardInput.jumpDown || virtualState.jumpDown || gamepadInput.jumpDown,
+        jumpHeld:
+          this.keyboardInput.jumpHeld || virtualState.jumpHeld || gamepadInput.jumpHeld,
       };
+      if (Math.abs(gamepadInput.moveX) > Math.abs(mergedInput.moveX)) {
+        mergedInput.moveX = gamepadInput.moveX;
+      }
 
       this.keyboardInput.jumpDown = false;
       this.inputState.move = mergedInput.moveX;
@@ -355,6 +369,7 @@ export class GamePlayPage extends Page {
 
     this.keyboardInput = { moveX: 0, jumpDown: false, jumpHeld: false };
     this.inputState = { move: 0, jump: false };
+    this.gamepadInput = null;
 
     if (this.isPlaytest) {
       LevelSession.clearPreviewLevel();
