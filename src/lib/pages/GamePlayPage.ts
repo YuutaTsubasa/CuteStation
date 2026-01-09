@@ -165,7 +165,6 @@ export class GamePlayPage extends Page {
     this.background = background;
     this.world = world;
     const effectsLayer = new Container();
-    world.addChild(effectsLayer);
     this.effectsLayer = effectsLayer;
     const homingReticle = new Graphics();
     homingReticle.visible = false;
@@ -217,6 +216,7 @@ export class GamePlayPage extends Page {
       enemy.resolveSpawn(this.platforms);
       return enemy;
     });
+    world.addChild(effectsLayer);
     this.centerCameraOnPlayer();
     await player.loadAssets();
     if (token !== this.enterToken) {

@@ -28,13 +28,18 @@ export class Combat {
       return hits;
     }
 
+    if (!player.isAttackHitActive()) {
+      return hits;
+    }
+
     const attackId = player.getAttackSequence();
     if (attackId !== this.lastAttackId) {
       this.lastAttackId = attackId;
       this.hitTargets.clear();
     }
 
-    const hitbox = this.getAttackHitbox(player);
+    const attackType = player.getAttackHitType();
+    const hitbox = this.getAttackHitbox(player, attackType);
     if (!hitbox) {
       return hits;
     }
@@ -47,7 +52,7 @@ export class Combat {
         continue;
       }
       if (Physics.overlaps(hitbox, enemy.getRect())) {
-        const profile = this.getAttackProfile(player, hitbox);
+        const profile = this.getAttackProfile(player, hitbox, attackType);
         const knockbackX = profile.knockback.x * player.getFacingDirection();
         const hit = enemy.applyHit(profile.damage, {
           x: knockbackX,
@@ -61,7 +66,7 @@ export class Combat {
               x: hitbox.x + hitbox.width * 0.5,
               y: hitbox.y + hitbox.height * 0.5,
             },
-            attackType: player.getAttackState(),
+            attackType,
           });
         }
       }
@@ -75,14 +80,13 @@ export class Combat {
     this.hitTargets.clear();
   }
 
-  private getAttackHitbox(player: Player): Rect | null {
-    const state = player.getAttackState();
-    if (state === "idle") {
+  private getAttackHitbox(player: Player, attackType: "attack" | "homing"): Rect | null {
+    if (!attackType) {
       return null;
     }
 
     const rect = player.getRect();
-    const profile = this.getAttackProfile(player);
+    const profile = this.getAttackProfile(player, undefined, attackType);
     const centerX = rect.x + rect.width * 0.5;
     const centerY = rect.y + rect.height * 0.5 + profile.verticalOffset;
     const facing = player.getFacingDirection();
@@ -98,8 +102,12 @@ export class Combat {
     };
   }
 
-  private getAttackProfile(player: Player, knockbackRef?: Rect): AttackProfile {
-    const state = player.getAttackState();
+  private getAttackProfile(
+    player: Player,
+    knockbackRef?: Rect,
+    attackType?: "attack" | "homing",
+  ): AttackProfile {
+    const state = attackType ?? player.getAttackState();
     const baseWidth = player.width;
     const baseHeight = player.height;
     if (state === "homing") {

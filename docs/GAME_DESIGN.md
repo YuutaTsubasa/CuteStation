@@ -1,56 +1,45 @@
-# CuteStation 遊戲設計文件
+# CuteStation Game Design Document
 
-## 專案概述
-- **類型**：2D 橫向平台捲軸動作遊戲
-- **風格**：可愛風
-- **技術棧**：Tauri V2 + Svelte 5 + TypeScript + PixiJS v8
+## High-Level Overview
+- **Genre:** 2D action platformer
+- **Style:** Cute fantasy with crisp, readable silhouettes
+- **Target Platforms:** Desktop and mobile (via Tauri)
 
-## 故事概要
-騎士奉公主之命追回被盜賊偷走的寶物，途經六大場景後發現寶物是惡魔封印，盜賊實為英雄。最終與惡魔決戰。
+## Core Loop
+1. Enter a level.
+2. Move, jump, and fight enemies.
+3. Collect coins and reach the goal.
+4. Repeat with tougher layouts and enemy patterns.
 
-## 關卡結構
-| 大關 | 場景 | 小關 | Boss |
-|------|------|------|------|
-| 1 | 白色宮殿 | 3 | ✓ |
-| 2 | 森林 | 3 | ✓ |
-| 3 | 海洋 | 3 | ✓ |
-| 4 | 雪山 | 3 | ✓ |
-| 5 | 火山 | 3 | ✓ |
-| 6 | 惡魔據點 | 3 | ✓ 最終Boss |
+## Player Actions
 
-每小關含 5 個收集幣
+### Movement
+- Left/right movement with optional run speed.
+- Jump and fall with mid-air control.
 
-## 可選角色
-- 騎士
-- 公主
-- （操作方式相同，外觀不同）
+### Combat
+- Ground attack: melee strike with a short hit window.
+- Homing attack: mid-air dash to a target (requires a valid homing target).
+- Attack hit window: active on attack frames 8-9; the rest of the animation is visual only.
+- Moving attacks: when grounded and moving, use `knight_runningAttacking` to keep the legs in motion.
 
-## 核心機制
+## Level Structure
+- White Palace world is the current focus (Level 1-1).
+- Levels include solids, coins, goal, and enemy placements.
+- Each level targets 5 collectible coins.
 
-### 移動系統
-- 左右移動
-- 奔跑（按住特定鍵加速）
+## Controls
 
-### 跳躍系統
-- 基本跳躍
+### Keyboard
+- Move: Arrow keys or A/D
+- Jump: Space
+- Attack: J or K
+- Pause/Exit: Escape
 
-### 攻擊系統
-- 近戰攻擊
-- Homing Attack：空中時鎖定範圍內敵人，衝撞攻擊
+### Touch (Mobile)
+- Left virtual joystick: move
+- Right buttons: jump and attack
 
-### 收集系統
-- 每關 5 個收集幣
+## Tools
 
-## 輸入支援
-- 鍵盤（PC）
-- 觸控虛擬按鍵（手機）
-- 手把控制器
-
-## 介面流程
-
-- Splash → Main Menu → GamePlay（可返回主選單）
-- 主選單提供開始遊戲與關卡編輯器入口
-
-## 內部工具
-
-- Level Editor v0：提供網格、吸附、平移與 JSON 匯出
+- Level Editor v0: grid, snap, pan, and JSON export.

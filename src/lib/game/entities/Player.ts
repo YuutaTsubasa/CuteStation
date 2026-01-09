@@ -23,10 +23,13 @@ export class Player {
     fall: Texture[];
     land: Texture[];
   } | null = null;
+  private attackHitFrames = new Set<number>();
   private currentAnimation:
     | "idle"
     | "walk"
     | "run"
+    | "attack"
+    | "runAttack"
     | "jumpUp"
     | "jumpHold"
     | "jumpFall"
@@ -40,14 +43,20 @@ export class Player {
   private jumpPhase: "none" | "jumpUp" | "hold" | "fall" | "land" = "none";
   private readonly fallEps = 5;
   private attackState: "idle" | "attack" | "homing" = "idle";
+  private lastAttackType: "attack" | "homing" | null = null;
   private attackActiveTimer = 0;
   private attackCooldownTimer = 0;
   private attackSequence = 0;
   private readonly attackDuration = 0.2;
   private readonly attackCooldown = 0.3;
+  private readonly attackVisualDuration = 0.6;
+  private readonly attackStartFrame = 8;
   private readonly homingDuration = 0.28;
   private readonly homingCooldown = 0.4;
+  private readonly homingVisualDuration = 0.5;
   private readonly homingInvincibility = 0.45;
+  private attackJustEnded = false;
+  private attackVisualTimer = 0;
   private invincibleTimer = 0;
   private flickerTimer = 0;
   private flickerOn = false;
@@ -104,6 +113,13 @@ export class Player {
     this.animations.idle = await this.loadFrames(basePath, "knight_idle");
     this.animations.walk = await this.loadFrames(basePath, "knight_walking");
     this.animations.run = await this.loadFrames(basePath, "knight_running");
+    const attackSegments = await this.loadAttackSegments(basePath, "knight_attacking");
+    this.animations.attack = attackSegments.frames;
+    this.attackHitFrames = attackSegments.hitFrames;
+    this.animations.runAttack = await this.loadFrames(
+      basePath,
+      "knight_runningAttacking",
+    );
     const jumpSegments = await this.loadJumpSegments(basePath, "knight_jumping");
     this.jumpFrames = jumpSegments;
 
@@ -178,11 +194,34 @@ export class Player {
   }
 
   isAttackActive() {
-    return this.attackState !== "idle";
+    return this.attackState !== "idle" || this.attackVisualTimer > 0;
+  }
+
+  isAttackHitActive() {
+    if (this.attackVisualTimer <= 0) {
+      return false;
+    }
+    if (this.attackHitFrames.size === 0) {
+      return true;
+    }
+    if (
+      !this.sprite ||
+      (this.currentAnimation !== "attack" && this.currentAnimation !== "runAttack")
+    ) {
+      return false;
+    }
+    return this.attackHitFrames.has(this.sprite.currentFrame);
   }
 
   getAttackState() {
     return this.attackState;
+  }
+
+  getAttackHitType() {
+    if (this.attackState !== "idle") {
+      return this.attackState;
+    }
+    return this.lastAttackType ?? "attack";
   }
 
   getAttackSequence() {
@@ -234,15 +273,24 @@ export class Player {
   }
 
   updateAttackTimers(deltaSeconds: number, pressed: boolean) {
+    this.attackJustEnded = false;
     if (this.attackActiveTimer > 0) {
       this.attackActiveTimer = Math.max(0, this.attackActiveTimer - deltaSeconds);
       if (this.attackActiveTimer === 0 && this.attackState !== "idle") {
         this.attackState = "idle";
+        this.attackJustEnded = true;
       }
     }
 
     if (this.attackCooldownTimer > 0) {
       this.attackCooldownTimer = Math.max(0, this.attackCooldownTimer - deltaSeconds);
+    }
+
+    if (this.attackVisualTimer > 0) {
+      this.attackVisualTimer = Math.max(0, this.attackVisualTimer - deltaSeconds);
+      if (this.attackVisualTimer === 0 && this.attackState === "idle") {
+        this.lastAttackType = null;
+      }
     }
 
     if (!pressed || this.attackCooldownTimer > 0 || this.attackActiveTimer > 0) {
@@ -255,6 +303,9 @@ export class Player {
       nextState === "homing" ? this.homingDuration : this.attackDuration;
     this.attackCooldownTimer =
       nextState === "homing" ? this.homingCooldown : this.attackCooldown;
+    this.attackVisualTimer =
+      nextState === "homing" ? this.homingVisualDuration : this.attackVisualDuration;
+    this.lastAttackType = nextState;
     this.attackSequence += 1;
   }
 
@@ -317,6 +368,39 @@ export class Player {
       this.facing = -1;
     } else if (moveInput > 0.1) {
       this.facing = 1;
+    }
+
+    if (this.attackState !== "idle" || this.attackVisualTimer > 0) {
+      const shouldRunAttack = this.grounded && moving;
+      const target = shouldRunAttack ? "runAttack" : "attack";
+      const frames = shouldRunAttack
+        ? this.animations.runAttack ?? []
+        : this.animations.attack ?? [];
+      let startFrame: number | undefined;
+      if (
+        this.currentAnimation !== "attack" &&
+        this.currentAnimation !== "runAttack"
+      ) {
+        startFrame = this.attackStartFrame;
+      } else if (this.currentAnimation !== target && this.sprite) {
+        startFrame = this.sprite.currentFrame;
+      }
+      this.playAnimation(target, frames, {
+        loop: false,
+        holdLastFrame: true,
+        startFrame,
+      });
+      this.applyFacing();
+      return;
+    }
+
+    if (this.attackJustEnded) {
+      if (this.grounded) {
+        this.jumpPhase = "none";
+      } else if (this.jumpPhase === "jumpUp") {
+        this.jumpPhase = "hold";
+      }
+      this.attackJustEnded = false;
     }
 
     if (this.jumpFrames) {
@@ -389,6 +473,8 @@ export class Player {
       | "idle"
       | "walk"
       | "run"
+      | "attack"
+      | "runAttack"
       | "jumpUp"
       | "jumpHold"
       | "jumpFall"
@@ -398,6 +484,7 @@ export class Player {
       loop: boolean;
       onComplete?: () => void;
       holdLastFrame?: boolean;
+      startFrame?: number;
     },
   ) {
     if (this.currentAnimation === name) {
@@ -416,10 +503,16 @@ export class Player {
     sprite.anchor.set(0.5, 1);
     sprite.animationSpeed = 0.24;
     sprite.loop = options.loop;
+    const startFrame =
+      options.startFrame !== undefined
+        ? Math.min(Math.max(0, options.startFrame), frames.length - 1)
+        : undefined;
     if (frames.length === 1) {
       sprite.gotoAndStop(0);
     } else if (options.loop) {
       sprite.play();
+    } else if (startFrame !== undefined) {
+      sprite.gotoAndPlay(startFrame);
     } else {
       sprite.play();
       if (options.holdLastFrame) {
@@ -454,6 +547,47 @@ export class Player {
       `${basePath}/${fileBase}.png`,
     )) as Texture;
     return [texture];
+  }
+
+  private async loadAttackSegments(basePath: string, fileBase: string) {
+    const jsonPath = `${basePath}/${fileBase}.json`;
+    try {
+      const sheet = (await Assets.load(jsonPath)) as Spritesheet;
+      const frames = this.extractFrames(sheet);
+      const animations = sheet.animations;
+      const hitFrames =
+        animations?.attackHit ??
+        animations?.AttackHit ??
+        animations?.attack_hit ??
+        animations?.Attack_hit ??
+        animations?.attackhit ??
+        animations?.Attackhit;
+      const hitSet = new Set<number>();
+      const frameIndex = new Map<Texture, number>();
+      frames.forEach((frame, index) => {
+        frameIndex.set(frame, index);
+      });
+      if (hitFrames && hitFrames.length > 0) {
+        for (const frame of hitFrames) {
+          const index = frameIndex.get(frame);
+          if (index !== undefined) {
+            hitSet.add(index);
+          }
+        }
+      } else if (frames.length >= 10) {
+        hitSet.add(8);
+        hitSet.add(9);
+      }
+      return { frames, hitFrames: hitSet };
+    } catch {
+      const frames = await this.loadFrames(basePath, fileBase);
+      const hitSet = new Set<number>();
+      if (frames.length >= 10) {
+        hitSet.add(8);
+        hitSet.add(9);
+      }
+      return { frames, hitFrames: hitSet };
+    }
   }
 
   private async loadJumpSegments(basePath: string, fileBase: string) {

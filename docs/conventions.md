@@ -10,3 +10,5 @@ Use the convention checker to validate repository naming rules and asset placeme
 Reports are written to:
 - `reports/convention-report.json`
 - `reports/convention-report.md`
+
+Run the checker after adding or renaming assets in `ProjectContent/`.

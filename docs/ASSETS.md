@@ -62,18 +62,18 @@ Level visuals live under `ProjectContent/Levels/{world}/visuals/`.
 
 ## Web Build Notes
 
-- Frontend builds copy `ProjectContent/` into `static/ProjectContent/` so assets resolve on Netlify.
+- Frontend builds copy `ProjectContent/` into `static/ProjectContent/` so assets resolve in web builds.
 
 ## Naming Conventions
 
-- Prefer lowerCamelCase or PascalCase for files and folders.
-- Keep names stable and action-driven (e.g., `Idle`, `Walking`, `Running`, `Jumping`).
-- Avoid hyphens and underscores.
+- Prefer `lower_snake_case` for files and folders.
+- Keep names stable and action-driven (e.g., `idle`, `walking`, `running`, `jumping`).
 
 ## Animation Usage Rules
 
 - `Idle`, `Walking`, `Running` are looping animations.
 - `Jumping` is segmented via spritesheet JSON `animations` (e.g., `jumpUp`, `jumpHold`, `jumpFall`, `jumpLand`).
+- `Attack` hit windows are defined via an `attackHit` animation list in the spritesheet JSON.
 - Use a foot-center anchor/pivot so the character stands on the same ground line across actions.
 
 ## Current Character Assets
@@ -84,10 +84,18 @@ Actions available:
 - Idle
 - Walking
 - Running
+- Attacking
+- Running Attacking
+- Hit
+- Dead
 - Jumping
 
 Files available:
 - `ProjectContent/Characters/knight/knight_idle.png` + `.json`
 - `ProjectContent/Characters/knight/knight_walking.png` + `.json`
 - `ProjectContent/Characters/knight/knight_running.png` + `.json`
+- `ProjectContent/Characters/knight/knight_attacking.png` + `.json`
+- `ProjectContent/Characters/knight/knight_runningAttacking.png` + `.json`
+- `ProjectContent/Characters/knight/knight_hit.png` + `.json`
+- `ProjectContent/Characters/knight/knight_dead.png` + `.json`
 - `ProjectContent/Characters/knight/knight_jumping.png` + `.json`

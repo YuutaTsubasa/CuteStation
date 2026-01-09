@@ -4,8 +4,8 @@ A 2D platformer action game built with modern cross-platform technologies.
 
 ## Documentation
 
-- [Game Design Document](docs/GAME_DESIGN.md) - 遊戲設計文件（關卡、角色、機制）
-- [Technical Design Document](docs/TECHNICAL_DESIGN.md) - 技術設計文件（架構、技術選型、開發階段）
+- [Game Design Document](docs/GAME_DESIGN.md) - Core loop, combat, levels, and player experience.
+- [Technical Design Document](docs/TECHNICAL_DESIGN.md) - Engine architecture, systems, and asset pipeline.
 
 ## Assets
 
@@ -24,9 +24,9 @@ A 2D platformer action game built with modern cross-platform technologies.
 
 | Platform | Status | CI Build | Output |
 |----------|--------|----------|--------|
-| Windows | Supported | ✓ | `.exe` / `.msi` |
-| Android | Supported | ✓ | `.apk` / `.aab` |
-| iOS | Supported | - | `.ipa` (requires macOS) |
+| Windows | Supported | TBD | `.exe` / `.msi` |
+| Android | Supported | TBD | `.apk` / `.aab` |
+| iOS | Supported | N/A | `.ipa` (requires macOS) |
 
 > **Note:** iOS builds require Apple Developer certificates and signing setup. Use `tauri ios build` locally on macOS instead of CI.
 
@@ -58,7 +58,7 @@ JAVA_HOME=<path-to-jdk>
 
 Add Rust Android targets:
 ```bash
-rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-android x86_64-linux-android
+rustup target add aarch64-linux-android armv7-linux-androideabi i686-linux-androideabi x86_64-linux-android
 ```
 
 ### iOS (macOS only)
@@ -120,11 +120,12 @@ Details live in `docs/conventions.md`.
 - Phase 6: JSON level data (solids/coins/goal) wired into gameplay done.
 - Phase 7: Level Editor v0 (grid/snap/pan + export) done.
 - Phase 8: Mobile virtual controls (joystick + jump) overlay done.
+- Phase 9: Knight combat animations (attack, hit, dead, running attack) done.
 
 ## Controls
 
-- Keyboard: Arrow keys / A-D to move, Space to jump, Escape to return to the menu.
-- Touch: Left virtual joystick for horizontal movement, right jump button for jumping.
+- Keyboard: Arrow keys / A-D to move, Space to jump, J/K to attack, Escape to return to the menu.
+- Touch: Left virtual joystick for horizontal movement, right jump and attack buttons.
 
 ## Rendering
 
@@ -183,26 +184,16 @@ Output:
 
 ```
 CuteStation/
-├── src/                          # Svelte frontend source
-│   ├── routes/                   # SvelteKit routes
-│   │   ├── +layout.ts
-│   │   └── +page.svelte          # Main page
-│   └── app.html                  # HTML template
-├── src-tauri/                    # Tauri Rust backend
-│   ├── src/
-│   │   ├── lib.rs                # Library entry
-│   │   └── main.rs               # Application entry
-│   ├── gen/                      # Generated platform projects
-│   │   └── android/              # Android project
-│   ├── icons/                    # Application icons
-│   ├── capabilities/             # Tauri capabilities config
-│   ├── Cargo.toml                # Rust dependencies
-│   └── tauri.conf.json           # Tauri configuration
-├── static/                       # Static assets
-├── package.json                  # Node.js dependencies
-├── svelte.config.js              # Svelte configuration
-├── vite.config.js                # Vite configuration
-└── tsconfig.json                 # TypeScript configuration
+  src/                          # Svelte frontend source
+  src/routes/                   # SvelteKit routes
+  src-tauri/                    # Tauri Rust backend
+  static/                       # Static assets
+  ProjectContent/               # Game content (spritesheets, audio, levels)
+  docs/                         # Design and technical docs
+  package.json                  # Node.js dependencies
+  svelte.config.js              # Svelte configuration
+  vite.config.js                # Vite configuration
+  tsconfig.json                 # TypeScript configuration
 ```
 
 ## IDE Setup
