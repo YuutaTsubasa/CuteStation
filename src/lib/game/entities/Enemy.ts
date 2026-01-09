@@ -17,12 +17,14 @@ export class Enemy {
   private patrolDirection = 1;
   private readonly behavior: "idle" | "patrol";
   private readonly patrolStepTolerance: number;
+  private readonly groundTolerance: number;
 
   readonly width: number;
   readonly height: number;
 
   position = { x: 0, y: 0 };
   velocity = { x: 0, y: 0 };
+  grounded = false;
   health: number;
   state: "idle" | "patrol" | "hurt" | "dead" = "idle";
 
@@ -53,6 +55,7 @@ export class Enemy {
     this.idleDuration = options.idleDuration ?? 0.5;
     this.idleTimer = this.idleDuration;
     this.patrolStepTolerance = 8 * this.scale;
+    this.groundTolerance = 4 * this.scale;
     if (this.behavior === "patrol" && this.idleDuration <= 0) {
       this.state = "patrol";
     }
@@ -117,6 +120,7 @@ export class Enemy {
     this.position.y = resolved.y;
     this.velocity.x = resolved.vx / safeDelta;
     this.velocity.y = resolved.vy / safeDelta;
+    this.grounded = resolved.grounded;
 
     if (this.state === "patrol") {
       let hitBounds = false;
@@ -217,9 +221,12 @@ export class Enemy {
   }
 
   private shouldTurnAtEdge(solids: Rect[], baseX: number) {
+    if (!this.grounded) {
+      return false;
+    }
     const footY = this.position.y + this.height;
     const floorTop = this.getFloorTopAt(baseX, baseX + this.width, solids);
-    if (floorTop === null || Math.abs(footY - floorTop) > 1) {
+    if (floorTop === null || Math.abs(footY - floorTop) > this.groundTolerance) {
       return false;
     }
 
