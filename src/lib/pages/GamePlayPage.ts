@@ -588,6 +588,10 @@ export class GamePlayPage extends Page {
       return;
     }
 
+    if (this.player.isInvincible()) {
+      return;
+    }
+
     if (this.enemyContactTimer > 0) {
       this.enemyContactTimer = Math.max(0, this.enemyContactTimer - deltaSeconds);
       return;
@@ -618,6 +622,7 @@ export class GamePlayPage extends Page {
       this.player.velocity.x = direction * this.enemyContactKnockbackSpeed * this.worldScale;
       this.player.velocity.y = -this.player.getHomingBounceSpeed() * 0.6;
       this.player.grounded = false;
+      this.player.triggerInvincibility();
       this.enemyContactTimer = 0.35;
       break;
     }
@@ -752,7 +757,7 @@ export class GamePlayPage extends Page {
     this.player.position.y = desiredBottom - this.player.height;
     this.resolvePlayerHomingOverlap();
     this.player.velocity.x = 0;
-    this.player.velocity.y = -this.player.getHomingBounceSpeed();
+    this.player.velocity.y = -this.player.getHomingAttackBounceSpeed();
   }
 
   private resolvePlayerHomingOverlap() {

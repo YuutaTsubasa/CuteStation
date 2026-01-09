@@ -79,7 +79,7 @@
     {
       "id": "enemy-01",
       "x": 190,
-      "y": 368,
+      "y": 336,
       "behavior": "patrol",
       "patrolRange": 140
     }
