@@ -16,8 +16,6 @@ export class Enemy {
   private readonly patrolMaxX: number;
   private patrolDirection = 1;
   private readonly behavior: "idle" | "patrol";
-  private readonly patrolStepTolerance: number;
-  private readonly groundTolerance: number;
   private readonly edgeProbeOffset: number;
 
   readonly width: number;
@@ -55,8 +53,6 @@ export class Enemy {
     this.health = 3;
     this.idleDuration = options.idleDuration ?? 0.5;
     this.idleTimer = this.idleDuration;
-    this.patrolStepTolerance = 8 * this.scale;
-    this.groundTolerance = 4 * this.scale;
     this.edgeProbeOffset = 0.01 * this.scale;
     if (this.behavior === "patrol" && this.idleDuration <= 0) {
       this.state = "patrol";
@@ -236,11 +232,6 @@ export class Enemy {
       return false;
     }
     const footY = this.position.y + this.height;
-    const floorTop = this.getFloorTopAt(baseX, baseX + this.width, solids);
-    if (floorTop === null || Math.abs(footY - floorTop) > this.groundTolerance) {
-      return false;
-    }
-
     const centerX = baseX + this.width * 0.5;
     if (!this.hasSolidBelow(centerX, footY + this.edgeProbeOffset, solids)) {
       return true;
@@ -253,9 +244,6 @@ export class Enemy {
     if (frontTop === null) {
       return true;
     }
-    if (Math.abs(frontTop - floorTop) > this.patrolStepTolerance) {
-      return true;
-    }
 
     const lookAhead = halfWidth * this.patrolDirection;
     const aheadX = baseX + lookAhead;
@@ -264,7 +252,7 @@ export class Enemy {
       return true;
     }
 
-    return Math.abs(aheadTop - floorTop) > this.patrolStepTolerance;
+    return false;
   }
 
   private getFloorTopAt(xStart: number, xEnd: number, solids: Rect[]) {
