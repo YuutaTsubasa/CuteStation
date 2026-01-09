@@ -74,6 +74,7 @@
     pageManager?.goTo(id);
     updateStatus();
     updateUiLayout();
+    window.requestAnimationFrame(() => updateUiLayout());
   }
 
   function exportLevel() {
