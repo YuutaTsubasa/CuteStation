@@ -7,6 +7,7 @@
   import { SplashScreenPage } from "$lib/pages/SplashScreenPage";
   import VirtualControls from "$lib/components/VirtualControls.svelte";
   import { VirtualInput } from "$lib/game/input/VirtualInput";
+  import type { LevelEnemy } from "$lib/game/levels/LevelLoader";
 
   let status = $state("Initializing...");
   let currentPageId = $state("None");
@@ -24,6 +25,12 @@
   let gameLoading = $state(false);
   let showVirtualControls = $state(true);
   const virtualInput = new VirtualInput();
+  let selectedEnemy = $state<LevelEnemy | null>(null);
+  let enemyType = $state("static");
+  let enemyPatrolRange = $state(96);
+  let enemyPatrolSpeed = $state(80);
+  let enemyIdleDuration = $state(0.5);
+  let enemyGravityEnabled = $state(true);
 
   let uiScale = $state(1);
   let uiOffsetX = $state(0);
@@ -122,6 +129,18 @@
     levelEditor.setHost(pixiFrame);
     levelEditor.setOnRequestExit(() => goTo("MainMenu"));
     levelEditor.setOnRequestPlaytest(() => goTo("GamePlay"));
+    levelEditor.setOnSelectionChange((selection) => {
+      if (selection.type === "enemy") {
+        selectedEnemy = selection.enemy;
+        enemyType = selection.enemy.enemyType ?? "static";
+        enemyPatrolRange = selection.enemy.patrolRange ?? 96;
+        enemyPatrolSpeed = selection.enemy.patrolSpeed ?? 80;
+        enemyIdleDuration = selection.enemy.idleDuration ?? 0.5;
+        enemyGravityEnabled = selection.enemy.gravityEnabled ?? true;
+        return;
+      }
+      selectedEnemy = null;
+    });
     editor = levelEditor;
 
     manager.register(splash);
@@ -186,6 +205,9 @@
           <button class="action" type="button" on:click={() => editor?.addCoin()}
             >Add Coin</button
           >
+          <button class="action" type="button" on:click={() => editor?.addEnemy()}
+            >Add Enemy</button
+          >
           <button class="action" type="button" on:click={() => editor?.deleteSelected()}
             >Delete</button
           >
@@ -225,9 +247,88 @@
             >Back</button
           >
         </div>
+        {#if selectedEnemy}
+          <div class="editor-panel">
+            <div class="panel-title">Enemy Settings</div>
+            <label class="panel-row">
+              <span>Type</span>
+              <select
+                value={enemyType}
+                on:change={(event) => {
+                  const value = (event.target as HTMLSelectElement).value;
+                  enemyType = value;
+                  editor?.updateSelectedEnemy({ enemyType: value as "static" | "patrol" });
+                }}
+              >
+                <option value="static">Static</option>
+                <option value="patrol">Patrol</option>
+              </select>
+            </label>
+            <label class="panel-row">
+              <span>Patrol Range</span>
+              <input
+                type="number"
+                value={enemyPatrolRange}
+                min="0"
+                step="1"
+                disabled={enemyType !== "patrol"}
+                on:change={(event) => {
+                  const value = Number((event.target as HTMLInputElement).value);
+                  enemyPatrolRange = value;
+                  editor?.updateSelectedEnemy({ patrolRange: value });
+                }}
+              />
+            </label>
+            <label class="panel-row">
+              <span>Patrol Speed</span>
+              <input
+                type="number"
+                value={enemyPatrolSpeed}
+                min="0"
+                step="1"
+                disabled={enemyType !== "patrol"}
+                on:change={(event) => {
+                  const value = Number((event.target as HTMLInputElement).value);
+                  enemyPatrolSpeed = value;
+                  editor?.updateSelectedEnemy({ patrolSpeed: value });
+                }}
+              />
+            </label>
+            <label class="panel-row">
+              <span>Idle Duration</span>
+              <input
+                type="number"
+                value={enemyIdleDuration}
+                min="0"
+                step="0.1"
+                on:change={(event) => {
+                  const value = Number((event.target as HTMLInputElement).value);
+                  enemyIdleDuration = value;
+                  editor?.updateSelectedEnemy({ idleDuration: value });
+                }}
+              />
+            </label>
+            <label class="panel-row">
+              <span>Gravity</span>
+              <input
+                type="checkbox"
+                checked={enemyGravityEnabled}
+                on:change={(event) => {
+                  const value = (event.target as HTMLInputElement).checked;
+                  enemyGravityEnabled = value;
+                  editor?.updateSelectedEnemy({ gravityEnabled: value });
+                }}
+              />
+            </label>
+          </div>
+        {/if}
         <div class="editor-hint">
-          Drag to move. Shift + drag to resize. Space/right click + drag to pan. Grid/Snap
-          toggles.
+          Mouse: Drag to move. Shift + drag to resize. Space/right click + drag to pan.
+          <br />
+          Touch: One finger drag to move. Two fingers to pan.
+          <br />
+          Gamepad: Left stick move cursor. A drag/select. X add solid. Y add coin. LB add enemy.
+          B delete. Right stick pans.
         </div>
       {:else}
         <!-- Main menu UI is rendered by MainMenuPage in Pixi. -->
@@ -418,6 +519,41 @@
   color: #ffffff;
   font-size: 24px;
   pointer-events: auto;
+}
+
+.editor-panel {
+  position: absolute;
+  top: 120px;
+  right: 24px;
+  width: 360px;
+  padding: 16px 20px;
+  border-radius: 16px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+  display: grid;
+  gap: 12px;
+  pointer-events: auto;
+}
+
+.panel-title {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.panel-row {
+  display: grid;
+  grid-template-columns: 1fr 140px;
+  align-items: center;
+  gap: 12px;
+  font-size: 20px;
+}
+
+.panel-row input,
+.panel-row select {
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: none;
+  font-size: 18px;
 }
 
 .stage-overlay {

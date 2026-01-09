@@ -28,6 +28,10 @@
 - Levels include solids, coins, goal, and enemy placements.
 - Each level targets 5 collectible coins.
 
+## Enemies
+- Types: `static` (idle in place) and `patrol` (moves within a range).
+- Enemies can disable gravity for floating or stationary placements.
+
 ## Controls
 
 ### Keyboard

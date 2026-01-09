@@ -41,6 +41,7 @@
 - Phase 7: Level Editor v0 with grid/snap/pan and export complete.
 - Phase 8: Mobile virtual controls overlay (joystick + jump) complete.
 - Phase 9: Knight combat animations (attack, hit, dead, running attack) complete.
+- Phase 10: Level editor enemy placement + touch/gamepad editing complete.
 
 ## Testing Guidelines
 - There are no automated tests yet. Use `npm run check` before PRs.
@@ -58,3 +59,4 @@
 - GamePlay centers the camera at player spawn and hides the world until player assets finish loading.
 - Main menu video background and Press-to-Start prompt are DOM overlays inside the stage frame.
 - Attack hit windows are defined by the `attackHit` animation inside `knight_attacking.json` and `knight_runningAttacking.json`.
+- Enemy entries support `enemyType` (`static`/`patrol`) and `gravityEnabled` to toggle falling behavior.

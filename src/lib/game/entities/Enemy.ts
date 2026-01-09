@@ -7,6 +7,7 @@ export class Enemy {
   private readonly scale: number;
   private readonly gravity: number;
   private readonly maxFallSpeed: number;
+  private readonly gravityEnabled: boolean;
   private readonly knockbackDamp = 10;
   private hurtTimer = 0;
   private idleTimer = 0;
@@ -36,6 +37,7 @@ export class Enemy {
       patrolRange?: number;
       patrolSpeed?: number;
       idleDuration?: number;
+      gravityEnabled?: boolean;
     } = {},
   ) {
     this.scale = scale;
@@ -43,6 +45,7 @@ export class Enemy {
     this.height = 64 * this.scale;
     this.gravity = 1000 * this.scale;
     this.maxFallSpeed = 900 * this.scale;
+    this.gravityEnabled = options.gravityEnabled ?? true;
     this.behavior = options.behavior ?? "patrol";
     this.patrolSpeed = (options.patrolSpeed ?? 80) * this.scale;
     this.position.x = startX * this.scale;
@@ -94,15 +97,19 @@ export class Enemy {
     if (this.state === "patrol") {
       const projectedX = this.position.x + this.velocity.x * safeDelta;
       if (this.shouldTurnAtEdge(solids, projectedX)) {
-        this.setPatrolDirection(this.patrolDirection * -1, true);
+        this.setPatrolDirection(this.patrolDirection * -1, false);
         preTurned = true;
       }
     }
 
-    this.velocity.y = Math.min(
-      this.velocity.y + this.gravity * deltaSeconds,
-      this.maxFallSpeed,
-    );
+    if (this.gravityEnabled) {
+      this.velocity.y = Math.min(
+        this.velocity.y + this.gravity * deltaSeconds,
+        this.maxFallSpeed,
+      );
+    } else {
+      this.velocity.y = 0;
+    }
     if (this.state === "hurt") {
       this.velocity.x += -this.velocity.x * Math.min(deltaSeconds * this.knockbackDamp, 1);
     }
@@ -127,7 +134,7 @@ export class Enemy {
         this.position.y = previousPosition.y;
         this.velocity.x = 0;
         this.velocity.y = 0;
-        this.setPatrolDirection(this.patrolDirection * -1, true);
+        this.setPatrolDirection(this.patrolDirection * -1, false);
         preTurned = true;
       }
       let hitBounds = false;
@@ -136,15 +143,15 @@ export class Enemy {
       }
       if (this.position.x <= this.patrolMinX) {
         this.position.x = this.patrolMinX;
-        this.setPatrolDirection(1, true);
+        this.setPatrolDirection(1, false);
         hitBounds = true;
       } else if (this.position.x >= this.patrolMaxX) {
         this.position.x = this.patrolMaxX;
-        this.setPatrolDirection(-1, true);
+        this.setPatrolDirection(-1, false);
         hitBounds = true;
       }
       if (!hitBounds && Math.abs(resolved.vx) <= 0.01 && Math.abs(desiredVx) > 0.01) {
-        this.setPatrolDirection(this.patrolDirection * -1, true);
+        this.setPatrolDirection(this.patrolDirection * -1, false);
       }
     }
 
@@ -180,6 +187,9 @@ export class Enemy {
   }
 
   resolveSpawn(solids: Rect[]) {
+    if (!this.gravityEnabled) {
+      return;
+    }
     const rect = this.getRect();
     const resolved = Physics.resolve(rect, { x: 0, y: 1 }, solids);
     this.position.x = resolved.x;

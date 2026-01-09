@@ -1,5 +1,5 @@
 import { Container, Graphics } from "pixi.js";
-import type { LevelData, LevelPoint, LevelRect } from "./LevelLoader";
+import type { LevelData, LevelEnemy, LevelPoint, LevelRect } from "./LevelLoader";
 import type { Rect } from "../systems/Physics";
 
 export type LevelRuntimeOptions = {
@@ -11,6 +11,7 @@ export type LevelRuntimeOptions = {
   showGoal?: boolean;
   showSpawn?: boolean;
   showWorldBounds?: boolean;
+  showEnemies?: boolean;
 };
 
 type WorldBounds = { minX: number; minY: number; maxX: number; maxY: number };
@@ -29,6 +30,7 @@ export class LevelRuntime {
   private readonly showGoal: boolean;
   private readonly showSpawn: boolean;
   private readonly showWorldBounds: boolean;
+  private readonly showEnemies: boolean;
 
   private world: Container | null = null;
   private solidsWorld: Rect[] = [];
@@ -38,6 +40,8 @@ export class LevelRuntime {
   private spawnGraphic: Graphics | null = null;
   private worldBoundsGraphic: Graphics | null = null;
   private worldBounds: WorldBounds | null = null;
+  private enemiesWorld: Point[] = [];
+  private enemyGraphics: Graphics[] = [];
 
   constructor(level: LevelData, options: LevelRuntimeOptions) {
     this.level = level;
@@ -53,6 +57,7 @@ export class LevelRuntime {
     this.showGoal = options.showGoal ?? true;
     this.showSpawn = options.showSpawn ?? false;
     this.showWorldBounds = options.showWorldBounds ?? false;
+    this.showEnemies = options.showEnemies ?? false;
 
     const baseFloorY = options.baseFloorY ?? this.getBaseFloorY(level.solids);
     this.worldOffsetY = baseFloorY * (this.worldScale - 1);
@@ -72,6 +77,11 @@ export class LevelRuntime {
       gfx.destroy();
     }
     this.coinGraphics.clear();
+    for (const gfx of this.enemyGraphics) {
+      gfx.destroy();
+    }
+    this.enemyGraphics = [];
+    this.enemiesWorld = [];
     this.goalGraphic?.destroy();
     this.goalGraphic = null;
     this.spawnGraphic?.destroy();
@@ -89,6 +99,10 @@ export class LevelRuntime {
 
   getCoinsWorld() {
     return this.level.coins.map((coin) => this.toWorldPoint(coin));
+  }
+
+  getEnemiesWorld() {
+    return this.enemiesWorld;
   }
 
   getGoalWorld() {
@@ -197,6 +211,52 @@ export class LevelRuntime {
     this.coinGraphics.delete(id);
   }
 
+  addEnemy(enemy: LevelEnemy) {
+    this.level.enemies = this.level.enemies ?? [];
+    this.level.enemies.push(enemy);
+    const index = this.level.enemies.length - 1;
+    if (!this.world || !this.showEnemies) {
+      return index;
+    }
+    const worldPoint = this.toWorldPoint(enemy);
+    const gfx = this.drawEnemy(worldPoint, enemy);
+    this.enemyGraphics.push(gfx);
+    this.enemiesWorld.push(worldPoint);
+    return index;
+  }
+
+  updateEnemy(index: number, enemy: LevelEnemy) {
+    if (!this.level.enemies) {
+      this.level.enemies = [];
+    }
+    this.level.enemies[index] = enemy;
+    const worldPoint = this.toWorldPoint(enemy);
+    this.enemiesWorld[index] = worldPoint;
+    const gfx = this.enemyGraphics[index];
+    if (gfx) {
+      const color = this.getEnemyColor(enemy);
+      gfx.clear();
+      gfx.circle(0, 0, 12 * this.worldScale).fill(color).stroke({
+        color: 0xffffff,
+        width: 2,
+      });
+      gfx.x = worldPoint.x;
+      gfx.y = worldPoint.y;
+    }
+  }
+
+  removeEnemy(index: number) {
+    if (!this.level.enemies) {
+      return;
+    }
+    this.level.enemies.splice(index, 1);
+    const gfx = this.enemyGraphics.splice(index, 1)[0];
+    if (gfx) {
+      gfx.destroy();
+    }
+    this.enemiesWorld.splice(index, 1);
+  }
+
   updateGoal(rect: LevelRect) {
     this.level.goal = rect;
     if (this.goalGraphic) {
@@ -280,6 +340,13 @@ export class LevelRuntime {
       }
     }
 
+    if (this.showEnemies && this.level.enemies) {
+      this.enemiesWorld = this.level.enemies.map((enemy) => this.toWorldPoint(enemy));
+      this.enemyGraphics = this.enemiesWorld.map((enemy, index) =>
+        this.drawEnemy(enemy, this.level.enemies?.[index]),
+      );
+    }
+
     if (this.showGoal && this.level.goal) {
       this.goalGraphic = this.drawGoal(this.toWorldRect(this.level.goal));
     }
@@ -348,6 +415,23 @@ export class LevelRuntime {
     gfx.y = point.y;
     this.world?.addChild(gfx);
     return gfx;
+  }
+
+  private drawEnemy(point: Point, enemy?: LevelEnemy) {
+    const gfx = new Graphics();
+    const color = this.getEnemyColor(enemy);
+    gfx.circle(0, 0, 12 * this.worldScale).fill(color).stroke({
+      color: 0xffffff,
+      width: 2,
+    });
+    gfx.x = point.x;
+    gfx.y = point.y;
+    this.world?.addChild(gfx);
+    return gfx;
+  }
+
+  private getEnemyColor(enemy?: LevelEnemy) {
+    return enemy?.enemyType === "patrol" ? 0xff6b6b : 0x6bd6ff;
   }
 
   private drawGoal(rect: Rect) {

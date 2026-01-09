@@ -57,6 +57,7 @@ export class Player {
   private readonly homingInvincibility = 0.45;
   private attackJustEnded = false;
   private attackVisualTimer = 0;
+  private attackRestartRequested = false;
   private invincibleTimer = 0;
   private flickerTimer = 0;
   private flickerOn = false;
@@ -163,11 +164,23 @@ export class Player {
     this.syncVisual();
   }
 
-  clampToBounds(bounds: { minX: number; minY: number; maxX: number; maxY: number }) {
+  clampToBounds(
+    bounds: { minX: number; minY: number; maxX: number; maxY: number },
+    options: { clampX?: boolean; clampY?: boolean } = {},
+  ) {
+    const clampX = options.clampX ?? true;
+    const clampY = options.clampY ?? true;
     const maxX = bounds.maxX - this.width;
     const maxY = bounds.maxY - this.height;
-    let clampedX = Math.min(Math.max(this.position.x, bounds.minX), maxX);
-    let clampedY = Math.min(Math.max(this.position.y, bounds.minY), maxY);
+    let clampedX = this.position.x;
+    let clampedY = this.position.y;
+
+    if (clampX) {
+      clampedX = Math.min(Math.max(this.position.x, bounds.minX), maxX);
+    }
+    if (clampY) {
+      clampedY = Math.min(Math.max(this.position.y, bounds.minY), maxY);
+    }
 
     if (clampedX !== this.position.x) {
       this.position.x = clampedX;
@@ -215,6 +228,23 @@ export class Player {
 
   getAttackState() {
     return this.attackState;
+  }
+
+  canStartAttack() {
+    return this.attackCooldownTimer <= 0 && this.attackActiveTimer <= 0;
+  }
+
+  triggerHomingAttackVisual() {
+    if (!this.canStartAttack()) {
+      return;
+    }
+    this.attackState = "homing";
+    this.attackActiveTimer = this.homingDuration;
+    this.attackCooldownTimer = this.homingCooldown;
+    this.attackVisualTimer = this.homingVisualDuration;
+    this.lastAttackType = "homing";
+    this.attackSequence += 1;
+    this.attackRestartRequested = true;
   }
 
   getAttackHitType() {
@@ -273,7 +303,6 @@ export class Player {
   }
 
   updateAttackTimers(deltaSeconds: number, pressed: boolean) {
-    this.attackJustEnded = false;
     if (this.attackActiveTimer > 0) {
       this.attackActiveTimer = Math.max(0, this.attackActiveTimer - deltaSeconds);
       if (this.attackActiveTimer === 0 && this.attackState !== "idle") {
@@ -377,6 +406,7 @@ export class Player {
         ? this.animations.runAttack ?? []
         : this.animations.attack ?? [];
       let startFrame: number | undefined;
+      let forceRestart = false;
       if (
         this.currentAnimation !== "attack" &&
         this.currentAnimation !== "runAttack"
@@ -384,12 +414,17 @@ export class Player {
         startFrame = this.attackStartFrame;
       } else if (this.currentAnimation !== target && this.sprite) {
         startFrame = this.sprite.currentFrame;
+      } else if (this.attackRestartRequested) {
+        startFrame = this.attackStartFrame;
+        forceRestart = true;
       }
       this.playAnimation(target, frames, {
         loop: false,
         holdLastFrame: true,
         startFrame,
+        forceRestart,
       });
+      this.attackRestartRequested = false;
       this.applyFacing();
       return;
     }
@@ -399,6 +434,28 @@ export class Player {
         this.jumpPhase = "none";
       } else if (this.jumpPhase === "jumpUp") {
         this.jumpPhase = "hold";
+      } else if (this.jumpFrames) {
+        if (this.velocity.y > this.fallEps) {
+          this.jumpPhase = "fall";
+          this.playAnimation("jumpFall", this.jumpFrames.fall, {
+            loop: false,
+            holdLastFrame: true,
+          });
+        } else if (this.velocity.y < 0) {
+          this.jumpPhase = "jumpUp";
+          this.playAnimation("jumpUp", this.jumpFrames.jumpUp, {
+            loop: false,
+            onComplete: () => {
+              this.jumpPhase = "hold";
+              this.playAnimation("jumpHold", this.jumpFrames?.hold ?? [], {
+                loop: false,
+              });
+            },
+          });
+        } else {
+          this.jumpPhase = "hold";
+          this.playAnimation("jumpHold", this.jumpFrames.hold, { loop: false });
+        }
       }
       this.attackJustEnded = false;
     }
@@ -485,9 +542,10 @@ export class Player {
       onComplete?: () => void;
       holdLastFrame?: boolean;
       startFrame?: number;
+      forceRestart?: boolean;
     },
   ) {
-    if (this.currentAnimation === name) {
+    if (this.currentAnimation === name && !options.forceRestart) {
       return;
     }
 

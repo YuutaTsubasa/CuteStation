@@ -21,14 +21,10 @@ export class Combat {
   private lastAttackId = -1;
   private readonly hitTargets = new Set<Enemy>();
 
-  update(player: Player, enemies: Enemy[]): CombatHit[] {
+  update(player: Player, enemies: Enemy[], homingTarget: Enemy | null = null): CombatHit[] {
     const hits: CombatHit[] = [];
     if (!player.isAttackActive()) {
       this.resetAttackState();
-      return hits;
-    }
-
-    if (!player.isAttackHitActive()) {
       return hits;
     }
 
@@ -39,6 +35,38 @@ export class Combat {
     }
 
     const attackType = player.getAttackHitType();
+    if (attackType === "homing") {
+      if (!homingTarget || homingTarget.isDead()) {
+        return hits;
+      }
+      if (this.hitTargets.has(homingTarget)) {
+        return hits;
+      }
+      const rect = homingTarget.getRect();
+      const profile = this.getAttackProfile(player, rect, attackType);
+      const knockbackX = profile.knockback.x * player.getFacingDirection();
+      const hit = homingTarget.applyHit(profile.damage, {
+        x: knockbackX,
+        y: profile.knockback.y,
+      });
+      if (hit) {
+        this.hitTargets.add(homingTarget);
+        hits.push({
+          enemy: homingTarget,
+          position: {
+            x: rect.x + rect.width * 0.5,
+            y: rect.y + rect.height * 0.5,
+          },
+          attackType,
+        });
+      }
+      return hits;
+    }
+
+    if (!player.isAttackHitActive()) {
+      return hits;
+    }
+
     const hitbox = this.getAttackHitbox(player, attackType);
     if (!hitbox) {
       return hits;

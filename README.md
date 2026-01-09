@@ -121,6 +121,7 @@ Details live in `docs/conventions.md`.
 - Phase 7: Level Editor v0 (grid/snap/pan + export) done.
 - Phase 8: Mobile virtual controls (joystick + jump) overlay done.
 - Phase 9: Knight combat animations (attack, hit, dead, running attack) done.
+- Phase 10: Level editor enemy placement + touch/gamepad editing done.
 
 ## Controls
 

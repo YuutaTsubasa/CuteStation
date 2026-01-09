@@ -14,7 +14,7 @@
     {
       "x": -176,
       "y": 432,
-      "w": 1408,
+      "w": 752,
       "h": 48
     },
     {
@@ -30,15 +30,9 @@
       "h": 32
     },
     {
-      "x": 640,
+      "x": 1136,
       "y": 400,
-      "w": 192,
-      "h": 32
-    },
-    {
-      "x": 896,
-      "y": 400,
-      "w": 192,
+      "w": 160,
       "h": 32
     }
   ],
@@ -61,27 +55,75 @@
     },
     {
       "id": "coin-03",
-      "x": 736,
+      "x": 688,
       "y": 368
     },
     {
       "id": "coin-04",
-      "x": 944,
+      "x": 848,
       "y": 368
     },
     {
       "id": "coin-05",
-      "x": 1056,
+      "x": 1008,
       "y": 368
     }
   ],
   "enemies": [
     {
-      "id": "enemy-01",
-      "x": 190,
-      "y": 336,
+      "id": "enemy-1767992465340",
+      "x": 192,
+      "y": 352,
+      "enemyType": "patrol",
       "behavior": "patrol",
-      "patrolRange": 140
+      "patrolRange": 96,
+      "patrolSpeed": 80,
+      "idleDuration": 0.5,
+      "gravityEnabled": true
+    },
+    {
+      "id": "enemy-1767992473193",
+      "x": 448,
+      "y": 352,
+      "enemyType": "patrol",
+      "behavior": "patrol",
+      "patrolRange": 96,
+      "patrolSpeed": 80,
+      "idleDuration": 0.5,
+      "gravityEnabled": true
+    },
+    {
+      "id": "enemy-1767992489504",
+      "x": 720,
+      "y": 384,
+      "enemyType": "static",
+      "behavior": "idle",
+      "patrolRange": 96,
+      "patrolSpeed": 80,
+      "idleDuration": 0.5,
+      "gravityEnabled": false
+    },
+    {
+      "id": "enemy-1767992507822",
+      "x": 880,
+      "y": 384,
+      "enemyType": "static",
+      "behavior": "idle",
+      "patrolRange": 96,
+      "patrolSpeed": 80,
+      "idleDuration": 0.5,
+      "gravityEnabled": false
+    },
+    {
+      "id": "enemy-1767992513837",
+      "x": 1040,
+      "y": 384,
+      "enemyType": "static",
+      "behavior": "idle",
+      "patrolRange": 96,
+      "patrolSpeed": 80,
+      "idleDuration": 0.5,
+      "gravityEnabled": false
     }
   ]
 }

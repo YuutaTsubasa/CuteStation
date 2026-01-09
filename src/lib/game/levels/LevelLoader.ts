@@ -12,10 +12,12 @@ export type LevelPoint = {
 };
 
 export type LevelEnemy = LevelPoint & {
+  enemyType?: "static" | "patrol";
   behavior?: "idle" | "patrol";
   patrolRange?: number;
   patrolSpeed?: number;
   idleDuration?: number;
+  gravityEnabled?: boolean;
 };
 
 export type LevelData = {
@@ -43,10 +45,22 @@ export async function loadLevel(path: string): Promise<LevelData> {
   }
 
   const data = (await response.json()) as LevelData;
+  const normalizedEnemies = (data.enemies ?? []).map((enemy) => {
+    const inferredType =
+      enemy.enemyType ?? (enemy.behavior === "patrol" ? "patrol" : "static");
+    const inferredBehavior =
+      enemy.behavior ?? (inferredType === "patrol" ? "patrol" : "idle");
+    return {
+      ...enemy,
+      enemyType: inferredType,
+      behavior: inferredBehavior,
+      gravityEnabled: enemy.gravityEnabled ?? true,
+    };
+  });
   const normalizedData: LevelData = {
     ...data,
     coins: data.coins ?? [],
-    enemies: data.enemies ?? [],
+    enemies: normalizedEnemies,
   };
   return normalizedData;
 }

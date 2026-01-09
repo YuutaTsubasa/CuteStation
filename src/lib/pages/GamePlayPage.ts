@@ -39,6 +39,7 @@ export class GamePlayPage extends Page {
   private hitStopTimer = 0;
   private homingRadius = 180;
   private homingTarget: Enemy | null = null;
+  private homingAttackTarget: Enemy | null = null;
   private homingReticle: Graphics | null = null;
   private worldBounds: { minX: number; minY: number; maxX: number; maxY: number } | null =
     null;
@@ -47,6 +48,7 @@ export class GamePlayPage extends Page {
   private collectibles: Collectible | null = null;
   private levelCleared = false;
   private enemyContactTimer = 0;
+  private homingHoldLatch = false;
   private tickerHandler: (() => void) | null = null;
   private onRequestExit: (() => void) | null = null;
   private onCoinChange: ((count: number, total: number) => void) | null = null;
@@ -201,15 +203,19 @@ export class GamePlayPage extends Page {
     this.player = player;
     const enemies = level.enemies ?? [];
     this.enemies = enemies.map((enemyPoint: LevelEnemy) => {
+      const enemyType =
+        enemyPoint.enemyType ?? (enemyPoint.behavior === "patrol" ? "patrol" : "static");
+      const behavior = enemyType === "patrol" ? "patrol" : "idle";
       const enemy = new Enemy(
         enemyPoint.x,
         enemyPoint.y - spawnOffsetY,
         this.worldScale,
         {
-          behavior: enemyPoint.behavior ?? "patrol",
+          behavior,
           patrolRange: enemyPoint.patrolRange,
           patrolSpeed: enemyPoint.patrolSpeed,
           idleDuration: enemyPoint.idleDuration,
+          gravityEnabled: enemyPoint.gravityEnabled ?? true,
         },
       );
       enemy.mount(world);
@@ -338,7 +344,6 @@ export class GamePlayPage extends Page {
       this.keyboardInput.attackDown = false;
       this.inputState.move = mergedInput.moveX;
       this.inputState.jump = mergedInput.jumpDown;
-      this.inputState.attack = mergedInput.attackDown;
 
       this.homingTarget = this.findHomingTarget();
       this.updateHomingReticle(this.homingTarget);
@@ -350,20 +355,39 @@ export class GamePlayPage extends Page {
         return;
       }
 
+      const attackHeld = mergedInput.attackHeld;
+      if (!attackHeld) {
+        this.homingHoldLatch = false;
+      } else if (!this.homingHoldLatch) {
+        this.homingHoldLatch = true;
+      }
+      const canHoming =
+        !this.player.grounded && this.homingTarget && this.player.canStartAttack();
+      const homingTrigger = this.homingHoldLatch && canHoming;
+      const attackTrigger = mergedInput.attackDown || homingTrigger;
+      if (homingTrigger) {
+        this.homingHoldLatch = false;
+      }
+
+      this.inputState.attack = attackTrigger;
+
       this.player.update(deltaSeconds, this.inputState, this.platforms);
       for (const enemy of this.enemies) {
         enemy.update(deltaSeconds, this.platforms);
       }
       if (this.worldBounds) {
-        this.player.clampToBounds(this.worldBounds);
+        this.player.clampToBounds(this.worldBounds, { clampY: false });
       }
 
       this.resolveEnemyContacts(deltaSeconds);
-      if (mergedInput.attackDown && !this.player.grounded && this.homingTarget) {
+      if (attackTrigger && !this.player.grounded && this.homingTarget) {
         this.executeHomingAttack(this.homingTarget);
       }
 
       this.resolveCombat();
+      if (!this.player.isHomingAttackActive()) {
+        this.homingAttackTarget = null;
+      }
       this.collectibles?.update(this.player.getRect());
       this.checkLevelCompletion();
       this.updateHitEffects(deltaSeconds);
@@ -461,6 +485,7 @@ export class GamePlayPage extends Page {
     this.hitEffects = [];
     this.hitStopTimer = 0;
     this.homingTarget = null;
+    this.homingAttackTarget = null;
     this.enemyContactTimer = 0;
 
     if (this.app) {
@@ -557,7 +582,7 @@ export class GamePlayPage extends Page {
       return;
     }
 
-    const hits = this.combat.update(this.player, this.enemies);
+    const hits = this.combat.update(this.player, this.enemies, this.homingAttackTarget);
     if (hits.length === 0) {
       return;
     }
@@ -744,6 +769,8 @@ export class GamePlayPage extends Page {
       return;
     }
 
+    this.homingAttackTarget = target;
+    this.player.triggerHomingAttackVisual();
     const rect = target.getRect();
     const targetCenterX = rect.x + rect.width * 0.5;
     const targetCenterY = rect.y + rect.height * 0.5;

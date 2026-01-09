@@ -1,6 +1,11 @@
 import { Application, Container, Graphics, Rectangle } from "pixi.js";
 import { audioManager } from "../game/audio/AudioManager";
-import { loadLevel, type LevelPoint, type LevelRect } from "../game/levels/LevelLoader";
+import {
+  loadLevel,
+  type LevelEnemy,
+  type LevelPoint,
+  type LevelRect,
+} from "../game/levels/LevelLoader";
 import { EditorSession } from "../game/levels/EditorSession";
 import { LevelSession } from "../game/levels/LevelSession";
 import { LevelRuntime } from "../game/levels/LevelRuntime";
@@ -11,11 +16,16 @@ type Selection =
   | { type: "spawn" }
   | { type: "solid"; index: number }
   | { type: "coin"; id: string }
+  | { type: "enemy"; index: number }
   | { type: "goal" }
   | { type: "none" };
 
+type SelectionSnapshot =
+  | { type: "spawn" | "solid" | "coin" | "goal" | "none" }
+  | { type: "enemy"; index: number; enemy: LevelEnemy };
+
 type DragState = {
-  type: "spawn" | "solid" | "coin" | "goal";
+  type: "spawn" | "solid" | "coin" | "goal" | "enemy";
   offsetX: number;
   offsetY: number;
   startRect?: { x: number; y: number; w: number; h: number };
@@ -45,11 +55,28 @@ export class LevelEditorPage extends Page {
   private onRequestExit: (() => void) | null = null;
   private onRequestPlaytest: (() => void) | null = null;
   private pointerMoveHandler: ((event: PointerEvent) => void) | null = null;
-  private pointerUpHandler: (() => void) | null = null;
+  private pointerUpHandler: ((event: PointerEvent) => void) | null = null;
   private keyDownHandler: ((event: KeyboardEvent) => void) | null = null;
   private keyUpHandler: ((event: KeyboardEvent) => void) | null = null;
+  private tickerHandler: (() => void) | null = null;
   private spaceDown = false;
   private enterToken = 0;
+  private selectionChangeHandler: ((selection: SelectionSnapshot) => void) | null = null;
+  private activePointers = new Map<number, { x: number; y: number }>();
+  private touchPanState:
+    | { startCenterX: number; startCenterY: number; worldX: number; worldY: number }
+    | null = null;
+  private gamepadCursorWorld = { x: GAME_WIDTH * 0.5, y: GAME_HEIGHT * 0.5 };
+  private gamepadCursorGraphic: Graphics | null = null;
+  private gamepadDragActive = false;
+  private lastGamepadButtons = {
+    select: false,
+    delete: false,
+    addSolid: false,
+    addCoin: false,
+    addEnemy: false,
+  };
+  private readonly gamepadDeadzone = 0.2;
 
   constructor() {
     super("LevelEditor");
@@ -65,6 +92,11 @@ export class LevelEditorPage extends Page {
 
   setOnRequestPlaytest(handler: (() => void) | null) {
     this.onRequestPlaytest = handler;
+  }
+
+  setOnSelectionChange(handler: ((selection: SelectionSnapshot) => void) | null) {
+    this.selectionChangeHandler = handler;
+    this.notifySelection();
   }
 
   override async onEnter() {
@@ -131,6 +163,7 @@ export class LevelEditorPage extends Page {
       showGoal: true,
       showSpawn: true,
       showWorldBounds: true,
+      showEnemies: true,
     });
     runtime.attach(world);
     this.gridVisible = true;
@@ -141,13 +174,32 @@ export class LevelEditorPage extends Page {
     app.stage.hitArea = new Rectangle(0, 0, app.renderer.width, app.renderer.height);
 
     app.stage.on("pointerdown", (event) => {
-      const worldPoint = this.getWorldPoint(event.global.x, event.global.y);
+      const stagePoint = { x: event.global.x, y: event.global.y };
+      const worldPoint = this.getWorldPoint(stagePoint.x, stagePoint.y);
       this.lastPointerWorld = worldPoint;
+
+      if (event.pointerType === "touch") {
+        this.activePointers.set(event.pointerId, stagePoint);
+        if (this.activePointers.size >= 2) {
+          const center = this.getActivePointerCenter();
+          if (this.world) {
+            this.touchPanState = {
+              startCenterX: center.x,
+              startCenterY: center.y,
+              worldX: this.world.x,
+              worldY: this.world.y,
+            };
+            this.dragState = null;
+          }
+          return;
+        }
+      }
+
       if (event.button === 2 || this.spaceDown) {
         if (this.world) {
           this.panState = {
-            startX: event.global.x,
-            startY: event.global.y,
+            startX: stagePoint.x,
+            startY: stagePoint.y,
             worldX: this.world.x,
             worldY: this.world.y,
           };
@@ -161,16 +213,26 @@ export class LevelEditorPage extends Page {
       if (!this.app) {
         return;
       }
-      const rect = this.app.canvas.getBoundingClientRect();
-      const scaleX = GAME_WIDTH / rect.width;
-      const scaleY = GAME_HEIGHT / rect.height;
-      const x = (event.clientX - rect.left) * scaleX;
-      const y = (event.clientY - rect.top) * scaleY;
-      const worldPoint = this.getWorldPoint(x, y);
+      const stagePoint = this.getStagePointFromClient(event);
+      const worldPoint = this.getWorldPoint(stagePoint.x, stagePoint.y);
       this.lastPointerWorld = worldPoint;
+      if (event.pointerType === "touch") {
+        this.activePointers.set(event.pointerId, stagePoint);
+        if (this.touchPanState && this.world && this.activePointers.size >= 2) {
+          const center = this.getActivePointerCenter();
+          const dx = center.x - this.touchPanState.startCenterX;
+          const dy = center.y - this.touchPanState.startCenterY;
+          const nextX = this.touchPanState.worldX + dx;
+          const nextY = this.touchPanState.worldY + dy;
+          const clamped = this.clampWorldPosition(nextX, nextY);
+          this.world.x = clamped.x;
+          this.world.y = clamped.y;
+          return;
+        }
+      }
       if (this.panState && this.world) {
-        const dx = x - this.panState.startX;
-        const dy = y - this.panState.startY;
+        const dx = stagePoint.x - this.panState.startX;
+        const dy = stagePoint.y - this.panState.startY;
         const nextX = this.panState.worldX + dx;
         const nextY = this.panState.worldY + dy;
         const clamped = this.clampWorldPosition(nextX, nextY);
@@ -181,9 +243,16 @@ export class LevelEditorPage extends Page {
       this.handlePointerMove(worldPoint, event.shiftKey);
     };
 
-    this.pointerUpHandler = () => {
+    this.pointerUpHandler = (event) => {
+      if (event.pointerType === "touch") {
+        this.activePointers.delete(event.pointerId);
+        if (this.activePointers.size < 2) {
+          this.touchPanState = null;
+        }
+      }
       this.dragState = null;
       this.panState = null;
+      this.gamepadDragActive = false;
     };
 
     this.keyDownHandler = (event) => {
@@ -212,6 +281,14 @@ export class LevelEditorPage extends Page {
     this.app = app;
     this.world = world;
     this.runtime = runtime;
+    this.gamepadCursorWorld = this.getWorldPoint(GAME_WIDTH * 0.5, GAME_HEIGHT * 0.5);
+    this.tickerHandler = () => {
+      if (!this.app) {
+        return;
+      }
+      this.updateGamepad(this.app.ticker.deltaMS / 1000);
+    };
+    this.app.ticker.add(this.tickerHandler);
   }
 
   override onExit() {
@@ -220,6 +297,11 @@ export class LevelEditorPage extends Page {
     if (this.runtime) {
       EditorSession.setEditorLevel(this.runtime.getLevelData());
     }
+
+    if (this.tickerHandler && this.app) {
+      this.app.ticker.remove(this.tickerHandler);
+    }
+    this.tickerHandler = null;
 
     if (this.pointerMoveHandler) {
       window.removeEventListener("pointermove", this.pointerMoveHandler);
@@ -243,10 +325,14 @@ export class LevelEditorPage extends Page {
 
     this.dragState = null;
     this.panState = null;
-    this.selection = { type: "none" };
+    this.setSelection({ type: "none" });
     this.spaceDown = false;
+    this.activePointers.clear();
+    this.touchPanState = null;
     this.gridGraphics?.destroy();
     this.gridGraphics = null;
+    this.gamepadCursorGraphic?.destroy();
+    this.gamepadCursorGraphic = null;
 
     if (this.runtime) {
       this.runtime.destroy();
@@ -289,7 +375,7 @@ export class LevelEditorPage extends Page {
       h: 24,
     };
     const index = this.runtime.addSolid(rect);
-    this.selection = { type: "solid", index };
+    this.setSelection({ type: "solid", index });
   }
 
   addCoin() {
@@ -301,7 +387,57 @@ export class LevelEditorPage extends Page {
     const id = `coin-${Date.now()}`;
     const coin: LevelPoint = { id, x: point.x, y: point.y };
     this.runtime.addCoin(coin);
-    this.selection = { type: "coin", id };
+    this.setSelection({ type: "coin", id });
+  }
+
+  addEnemy() {
+    if (!this.runtime) {
+      return;
+    }
+
+    const point = this.runtime.toLevelPoint(this.lastPointerWorld);
+    const id = `enemy-${Date.now()}`;
+    const enemy: LevelEnemy = {
+      id,
+      x: point.x,
+      y: point.y,
+      enemyType: "static",
+      behavior: "idle",
+      patrolRange: 96,
+      patrolSpeed: 80,
+      idleDuration: 0.5,
+      gravityEnabled: true,
+    };
+    const index = this.runtime.addEnemy(enemy);
+    this.setSelection({ type: "enemy", index });
+  }
+
+  updateSelectedEnemy(update: Partial<LevelEnemy>) {
+    if (!this.runtime || this.selection.type !== "enemy") {
+      return;
+    }
+
+    const index = this.selection.index;
+    const current = this.runtime.level.enemies?.[index];
+    if (!current) {
+      return;
+    }
+
+    const nextType = update.enemyType ?? current.enemyType ?? "static";
+    const nextBehavior =
+      update.behavior ??
+      (update.enemyType ? (nextType === "patrol" ? "patrol" : "idle") : current.behavior) ??
+      (nextType === "patrol" ? "patrol" : "idle");
+
+    const next: LevelEnemy = {
+      ...current,
+      ...update,
+      enemyType: nextType,
+      behavior: nextBehavior,
+    };
+
+    this.runtime.updateEnemy(index, next);
+    this.setSelection({ type: "enemy", index });
   }
 
   deleteSelected() {
@@ -311,13 +447,19 @@ export class LevelEditorPage extends Page {
 
     if (this.selection.type === "solid") {
       this.runtime.removeSolid(this.selection.index);
-      this.selection = { type: "none" };
+      this.setSelection({ type: "none" });
       return;
     }
 
     if (this.selection.type === "coin") {
       this.runtime.removeCoin(this.selection.id);
-      this.selection = { type: "none" };
+      this.setSelection({ type: "none" });
+      return;
+    }
+
+    if (this.selection.type === "enemy") {
+      this.runtime.removeEnemy(this.selection.index);
+      this.setSelection({ type: "none" });
     }
   }
 
@@ -365,6 +507,31 @@ export class LevelEditorPage extends Page {
     return this.snapEnabled;
   }
 
+  private setSelection(selection: Selection) {
+    this.selection = selection;
+    this.notifySelection();
+  }
+
+  private notifySelection() {
+    if (!this.selectionChangeHandler) {
+      return;
+    }
+
+    if (this.selection.type === "enemy" && this.runtime?.level.enemies) {
+      const enemy = this.runtime.level.enemies[this.selection.index];
+      if (enemy) {
+        this.selectionChangeHandler({
+          type: "enemy",
+          index: this.selection.index,
+          enemy: { ...enemy },
+        });
+        return;
+      }
+    }
+
+    this.selectionChangeHandler({ type: this.selection.type });
+  }
+
   private handlePointerDown(worldPoint: { x: number; y: number }, resizing: boolean) {
     if (!this.runtime) {
       return;
@@ -373,7 +540,7 @@ export class LevelEditorPage extends Page {
     const spawnWorld = this.runtime.toWorldPoint(this.runtime.level.spawn);
     const spawnDistance = this.distance(worldPoint, spawnWorld);
     if (spawnDistance < 20 * this.worldScale) {
-      this.selection = { type: "spawn" };
+      this.setSelection({ type: "spawn" });
       this.dragState = {
         type: "spawn",
         offsetX: 0,
@@ -386,7 +553,7 @@ export class LevelEditorPage extends Page {
     for (const coin of this.runtime.level.coins) {
       const coinWorld = this.runtime.toWorldPoint(coin);
       if (this.distance(worldPoint, coinWorld) < 18 * this.worldScale) {
-        this.selection = { type: "coin", id: coin.id };
+        this.setSelection({ type: "coin", id: coin.id });
         this.dragState = {
           type: "coin",
           offsetX: 0,
@@ -397,9 +564,24 @@ export class LevelEditorPage extends Page {
       }
     }
 
+    const enemiesWorld = this.runtime.getEnemiesWorld();
+    for (let i = 0; i < enemiesWorld.length; i += 1) {
+      const enemyWorld = enemiesWorld[i];
+      if (this.distance(worldPoint, enemyWorld) < 20 * this.worldScale) {
+        this.setSelection({ type: "enemy", index: i });
+        this.dragState = {
+          type: "enemy",
+          offsetX: worldPoint.x - enemyWorld.x,
+          offsetY: worldPoint.y - enemyWorld.y,
+          resizing: false,
+        };
+        return;
+      }
+    }
+
     const goalWorld = this.runtime.getGoalWorld();
     if (goalWorld && this.pointInRect(worldPoint, goalWorld)) {
-      this.selection = { type: "goal" };
+      this.setSelection({ type: "goal" });
       this.dragState = {
         type: "goal",
         offsetX: worldPoint.x - goalWorld.x,
@@ -414,7 +596,7 @@ export class LevelEditorPage extends Page {
     for (let i = 0; i < solidsWorld.length; i += 1) {
       const solid = solidsWorld[i];
       if (this.pointInRect(worldPoint, solid)) {
-        this.selection = { type: "solid", index: i };
+        this.setSelection({ type: "solid", index: i });
         this.dragState = {
           type: "solid",
           offsetX: worldPoint.x - solid.x,
@@ -426,7 +608,7 @@ export class LevelEditorPage extends Page {
       }
     }
 
-    this.selection = { type: "none" };
+    this.setSelection({ type: "none" });
     this.dragState = null;
   }
 
@@ -448,6 +630,22 @@ export class LevelEditorPage extends Page {
       }
       const levelPoint = this.snapPoint(this.runtime.toLevelPoint(worldPoint));
       this.runtime.updateCoin(this.selection.id, { id: this.selection.id, ...levelPoint });
+      return;
+    }
+
+    if (drag.type === "enemy") {
+      if (this.selection.type !== "enemy") {
+        return;
+      }
+      const nextWorld = {
+        x: worldPoint.x - drag.offsetX,
+        y: worldPoint.y - drag.offsetY,
+      };
+      const levelPoint = this.snapPoint(this.runtime.toLevelPoint(nextWorld));
+      const enemy = this.runtime.level.enemies?.[this.selection.index];
+      if (enemy) {
+        this.runtime.updateEnemy(this.selection.index, { ...enemy, ...levelPoint });
+      }
       return;
     }
 
@@ -544,6 +742,31 @@ export class LevelEditorPage extends Page {
     return { x: x - this.world.x, y: y - this.world.y };
   }
 
+  private getStagePointFromClient(event: PointerEvent) {
+    if (!this.app) {
+      return { x: event.clientX, y: event.clientY };
+    }
+    const rect = this.app.canvas.getBoundingClientRect();
+    const scaleX = GAME_WIDTH / rect.width;
+    const scaleY = GAME_HEIGHT / rect.height;
+    return {
+      x: (event.clientX - rect.left) * scaleX,
+      y: (event.clientY - rect.top) * scaleY,
+    };
+  }
+
+  private getActivePointerCenter() {
+    const pointers = Array.from(this.activePointers.values());
+    if (pointers.length === 0) {
+      return { x: 0, y: 0 };
+    }
+    const sum = pointers.reduce(
+      (acc, point) => ({ x: acc.x + point.x, y: acc.y + point.y }),
+      { x: 0, y: 0 },
+    );
+    return { x: sum.x / pointers.length, y: sum.y / pointers.length };
+  }
+
   private clampWorldPosition(x: number, y: number) {
     if (!this.app || !this.runtime) {
       return { x, y };
@@ -615,6 +838,134 @@ export class LevelEditorPage extends Page {
       w: Math.max(20, this.snapValue(rect.w)),
       h: Math.max(12, this.snapValue(rect.h)),
     };
+  }
+
+  private updateGamepad(deltaSeconds: number) {
+    if (!this.world || !this.runtime) {
+      return;
+    }
+
+    const pads = navigator.getGamepads?.() ?? [];
+    const pad = pads.find((entry) => entry && entry.connected) ?? null;
+    if (!pad) {
+      if (this.gamepadCursorGraphic) {
+        this.gamepadCursorGraphic.visible = false;
+      }
+      return;
+    }
+
+    this.ensureGamepadCursor();
+    if (this.gamepadCursorGraphic) {
+      this.gamepadCursorGraphic.visible = true;
+    }
+
+    const applyDeadzone = (value: number) =>
+      Math.abs(value) >= this.gamepadDeadzone ? value : 0;
+    const moveX = applyDeadzone(pad.axes[0] ?? 0);
+    const moveY = applyDeadzone(pad.axes[1] ?? 0);
+    const panX = applyDeadzone(pad.axes[2] ?? 0);
+    const panY = applyDeadzone(pad.axes[3] ?? 0);
+
+    const cursorSpeed = 540 * this.worldScale;
+    this.gamepadCursorWorld.x += moveX * cursorSpeed * deltaSeconds;
+    this.gamepadCursorWorld.y += moveY * cursorSpeed * deltaSeconds;
+
+    const worldRect = this.runtime.getWorldRect();
+    if (worldRect) {
+      this.gamepadCursorWorld.x = Math.min(
+        Math.max(this.gamepadCursorWorld.x, worldRect.x),
+        worldRect.x + worldRect.width,
+      );
+      this.gamepadCursorWorld.y = Math.min(
+        Math.max(this.gamepadCursorWorld.y, worldRect.y),
+        worldRect.y + worldRect.height,
+      );
+    }
+
+    this.lastPointerWorld = { ...this.gamepadCursorWorld };
+    if (this.gamepadCursorGraphic) {
+      this.gamepadCursorGraphic.x = this.gamepadCursorWorld.x;
+      this.gamepadCursorGraphic.y = this.gamepadCursorWorld.y;
+    }
+
+    if ((panX !== 0 || panY !== 0) && this.world) {
+      const panSpeed = 720;
+      const nextX = this.world.x - panX * panSpeed * deltaSeconds;
+      const nextY = this.world.y - panY * panSpeed * deltaSeconds;
+      const clamped = this.clampWorldPosition(nextX, nextY);
+      this.world.x = clamped.x;
+      this.world.y = clamped.y;
+    }
+
+    const selectPressed = Boolean(pad.buttons[0]?.pressed);
+    const deletePressed = Boolean(pad.buttons[1]?.pressed);
+    const addSolidPressed = Boolean(pad.buttons[2]?.pressed);
+    const addCoinPressed = Boolean(pad.buttons[3]?.pressed);
+    const addEnemyPressed = Boolean(pad.buttons[4]?.pressed);
+
+    const selectDown = selectPressed && !this.lastGamepadButtons.select;
+    const deleteDown = deletePressed && !this.lastGamepadButtons.delete;
+    const addSolidDown = addSolidPressed && !this.lastGamepadButtons.addSolid;
+    const addCoinDown = addCoinPressed && !this.lastGamepadButtons.addCoin;
+    const addEnemyDown = addEnemyPressed && !this.lastGamepadButtons.addEnemy;
+
+    if (selectDown) {
+      this.handlePointerDown(this.gamepadCursorWorld, false);
+      this.gamepadDragActive = true;
+    }
+
+    if (selectPressed && this.gamepadDragActive) {
+      this.handlePointerMove(this.gamepadCursorWorld, false);
+    }
+
+    if (!selectPressed && this.gamepadDragActive) {
+      this.dragState = null;
+      this.gamepadDragActive = false;
+    }
+
+    if (deleteDown) {
+      this.deleteSelected();
+    }
+
+    if (addSolidDown) {
+      this.addSolid();
+    }
+
+    if (addCoinDown) {
+      this.addCoin();
+    }
+
+    if (addEnemyDown) {
+      this.addEnemy();
+    }
+
+    this.lastGamepadButtons = {
+      select: selectPressed,
+      delete: deletePressed,
+      addSolid: addSolidPressed,
+      addCoin: addCoinPressed,
+      addEnemy: addEnemyPressed,
+    };
+  }
+
+  private ensureGamepadCursor() {
+    if (!this.world || this.gamepadCursorGraphic) {
+      return;
+    }
+
+    const size = 14 * this.worldScale;
+    const gfx = new Graphics();
+    gfx
+      .moveTo(-size, 0)
+      .lineTo(size, 0)
+      .stroke({ color: 0xffffff, width: 2 })
+      .moveTo(0, -size)
+      .lineTo(0, size)
+      .stroke({ color: 0xffffff, width: 2 });
+    gfx.x = this.gamepadCursorWorld.x;
+    gfx.y = this.gamepadCursorWorld.y;
+    this.world.addChild(gfx);
+    this.gamepadCursorGraphic = gfx;
   }
 
   private drawGrid() {
