@@ -80,6 +80,7 @@ export class Enemy {
       return;
     }
 
+    const previousPosition = { ...this.position };
     if (this.hurtTimer > 0) {
       this.hurtTimer = Math.max(0, this.hurtTimer - deltaSeconds);
       if (this.hurtTimer === 0 && this.state === "hurt") {
@@ -123,6 +124,14 @@ export class Enemy {
     this.grounded = resolved.grounded;
 
     if (this.state === "patrol") {
+      if (!preTurned && this.position.y > previousPosition.y + 0.5) {
+        this.position.x = previousPosition.x;
+        this.position.y = previousPosition.y;
+        this.velocity.x = 0;
+        this.velocity.y = 0;
+        this.setPatrolDirection(this.patrolDirection * -1, true);
+        preTurned = true;
+      }
       let hitBounds = false;
       if (preTurned) {
         hitBounds = true;
