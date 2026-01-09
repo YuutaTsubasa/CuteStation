@@ -82,6 +82,19 @@
     input.releaseJump();
   }
 
+  function onAttackDown(event: PointerEvent) {
+    if (event.button !== 0 && event.pointerType === "mouse") {
+      return;
+    }
+
+    input.pressAttack();
+    event.preventDefault();
+  }
+
+  function onAttackUp() {
+    input.releaseAttack();
+  }
+
   onDestroy(() => {
     input.reset();
   });
@@ -105,6 +118,17 @@
     </div>
   </div>
   <div class="right">
+    <button
+      class="attack"
+      type="button"
+      aria-label="Attack"
+      onpointerdown={onAttackDown}
+      onpointerup={onAttackUp}
+      onpointercancel={onAttackUp}
+      onpointerleave={onAttackUp}
+    >
+      Attack
+    </button>
     <button
       class="jump"
       type="button"
@@ -134,6 +158,7 @@
   .left,
   .right {
     display: flex;
+    gap: clamp(12px, 3vw, 24px);
     align-items: flex-end;
     pointer-events: auto;
   }
@@ -161,7 +186,8 @@
     box-shadow: 0 10px 18px rgba(0, 0, 0, 0.35);
   }
 
-  .jump {
+  .jump,
+  .attack {
     width: clamp(80px, 20vw, 140px);
     aspect-ratio: 1;
     border-radius: 50%;
@@ -176,7 +202,8 @@
     touch-action: none;
   }
 
-  .jump:active {
+  .jump:active,
+  .attack:active {
     background: rgba(255, 255, 255, 0.3);
   }
 

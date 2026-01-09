@@ -1,12 +1,15 @@
-import { Application, Container } from "pixi.js";
+import { Application, Container, Graphics } from "pixi.js";
 import { loadLevel, type LevelPoint } from "../game/levels/LevelLoader";
 import { LevelRuntime } from "../game/levels/LevelRuntime";
 import { LevelVisuals } from "../game/visuals/LevelVisuals";
 import { normalizeVisualsConfig, type VisualsConfig } from "../game/visuals/VisualsConfig";
 import { Player } from "../game/entities/Player";
+import { Enemy } from "../game/entities/Enemy";
+import { Combat, type CombatHit } from "../game/systems/Combat";
 import { audioManager } from "../game/audio/AudioManager";
 import { whitePalaceBgmPath } from "../game/audio/audioPaths";
 import { type Rect } from "../game/systems/Physics";
+import { Input } from "../game/core/Input";
 import { type VirtualInputState, VirtualInput } from "../game/input/VirtualInput";
 import { GAME_HEIGHT, GAME_WIDTH } from "../game/view/ResolutionManager";
 import { LevelSession } from "../game/levels/LevelSession";
@@ -24,9 +27,15 @@ export class GamePlayPage extends Page {
   private player: Player | null = null;
   private background: Container | null = null;
   private world: Container | null = null;
+  private effectsLayer: Container | null = null;
   private runtime: LevelRuntime | null = null;
   private visuals: LevelVisuals | null = null;
   private platforms: Rect[] = [];
+  private combat = new Combat();
+  private enemies: Enemy[] = [];
+  private hitEffects: Array<{ graphic: Graphics; ttl: number; duration: number }> =
+    [];
+  private hitStopTimer = 0;
   private worldBounds: { minX: number; minY: number; maxX: number; maxY: number } | null =
     null;
   private coins: LevelPoint[] = [];
@@ -42,16 +51,22 @@ export class GamePlayPage extends Page {
   private inputState = {
     move: 0,
     jump: false,
+    attack: false,
   };
   private keyboardInput: VirtualInputState = {
     moveX: 0,
     jumpDown: false,
     jumpHeld: false,
+    attackDown: false,
+    attackHeld: false,
   };
   private virtualInput: VirtualInput | null = null;
+  private inputHelper = new Input();
   private keyDownHandler: ((event: KeyboardEvent) => void) | null = null;
   private keyUpHandler: ((event: KeyboardEvent) => void) | null = null;
   private enterToken = 0;
+  private audioContext: AudioContext | null = null;
+  private lastHitSoundAt = 0;
 
   constructor() {
     super("GamePlay");
@@ -91,8 +106,14 @@ export class GamePlayPage extends Page {
     if (!this.host || this.app) {
       return;
     }
-    this.keyboardInput = { moveX: 0, jumpDown: false, jumpHeld: false };
-    this.inputState = { move: 0, jump: false };
+    this.keyboardInput = {
+      moveX: 0,
+      jumpDown: false,
+      jumpHeld: false,
+      attackDown: false,
+      attackHeld: false,
+    };
+    this.inputState = { move: 0, jump: false, attack: false };
 
     this.enterToken += 1;
     const token = this.enterToken;
@@ -137,6 +158,9 @@ export class GamePlayPage extends Page {
     gameRoot.addChild(world);
     this.background = background;
     this.world = world;
+    const effectsLayer = new Container();
+    world.addChild(effectsLayer);
+    this.effectsLayer = effectsLayer;
 
     const runtime = new LevelRuntime(level, {
       worldScale: this.worldScale,
@@ -166,6 +190,13 @@ export class GamePlayPage extends Page {
     const player = new Player(level.spawn.x, level.spawn.y - spawnOffsetY, this.worldScale);
     player.mount(world);
     this.player = player;
+    const enemy = new Enemy(
+      level.spawn.x + 160,
+      level.spawn.y - spawnOffsetY,
+      this.worldScale,
+    );
+    enemy.mount(world);
+    this.enemies = [enemy];
     this.centerCameraOnPlayer();
     await player.loadAssets();
     if (token !== this.enterToken) {
@@ -207,6 +238,13 @@ export class GamePlayPage extends Page {
         this.keyboardInput.jumpHeld = true;
       }
 
+      if (event.key.toLowerCase() === "j" || event.key.toLowerCase() === "k") {
+        if (!this.keyboardInput.attackHeld) {
+          this.keyboardInput.attackDown = true;
+        }
+        this.keyboardInput.attackHeld = true;
+      }
+
       if (event.key === "Escape") {
         if (this.isPlaytest) {
           this.exitPlaytest();
@@ -232,6 +270,10 @@ export class GamePlayPage extends Page {
       if (event.key === " ") {
         this.keyboardInput.jumpHeld = false;
       }
+
+      if (event.key.toLowerCase() === "j" || event.key.toLowerCase() === "k") {
+        this.keyboardInput.attackHeld = false;
+      }
     };
 
     window.addEventListener("keydown", this.keyDownHandler);
@@ -247,7 +289,10 @@ export class GamePlayPage extends Page {
         moveX: 0,
         jumpDown: false,
         jumpHeld: false,
+        attackDown: false,
+        attackHeld: false,
       };
+      const gamepadState = this.inputHelper.readGamepad();
       const mergedInput: VirtualInputState = {
         moveX:
           Math.abs(virtualState.moveX) > Math.abs(this.keyboardInput.moveX)
@@ -255,18 +300,42 @@ export class GamePlayPage extends Page {
             : this.keyboardInput.moveX,
         jumpDown: this.keyboardInput.jumpDown || virtualState.jumpDown,
         jumpHeld: this.keyboardInput.jumpHeld || virtualState.jumpHeld,
+        attackDown: this.keyboardInput.attackDown || virtualState.attackDown,
+        attackHeld: this.keyboardInput.attackHeld || virtualState.attackHeld,
       };
+      mergedInput.moveX =
+        Math.abs(gamepadState.moveX) > Math.abs(mergedInput.moveX)
+          ? gamepadState.moveX
+          : mergedInput.moveX;
+      mergedInput.jumpDown = mergedInput.jumpDown || gamepadState.jumpDown;
+      mergedInput.jumpHeld = mergedInput.jumpHeld || gamepadState.jumpHeld;
+      mergedInput.attackDown = mergedInput.attackDown || gamepadState.attackDown;
+      mergedInput.attackHeld = mergedInput.attackHeld || gamepadState.attackHeld;
 
       this.keyboardInput.jumpDown = false;
+      this.keyboardInput.attackDown = false;
       this.inputState.move = mergedInput.moveX;
       this.inputState.jump = mergedInput.jumpDown;
+      this.inputState.attack = mergedInput.attackDown;
+
+      if (this.hitStopTimer > 0) {
+        this.hitStopTimer = Math.max(0, this.hitStopTimer - deltaSeconds);
+        this.updateHitEffects(deltaSeconds);
+        return;
+      }
+
       this.player.update(deltaSeconds, this.inputState, this.platforms);
+      for (const enemy of this.enemies) {
+        enemy.update(deltaSeconds, this.platforms);
+      }
       if (this.worldBounds) {
         this.player.clampToBounds(this.worldBounds);
       }
 
+      this.resolveCombat();
       this.checkCoins();
       this.checkGoal();
+      this.updateHitEffects(deltaSeconds);
 
       if (this.world) {
         const viewCenterX = GAME_WIDTH * 0.5;
@@ -307,11 +376,17 @@ export class GamePlayPage extends Page {
     }
 
     this.virtualInput?.reset();
+    this.inputHelper.reset();
 
     if (this.player) {
       this.player.destroy();
       this.player = null;
     }
+
+    for (const enemy of this.enemies) {
+      enemy.destroy();
+    }
+    this.enemies = [];
 
     if (this.runtime) {
       this.runtime.destroy();
@@ -335,6 +410,12 @@ export class GamePlayPage extends Page {
       this.world = null;
     }
 
+    if (this.effectsLayer) {
+      this.effectsLayer.removeFromParent();
+      this.effectsLayer.destroy({ children: true });
+      this.effectsLayer = null;
+    }
+
     if (this.gameRoot) {
       this.gameRoot.removeFromParent();
       this.gameRoot.destroy({ children: false });
@@ -345,6 +426,8 @@ export class GamePlayPage extends Page {
     this.coins = [];
     this.collectedCoins.clear();
     this.levelCleared = false;
+    this.hitEffects = [];
+    this.hitStopTimer = 0;
 
     if (this.app) {
       const canvas = this.app.canvas;
@@ -353,8 +436,14 @@ export class GamePlayPage extends Page {
       canvas.remove();
     }
 
-    this.keyboardInput = { moveX: 0, jumpDown: false, jumpHeld: false };
-    this.inputState = { move: 0, jump: false };
+    this.keyboardInput = {
+      moveX: 0,
+      jumpDown: false,
+      jumpHeld: false,
+      attackDown: false,
+      attackHeld: false,
+    };
+    this.inputState = { move: 0, jump: false, attack: false };
 
     if (this.isPlaytest) {
       LevelSession.clearPreviewLevel();
@@ -449,6 +538,86 @@ export class GamePlayPage extends Page {
   private exitPlaytest() {
     LevelSession.clearPreviewLevel();
     this.onRequestPlaytestExit?.();
+  }
+
+  private resolveCombat() {
+    if (!this.player || this.enemies.length === 0) {
+      return;
+    }
+
+    const hits = this.combat.update(this.player, this.enemies);
+    if (hits.length === 0) {
+      return;
+    }
+
+    this.hitStopTimer = 0.05;
+    this.playHitSound();
+    for (const hit of hits) {
+      this.spawnHitEffect(hit);
+    }
+  }
+
+  private spawnHitEffect(hit: CombatHit) {
+    if (!this.effectsLayer) {
+      return;
+    }
+
+    const gfx = new Graphics();
+    const radius = hit.attackType === "homing" ? 18 : 14;
+    gfx.circle(0, 0, radius).fill(0xffe08a);
+    gfx.circle(0, 0, radius + 6).stroke({ color: 0xffc15a, width: 2, alpha: 0.7 });
+    gfx.x = hit.position.x;
+    gfx.y = hit.position.y;
+    this.effectsLayer.addChild(gfx);
+    this.hitEffects.push({ graphic: gfx, ttl: 0.25, duration: 0.25 });
+  }
+
+  private updateHitEffects(deltaSeconds: number) {
+    if (this.hitEffects.length === 0) {
+      return;
+    }
+
+    for (const effect of this.hitEffects) {
+      effect.ttl = Math.max(0, effect.ttl - deltaSeconds);
+      const ratio = effect.duration > 0 ? effect.ttl / effect.duration : 0;
+      effect.graphic.alpha = Math.max(0, Math.min(1, ratio));
+    }
+
+    this.hitEffects = this.hitEffects.filter((effect) => {
+      if (effect.ttl > 0) {
+        return true;
+      }
+      effect.graphic.removeFromParent();
+      effect.graphic.destroy();
+      return false;
+    });
+  }
+
+  private playHitSound() {
+    const now = performance.now();
+    if (now - this.lastHitSoundAt < 80) {
+      return;
+    }
+    this.lastHitSoundAt = now;
+
+    if (!this.audioContext) {
+      this.audioContext = new AudioContext();
+    }
+    const context = this.audioContext;
+    if (context.state === "suspended") {
+      void context.resume();
+    }
+
+    const oscillator = context.createOscillator();
+    const gain = context.createGain();
+    oscillator.type = "square";
+    oscillator.frequency.setValueAtTime(220, context.currentTime);
+    gain.gain.setValueAtTime(0.12, context.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, context.currentTime + 0.08);
+    oscillator.connect(gain);
+    gain.connect(context.destination);
+    oscillator.start();
+    oscillator.stop(context.currentTime + 0.08);
   }
 
   private rectsOverlap(a: Rect, b: Rect) {
