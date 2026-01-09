@@ -320,6 +320,7 @@ export class GamePlayPage extends Page {
 
       if (this.hitStopTimer > 0) {
         this.hitStopTimer = Math.max(0, this.hitStopTimer - deltaSeconds);
+        this.player.updateAttackTimers(deltaSeconds, false);
         this.updateHitEffects(deltaSeconds);
         return;
       }
@@ -448,6 +449,11 @@ export class GamePlayPage extends Page {
     if (this.isPlaytest) {
       LevelSession.clearPreviewLevel();
       this.isPlaytest = false;
+    }
+
+    if (this.audioContext) {
+      void this.audioContext.close();
+      this.audioContext = null;
     }
 
     super.onExit();

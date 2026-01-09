@@ -98,7 +98,7 @@ export class Combat {
     };
   }
 
-  private getAttackProfile(player: Player, hitbox?: Rect): AttackProfile {
+  private getAttackProfile(player: Player, knockbackRef?: Rect): AttackProfile {
     const state = player.getAttackState();
     const baseWidth = player.width;
     const baseHeight = player.height;
@@ -122,7 +122,7 @@ export class Combat {
       damage: 1,
       knockback: {
         x: baseWidth * 1.4,
-        y: hitbox ? -hitbox.height * 0.15 : -baseHeight * 0.15,
+        y: knockbackRef ? -knockbackRef.height * 0.15 : -baseHeight * 0.15,
       },
     };
   }

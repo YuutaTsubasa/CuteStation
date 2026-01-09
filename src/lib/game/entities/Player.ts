@@ -110,7 +110,7 @@ export class Player {
     const move = Math.max(-1, Math.min(1, input.move));
     this.velocity.x = move * this.moveSpeed;
 
-    this.handleAttackInput(input.attack, deltaSeconds);
+    this.updateAttackTimers(deltaSeconds, input.attack);
 
     if (this.grounded && input.jump) {
       this.velocity.y = -this.jumpSpeed;
@@ -186,13 +186,7 @@ export class Player {
     return this.facing;
   }
 
-  private syncVisual() {
-    this.container.x = this.position.x + this.width * 0.5;
-    this.container.y =
-      this.position.y + this.height + this.footOffset * this.scale;
-  }
-
-  private handleAttackInput(pressed: boolean, deltaSeconds: number) {
+  updateAttackTimers(deltaSeconds: number, pressed: boolean) {
     if (this.attackActiveTimer > 0) {
       this.attackActiveTimer = Math.max(0, this.attackActiveTimer - deltaSeconds);
       if (this.attackActiveTimer === 0 && this.attackState !== "idle") {
@@ -215,6 +209,12 @@ export class Player {
     this.attackCooldownTimer =
       nextState === "homing" ? this.homingCooldown : this.attackCooldown;
     this.attackSequence += 1;
+  }
+
+  private syncVisual() {
+    this.container.x = this.position.x + this.width * 0.5;
+    this.container.y =
+      this.position.y + this.height + this.footOffset * this.scale;
   }
 
   private updateAnimation(moveInput: number, wasGrounded: boolean) {
