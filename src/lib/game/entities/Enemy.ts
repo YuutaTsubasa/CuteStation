@@ -239,7 +239,18 @@ export class Enemy {
       return false;
     }
 
-    const lookAhead = this.width * 0.5 * this.patrolDirection;
+    const halfWidth = this.width * 0.5;
+    const frontStart = this.patrolDirection > 0 ? baseX + halfWidth : baseX;
+    const frontEnd = this.patrolDirection > 0 ? baseX + this.width : baseX + halfWidth;
+    const frontTop = this.getFloorTopAt(frontStart, frontEnd, solids);
+    if (frontTop === null) {
+      return true;
+    }
+    if (Math.abs(frontTop - floorTop) > this.patrolStepTolerance) {
+      return true;
+    }
+
+    const lookAhead = halfWidth * this.patrolDirection;
     const aheadX = baseX + lookAhead;
     const aheadTop = this.getFloorTopAt(aheadX, aheadX + this.width, solids);
     if (aheadTop === null) {
