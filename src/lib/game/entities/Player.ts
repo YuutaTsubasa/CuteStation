@@ -10,6 +10,7 @@ import { Physics, type Rect } from "../systems/Physics";
 type PlayerInput = {
   move: number;
   jump: boolean;
+  attack: boolean;
 };
 
 export class Player {
@@ -38,6 +39,14 @@ export class Player {
   private facing = 1;
   private jumpPhase: "none" | "jumpUp" | "hold" | "fall" | "land" = "none";
   private readonly fallEps = 5;
+  private attackState: "idle" | "attack" | "homing" = "idle";
+  private attackActiveTimer = 0;
+  private attackCooldownTimer = 0;
+  private attackSequence = 0;
+  private readonly attackDuration = 0.2;
+  private readonly attackCooldown = 0.3;
+  private readonly homingDuration = 0.28;
+  private readonly homingCooldown = 0.4;
 
   readonly width: number;
   readonly height: number;
@@ -101,6 +110,8 @@ export class Player {
     const move = Math.max(-1, Math.min(1, input.move));
     this.velocity.x = move * this.moveSpeed;
 
+    this.updateAttackTimers(deltaSeconds, input.attack);
+
     if (this.grounded && input.jump) {
       this.velocity.y = -this.jumpSpeed;
       this.grounded = false;
@@ -157,6 +168,56 @@ export class Player {
       width: this.width,
       height: this.height,
     };
+  }
+
+  isAttackActive() {
+    return this.attackState !== "idle";
+  }
+
+  getAttackState() {
+    return this.attackState;
+  }
+
+  getAttackSequence() {
+    return this.attackSequence;
+  }
+
+  getFacingDirection() {
+    return this.facing;
+  }
+
+  setFacingDirection(direction: number) {
+    this.facing = direction >= 0 ? 1 : -1;
+    this.applyFacing();
+  }
+
+  getHomingBounceSpeed() {
+    return this.jumpSpeed * 0.7;
+  }
+
+  updateAttackTimers(deltaSeconds: number, pressed: boolean) {
+    if (this.attackActiveTimer > 0) {
+      this.attackActiveTimer = Math.max(0, this.attackActiveTimer - deltaSeconds);
+      if (this.attackActiveTimer === 0 && this.attackState !== "idle") {
+        this.attackState = "idle";
+      }
+    }
+
+    if (this.attackCooldownTimer > 0) {
+      this.attackCooldownTimer = Math.max(0, this.attackCooldownTimer - deltaSeconds);
+    }
+
+    if (!pressed || this.attackCooldownTimer > 0 || this.attackActiveTimer > 0) {
+      return;
+    }
+
+    const nextState = this.grounded ? "attack" : "homing";
+    this.attackState = nextState;
+    this.attackActiveTimer =
+      nextState === "homing" ? this.homingDuration : this.attackDuration;
+    this.attackCooldownTimer =
+      nextState === "homing" ? this.homingCooldown : this.attackCooldown;
+    this.attackSequence += 1;
   }
 
   private syncVisual() {

@@ -115,6 +115,9 @@ export class LevelEditorPage extends Page {
       abort();
       return;
     }
+    if (!sessionLevel) {
+      level.enemies = [];
+    }
 
     const world = new Container();
     gameRoot.addChild(world);

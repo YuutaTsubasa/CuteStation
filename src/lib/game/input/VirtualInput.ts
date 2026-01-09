@@ -2,6 +2,8 @@ export type VirtualInputState = {
   moveX: number;
   jumpDown: boolean;
   jumpHeld: boolean;
+  attackDown: boolean;
+  attackHeld: boolean;
 };
 
 export class VirtualInput {
@@ -9,6 +11,8 @@ export class VirtualInput {
     moveX: 0,
     jumpDown: false,
     jumpHeld: false,
+    attackDown: false,
+    attackHeld: false,
   };
 
   setMoveX(value: number) {
@@ -26,13 +30,31 @@ export class VirtualInput {
     this.state.jumpHeld = false;
   }
 
+  pressAttack() {
+    if (!this.state.attackHeld) {
+      this.state.attackDown = true;
+    }
+    this.state.attackHeld = true;
+  }
+
+  releaseAttack() {
+    this.state.attackHeld = false;
+  }
+
   consumeFrame(): VirtualInputState {
     const snapshot = { ...this.state };
     this.state.jumpDown = false;
+    this.state.attackDown = false;
     return snapshot;
   }
 
   reset() {
-    this.state = { moveX: 0, jumpDown: false, jumpHeld: false };
+    this.state = {
+      moveX: 0,
+      jumpDown: false,
+      jumpHeld: false,
+      attackDown: false,
+      attackHeld: false,
+    };
   }
 }
