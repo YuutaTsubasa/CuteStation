@@ -186,6 +186,15 @@ export class Player {
     return this.facing;
   }
 
+  setFacingDirection(direction: number) {
+    this.facing = direction >= 0 ? 1 : -1;
+    this.applyFacing();
+  }
+
+  getHomingBounceSpeed() {
+    return this.jumpSpeed * 0.7;
+  }
+
   updateAttackTimers(deltaSeconds: number, pressed: boolean) {
     if (this.attackActiveTimer > 0) {
       this.attackActiveTimer = Math.max(0, this.attackActiveTimer - deltaSeconds);

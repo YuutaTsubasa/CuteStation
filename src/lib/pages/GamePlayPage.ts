@@ -36,6 +36,9 @@ export class GamePlayPage extends Page {
   private hitEffects: Array<{ graphic: Graphics; ttl: number; duration: number }> =
     [];
   private hitStopTimer = 0;
+  private homingRadius = 180;
+  private homingTarget: Enemy | null = null;
+  private homingReticle: Graphics | null = null;
   private worldBounds: { minX: number; minY: number; maxX: number; maxY: number } | null =
     null;
   private coins: LevelPoint[] = [];
@@ -161,6 +164,10 @@ export class GamePlayPage extends Page {
     const effectsLayer = new Container();
     world.addChild(effectsLayer);
     this.effectsLayer = effectsLayer;
+    const homingReticle = new Graphics();
+    homingReticle.visible = false;
+    effectsLayer.addChild(homingReticle);
+    this.homingReticle = homingReticle;
 
     const runtime = new LevelRuntime(level, {
       worldScale: this.worldScale,
@@ -318,6 +325,9 @@ export class GamePlayPage extends Page {
       this.inputState.jump = mergedInput.jumpDown;
       this.inputState.attack = mergedInput.attackDown;
 
+      this.homingTarget = this.findHomingTarget();
+      this.updateHomingReticle(this.homingTarget);
+
       if (this.hitStopTimer > 0) {
         this.hitStopTimer = Math.max(0, this.hitStopTimer - deltaSeconds);
         this.player.updateAttackTimers(deltaSeconds, false);
@@ -331,6 +341,10 @@ export class GamePlayPage extends Page {
       }
       if (this.worldBounds) {
         this.player.clampToBounds(this.worldBounds);
+      }
+
+      if (mergedInput.attackDown && !this.player.grounded && this.homingTarget) {
+        this.executeHomingAttack(this.homingTarget);
       }
 
       this.resolveCombat();
@@ -416,6 +430,7 @@ export class GamePlayPage extends Page {
       this.effectsLayer.destroy({ children: true });
       this.effectsLayer = null;
     }
+    this.homingReticle = null;
 
     if (this.gameRoot) {
       this.gameRoot.removeFromParent();
@@ -429,6 +444,7 @@ export class GamePlayPage extends Page {
     this.levelCleared = false;
     this.hitEffects = [];
     this.hitStopTimer = 0;
+    this.homingTarget = null;
 
     if (this.app) {
       const canvas = this.app.canvas;
@@ -624,6 +640,83 @@ export class GamePlayPage extends Page {
     gain.connect(context.destination);
     oscillator.start();
     oscillator.stop(context.currentTime + 0.08);
+  }
+
+  private findHomingTarget() {
+    if (!this.player || this.player.grounded) {
+      return null;
+    }
+
+    const radius = this.homingRadius * this.worldScale;
+    const playerCenterX = this.player.position.x + this.player.width * 0.5;
+    const playerCenterY = this.player.position.y + this.player.height * 0.5;
+    let best: Enemy | null = null;
+    let bestDistance = Number.POSITIVE_INFINITY;
+
+    for (const enemy of this.enemies) {
+      if (enemy.isDead()) {
+        continue;
+      }
+      const rect = enemy.getRect();
+      const centerX = rect.x + rect.width * 0.5;
+      const centerY = rect.y + rect.height * 0.5;
+      const dx = centerX - playerCenterX;
+      const dy = centerY - playerCenterY;
+      const distance = Math.hypot(dx, dy);
+      if (distance <= radius && distance < bestDistance) {
+        best = enemy;
+        bestDistance = distance;
+      }
+    }
+
+    return best;
+  }
+
+  private updateHomingReticle(target: Enemy | null) {
+    if (!this.homingReticle) {
+      return;
+    }
+
+    if (!target) {
+      this.homingReticle.visible = false;
+      return;
+    }
+
+    const rect = target.getRect();
+    const centerX = rect.x + rect.width * 0.5;
+    const centerY = rect.y + rect.height * 0.5;
+    const radius = rect.width * 0.6;
+    this.homingReticle.clear();
+    this.homingReticle
+      .circle(0, 0, radius)
+      .stroke({ color: 0xfff2aa, width: 3, alpha: 0.85 })
+      .moveTo(-radius * 0.8, 0)
+      .lineTo(radius * 0.8, 0)
+      .stroke({ color: 0xfff2aa, width: 2, alpha: 0.85 })
+      .moveTo(0, -radius * 0.8)
+      .lineTo(0, radius * 0.8)
+      .stroke({ color: 0xfff2aa, width: 2, alpha: 0.85 });
+    this.homingReticle.x = centerX;
+    this.homingReticle.y = centerY;
+    this.homingReticle.visible = true;
+  }
+
+  private executeHomingAttack(target: Enemy) {
+    if (!this.player) {
+      return;
+    }
+
+    const rect = target.getRect();
+    const targetCenterX = rect.x + rect.width * 0.5;
+    const targetCenterY = rect.y + rect.height * 0.5;
+    const playerCenterX = this.player.position.x + this.player.width * 0.5;
+    const direction = targetCenterX >= playerCenterX ? 1 : -1;
+    const offset = rect.width * 0.5 + this.player.width * 0.6;
+    this.player.setFacingDirection(direction);
+    this.player.position.x = targetCenterX + direction * offset - this.player.width * 0.5;
+    this.player.position.y = targetCenterY - this.player.height * 0.5;
+    this.player.velocity.x = 0;
+    this.player.velocity.y = -this.player.getHomingBounceSpeed();
   }
 
   private rectsOverlap(a: Rect, b: Rect) {
