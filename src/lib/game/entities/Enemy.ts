@@ -10,11 +10,12 @@ export class Enemy {
   private readonly knockbackDamp = 10;
   private hurtTimer = 0;
   private idleTimer = 0;
-  private readonly idleDuration = 0.5;
+  private readonly idleDuration: number;
   private readonly patrolSpeed: number;
   private readonly patrolMinX: number;
   private readonly patrolMaxX: number;
   private patrolDirection = 1;
+  private readonly behavior: "idle" | "patrol";
 
   readonly width: number;
   readonly height: number;
@@ -24,20 +25,35 @@ export class Enemy {
   health: number;
   state: "idle" | "patrol" | "hurt" | "dead" = "idle";
 
-  constructor(startX: number, startY: number, scale = 1) {
+  constructor(
+    startX: number,
+    startY: number,
+    scale = 1,
+    options: {
+      behavior?: "idle" | "patrol";
+      patrolRange?: number;
+      patrolSpeed?: number;
+      idleDuration?: number;
+    } = {},
+  ) {
     this.scale = scale;
     this.width = 48 * this.scale;
     this.height = 64 * this.scale;
     this.gravity = 1000 * this.scale;
     this.maxFallSpeed = 900 * this.scale;
-    this.patrolSpeed = 80 * this.scale;
+    this.behavior = options.behavior ?? "patrol";
+    this.patrolSpeed = (options.patrolSpeed ?? 80) * this.scale;
     this.position.x = startX * this.scale;
     this.position.y = startY * this.scale;
-    const patrolRange = 96 * this.scale;
+    const patrolRange = (options.patrolRange ?? 96) * this.scale;
     this.patrolMinX = this.position.x - patrolRange;
     this.patrolMaxX = this.position.x + patrolRange;
     this.health = 3;
+    this.idleDuration = options.idleDuration ?? 0.5;
     this.idleTimer = this.idleDuration;
+    if (this.behavior === "patrol" && this.idleDuration <= 0) {
+      this.state = "patrol";
+    }
 
     this.body.rect(0, 0, this.width, this.height).fill(0xd14545);
     this.container.addChild(this.body);
@@ -136,8 +152,23 @@ export class Enemy {
     return this.state === "dead";
   }
 
+  resolveSpawn(solids: Rect[]) {
+    const rect = this.getRect();
+    const resolved = Physics.resolve(rect, { x: 0, y: 1 }, solids);
+    this.position.x = resolved.x;
+    this.position.y = resolved.y;
+    this.velocity.x = resolved.vx;
+    this.velocity.y = resolved.vy;
+    this.syncVisual();
+  }
+
   private updateBehavior(deltaSeconds: number) {
     if (this.state === "dead" || this.state === "hurt") {
+      return;
+    }
+
+    if (this.behavior === "idle") {
+      this.velocity.x = 0;
       return;
     }
 

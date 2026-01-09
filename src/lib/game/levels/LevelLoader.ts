@@ -11,6 +11,13 @@ export type LevelPoint = {
   y: number;
 };
 
+export type LevelEnemy = LevelPoint & {
+  behavior?: "idle" | "patrol";
+  patrolRange?: number;
+  patrolSpeed?: number;
+  idleDuration?: number;
+};
+
 export type LevelData = {
   levelId: string;
   name: string;
@@ -26,7 +33,7 @@ export type LevelData = {
   solids: LevelRect[];
   goal: LevelRect;
   coins: LevelPoint[];
-  enemies?: LevelPoint[];
+  enemies?: LevelEnemy[];
 };
 
 export async function loadLevel(path: string): Promise<LevelData> {

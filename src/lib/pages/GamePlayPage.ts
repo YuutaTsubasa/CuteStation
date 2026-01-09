@@ -1,5 +1,5 @@
 import { Application, Container, Graphics } from "pixi.js";
-import { loadLevel } from "../game/levels/LevelLoader";
+import { loadLevel, type LevelEnemy } from "../game/levels/LevelLoader";
 import { LevelRuntime } from "../game/levels/LevelRuntime";
 import { LevelVisuals } from "../game/visuals/LevelVisuals";
 import { normalizeVisualsConfig, type VisualsConfig } from "../game/visuals/VisualsConfig";
@@ -199,13 +199,20 @@ export class GamePlayPage extends Page {
     player.mount(world);
     this.player = player;
     const enemies = level.enemies ?? [];
-    this.enemies = enemies.map((enemyPoint) => {
+    this.enemies = enemies.map((enemyPoint: LevelEnemy) => {
       const enemy = new Enemy(
         enemyPoint.x,
         enemyPoint.y - spawnOffsetY,
         this.worldScale,
+        {
+          behavior: enemyPoint.behavior ?? "patrol",
+          patrolRange: enemyPoint.patrolRange,
+          patrolSpeed: enemyPoint.patrolSpeed,
+          idleDuration: enemyPoint.idleDuration,
+        },
       );
       enemy.mount(world);
+      enemy.resolveSpawn(this.platforms);
       return enemy;
     });
     this.centerCameraOnPlayer();
@@ -525,9 +532,7 @@ export class GamePlayPage extends Page {
     }
 
     const goalRect = this.runtime.getGoalWorld();
-    const reachedGoal = goalRect ? this.rectsOverlap(this.player.getRect(), goalRect) : false;
-    const collectedAllCoins = this.collectibles?.hasCollectedAll() ?? false;
-    if (reachedGoal || collectedAllCoins) {
+    if (goalRect && this.rectsOverlap(this.player.getRect(), goalRect)) {
       this.levelCleared = true;
       if (this.isPlaytest) {
         this.exitPlaytest();
