@@ -711,15 +711,32 @@ export class GamePlayPage extends Page {
     const targetCenterY = rect.y + rect.height * 0.5;
     const playerCenterX = this.player.position.x + this.player.width * 0.5;
     const direction = targetCenterX >= playerCenterX ? 1 : -1;
-    const lateralOffset = this.player.width * 0.3;
-    const verticalOffset = this.player.height * 0.05;
+    const lateralOffset = this.player.width * 0.25;
     this.player.setFacingDirection(direction);
-    this.player.position.x =
-      targetCenterX - direction * lateralOffset - this.player.width * 0.5;
-    this.player.position.y =
-      targetCenterY + verticalOffset - this.player.height * 0.5;
+    const desiredCenterX = targetCenterX - direction * lateralOffset;
+    const desiredX = desiredCenterX - this.player.width * 0.5;
+    const floorTop = this.getFloorTopAt(desiredX, desiredX + this.player.width);
+    const enemyBottom = rect.y + rect.height;
+    const desiredBottom =
+      floorTop !== null ? Math.max(enemyBottom, floorTop) : enemyBottom;
+    this.player.position.x = desiredX;
+    this.player.position.y = desiredBottom - this.player.height;
     this.player.velocity.x = 0;
     this.player.velocity.y = -this.player.getHomingBounceSpeed();
+  }
+
+  private getFloorTopAt(xStart: number, xEnd: number) {
+    let best: number | null = null;
+    for (const solid of this.platforms) {
+      const overlap = xStart < solid.x + solid.width && xEnd > solid.x;
+      if (!overlap) {
+        continue;
+      }
+      if (best === null || solid.y > best) {
+        best = solid.y;
+      }
+    }
+    return best;
   }
 
   private rectsOverlap(a: Rect, b: Rect) {
