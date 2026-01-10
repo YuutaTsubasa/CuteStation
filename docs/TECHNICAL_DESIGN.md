@@ -42,7 +42,8 @@ src/
 
 - Keyboard, virtual touch controls, and gamepad input are merged each frame.
 - Attack input is edge-triggered to avoid repeated presses.
-- Level Editor supports pointer, touch (one-finger drag, two-finger pan), and gamepad cursor input.
+- Level Editor supports pointer, touch (one-finger drag, two-finger pan), and gamepad input.
+- Gamepad in Level Editor uses D-pad to focus UI controls and left stick to control the cursor.
 
 ## Level Data
 

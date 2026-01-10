@@ -438,7 +438,12 @@ export class MainMenuPage extends Page {
         this.lastGamepadNav = now;
       }
     }
-    if (state.buttonsDown[0]) {
+    if (
+      state.buttonsDown[0] ||
+      state.buttonsDown[1] ||
+      state.buttonsDown[2] ||
+      state.buttonsDown[3]
+    ) {
       this.activateSelection();
     }
   }

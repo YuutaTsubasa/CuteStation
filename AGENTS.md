@@ -66,3 +66,4 @@
 - Page transitions fade out/in; gameplay intro uses a dark overlay + zone logo before controls unlock.
 - Gameplay input is locked while the intro overlay/logo sequence plays.
 - Enemy entries support `enemyType` (`static`/`patrol`) and `gravityEnabled` to toggle falling behavior.
+- Level Editor gamepad input uses D-pad for UI focus/selection and left stick for cursor control.

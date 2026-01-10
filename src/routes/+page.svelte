@@ -46,6 +46,31 @@
   let pageFadeOpacity = $state(0);
   let pageFadeActive = $state(false);
   let pageTransitioning = false;
+  let editorUiActive = $state(false);
+  let editorUiIndex = $state(0);
+  let editorUiSelected = $state<HTMLElement | null>(null);
+  let editorGamepadRaf = 0;
+  let editorLastDpad = { up: false, down: false, left: false, right: false };
+  let editorLastConfirm = false;
+  const editorGamepadDeadzone = 0.3;
+  let editorButtonAddSolid: HTMLButtonElement | null = null;
+  let editorButtonAddCoin: HTMLButtonElement | null = null;
+  let editorButtonAddEnemy: HTMLButtonElement | null = null;
+  let editorButtonDelete: HTMLButtonElement | null = null;
+  let editorButtonGrid: HTMLButtonElement | null = null;
+  let editorButtonSnap: HTMLButtonElement | null = null;
+  let editorButtonWidthPlus: HTMLButtonElement | null = null;
+  let editorButtonWidthMinus: HTMLButtonElement | null = null;
+  let editorButtonHeightPlus: HTMLButtonElement | null = null;
+  let editorButtonHeightMinus: HTMLButtonElement | null = null;
+  let editorButtonPlayTest: HTMLButtonElement | null = null;
+  let editorButtonExport: HTMLButtonElement | null = null;
+  let editorButtonBack: HTMLButtonElement | null = null;
+  let editorEnemyTypeSelect: HTMLSelectElement | null = null;
+  let editorEnemyPatrolRangeInput: HTMLInputElement | null = null;
+  let editorEnemyPatrolSpeedInput: HTMLInputElement | null = null;
+  let editorEnemyIdleDurationInput: HTMLInputElement | null = null;
+  let editorEnemyGravityInput: HTMLInputElement | null = null;
 
   let uiScale = $state(1);
   let uiOffsetX = $state(0);
@@ -277,10 +302,94 @@
     window.addEventListener("keydown", handleKeydown);
     window.addEventListener("pointerdown", handlePointerDown);
 
+    const updateEditorGamepad = () => {
+      const inEditor = currentPageId === "LevelEditor";
+      if (!inEditor) {
+        if (editorUiActive) {
+          editorUiActive = false;
+          editorUiSelected = null;
+        }
+        editor?.setGamepadUiMode(false);
+        editorGamepadRaf = window.requestAnimationFrame(updateEditorGamepad);
+        return;
+      }
+
+      const pads = navigator.getGamepads?.() ?? [];
+      const pad = Array.from(pads).find((entry) => entry && entry.connected) ?? null;
+      if (!pad) {
+        if (editorUiActive) {
+          editorUiActive = false;
+          editorUiSelected = null;
+        }
+        editor?.setGamepadUiMode(false);
+        editorGamepadRaf = window.requestAnimationFrame(updateEditorGamepad);
+        return;
+      }
+
+      const leftStickActive =
+        Math.abs(pad.axes[0] ?? 0) >= editorGamepadDeadzone ||
+        Math.abs(pad.axes[1] ?? 0) >= editorGamepadDeadzone;
+      const dpad = {
+        up: Boolean(pad.buttons[12]?.pressed),
+        down: Boolean(pad.buttons[13]?.pressed),
+        left: Boolean(pad.buttons[14]?.pressed),
+        right: Boolean(pad.buttons[15]?.pressed),
+      };
+      const anyDpad = dpad.up || dpad.down || dpad.left || dpad.right;
+
+      if (leftStickActive) {
+        if (editorUiActive) {
+          editorUiActive = false;
+          editorUiSelected = null;
+        }
+        editor?.setGamepadUiMode(false);
+      } else if (anyDpad) {
+        if (!editorUiActive) {
+          editorUiActive = true;
+          editorUiIndex = 0;
+        }
+        editor?.setGamepadUiMode(true);
+      }
+
+      if (editorUiActive) {
+        const elements = getEditorUiElements();
+        syncEditorUiSelection(elements);
+
+        let delta = 0;
+        if (dpad.up && !editorLastDpad.up) {
+          delta = -1;
+        } else if (dpad.down && !editorLastDpad.down) {
+          delta = 1;
+        } else if (dpad.left && !editorLastDpad.left) {
+          delta = -1;
+        } else if (dpad.right && !editorLastDpad.right) {
+          delta = 1;
+        }
+
+        if (delta !== 0) {
+          moveEditorUiSelection(delta);
+        }
+
+        const confirmPressed = Boolean(pad.buttons[0]?.pressed);
+        if (confirmPressed && !editorLastConfirm) {
+          activateEditorUiSelection();
+        }
+        editorLastConfirm = confirmPressed;
+      } else {
+        editorLastConfirm = Boolean(pad.buttons[0]?.pressed);
+      }
+
+      editorLastDpad = dpad;
+      editorGamepadRaf = window.requestAnimationFrame(updateEditorGamepad);
+    };
+
+    editorGamepadRaf = window.requestAnimationFrame(updateEditorGamepad);
+
     return () => {
       window.removeEventListener("resize", resizeHandler);
       window.removeEventListener("keydown", handleKeydown);
       window.removeEventListener("pointerdown", handlePointerDown);
+      window.cancelAnimationFrame(editorGamepadRaf);
       document.body.style.backgroundImage = "";
       document.body.style.backgroundSize = "";
       document.body.style.backgroundPosition = "";
@@ -308,6 +417,75 @@
     }
     return Math.max(0, Math.min(100, (playerHp / playerHpMax) * 100));
   };
+
+  const getEditorUiElements = () => {
+    const elements: HTMLElement[] = [];
+    if (editorButtonAddSolid) elements.push(editorButtonAddSolid);
+    if (editorButtonAddCoin) elements.push(editorButtonAddCoin);
+    if (editorButtonAddEnemy) elements.push(editorButtonAddEnemy);
+    if (editorButtonDelete) elements.push(editorButtonDelete);
+    if (editorButtonGrid) elements.push(editorButtonGrid);
+    if (editorButtonSnap) elements.push(editorButtonSnap);
+    if (editorButtonWidthPlus) elements.push(editorButtonWidthPlus);
+    if (editorButtonWidthMinus) elements.push(editorButtonWidthMinus);
+    if (editorButtonHeightPlus) elements.push(editorButtonHeightPlus);
+    if (editorButtonHeightMinus) elements.push(editorButtonHeightMinus);
+    if (editorButtonPlayTest) elements.push(editorButtonPlayTest);
+    if (editorButtonExport) elements.push(editorButtonExport);
+    if (editorButtonBack) elements.push(editorButtonBack);
+    if (selectedEnemy) {
+      if (editorEnemyTypeSelect) elements.push(editorEnemyTypeSelect);
+      if (editorEnemyPatrolRangeInput) elements.push(editorEnemyPatrolRangeInput);
+      if (editorEnemyPatrolSpeedInput) elements.push(editorEnemyPatrolSpeedInput);
+      if (editorEnemyIdleDurationInput) elements.push(editorEnemyIdleDurationInput);
+      if (editorEnemyGravityInput) elements.push(editorEnemyGravityInput);
+    }
+    return elements;
+  };
+
+  const syncEditorUiSelection = (elements: HTMLElement[]) => {
+    if (elements.length === 0) {
+      editorUiSelected = null;
+      editorUiIndex = 0;
+      return;
+    }
+    if (editorUiIndex >= elements.length) {
+      editorUiIndex = elements.length - 1;
+    }
+    if (!editorUiSelected || !elements.includes(editorUiSelected)) {
+      editorUiSelected = elements[editorUiIndex] ?? elements[0];
+    }
+    editorUiSelected?.focus({ preventScroll: true });
+  };
+
+  const moveEditorUiSelection = (delta: number) => {
+    const elements = getEditorUiElements();
+    if (elements.length === 0) {
+      return;
+    }
+    const nextIndex = (editorUiIndex + delta + elements.length) % elements.length;
+    editorUiIndex = nextIndex;
+    editorUiSelected = elements[nextIndex];
+    editorUiSelected?.focus({ preventScroll: true });
+  };
+
+  const activateEditorUiSelection = () => {
+    if (!editorUiSelected) {
+      return;
+    }
+    if (editorUiSelected instanceof HTMLButtonElement) {
+      editorUiSelected.click();
+      return;
+    }
+    if (editorUiSelected instanceof HTMLInputElement) {
+      if (editorUiSelected.type === "checkbox") {
+        editorUiSelected.click();
+        return;
+      }
+    }
+    editorUiSelected.focus({ preventScroll: true });
+  };
+
 </script>
 
 <main class="container">
@@ -388,22 +566,44 @@
         {/if}
       {:else if currentPageId === "LevelEditor"}
         <div class="editor-toolbar">
-          <button class="action" type="button" on:click={() => editor?.addSolid()}
+          <button
+            class="action"
+            type="button"
+            bind:this={editorButtonAddSolid}
+            class:editor-ui-selected={editorUiSelected === editorButtonAddSolid}
+            on:click={() => editor?.addSolid()}
             >Add Solid</button
           >
-          <button class="action" type="button" on:click={() => editor?.addCoin()}
+          <button
+            class="action"
+            type="button"
+            bind:this={editorButtonAddCoin}
+            class:editor-ui-selected={editorUiSelected === editorButtonAddCoin}
+            on:click={() => editor?.addCoin()}
             >Add Coin</button
           >
-          <button class="action" type="button" on:click={() => editor?.addEnemy()}
+          <button
+            class="action"
+            type="button"
+            bind:this={editorButtonAddEnemy}
+            class:editor-ui-selected={editorUiSelected === editorButtonAddEnemy}
+            on:click={() => editor?.addEnemy()}
             >Add Enemy</button
           >
-          <button class="action" type="button" on:click={() => editor?.deleteSelected()}
+          <button
+            class="action"
+            type="button"
+            bind:this={editorButtonDelete}
+            class:editor-ui-selected={editorUiSelected === editorButtonDelete}
+            on:click={() => editor?.deleteSelected()}
             >Delete</button
           >
           <button
             class="action"
             type="button"
             data-active={gridEnabled}
+            bind:this={editorButtonGrid}
+            class:editor-ui-selected={editorUiSelected === editorButtonGrid}
             on:click={toggleGrid}
             >Grid</button
           >
@@ -411,28 +611,65 @@
             class="action"
             type="button"
             data-active={snapEnabled}
+            bind:this={editorButtonSnap}
+            class:editor-ui-selected={editorUiSelected === editorButtonSnap}
             on:click={toggleSnap}
             >Snap</button
           >
-          <button class="action" type="button" on:click={() => editor?.resizeWorld(200, 0)}
+          <button
+            class="action"
+            type="button"
+            bind:this={editorButtonWidthPlus}
+            class:editor-ui-selected={editorUiSelected === editorButtonWidthPlus}
+            on:click={() => editor?.resizeWorld(200, 0)}
             >Width +</button
           >
-          <button class="action" type="button" on:click={() => editor?.resizeWorld(-200, 0)}
+          <button
+            class="action"
+            type="button"
+            bind:this={editorButtonWidthMinus}
+            class:editor-ui-selected={editorUiSelected === editorButtonWidthMinus}
+            on:click={() => editor?.resizeWorld(-200, 0)}
             >Width -</button
           >
-          <button class="action" type="button" on:click={() => editor?.resizeWorld(0, 200)}
+          <button
+            class="action"
+            type="button"
+            bind:this={editorButtonHeightPlus}
+            class:editor-ui-selected={editorUiSelected === editorButtonHeightPlus}
+            on:click={() => editor?.resizeWorld(0, 200)}
             >Height +</button
           >
-          <button class="action" type="button" on:click={() => editor?.resizeWorld(0, -200)}
+          <button
+            class="action"
+            type="button"
+            bind:this={editorButtonHeightMinus}
+            class:editor-ui-selected={editorUiSelected === editorButtonHeightMinus}
+            on:click={() => editor?.resizeWorld(0, -200)}
             >Height -</button
           >
-          <button class="action" type="button" on:click={() => editor?.playTest()}
+          <button
+            class="action"
+            type="button"
+            bind:this={editorButtonPlayTest}
+            class:editor-ui-selected={editorUiSelected === editorButtonPlayTest}
+            on:click={() => editor?.playTest()}
             >Play Test</button
           >
-          <button class="action" type="button" on:click={exportLevel}
+          <button
+            class="action"
+            type="button"
+            bind:this={editorButtonExport}
+            class:editor-ui-selected={editorUiSelected === editorButtonExport}
+            on:click={exportLevel}
             >Export Level</button
           >
-          <button class="action" type="button" on:click={() => goTo("MainMenu")}
+          <button
+            class="action"
+            type="button"
+            bind:this={editorButtonBack}
+            class:editor-ui-selected={editorUiSelected === editorButtonBack}
+            on:click={() => goTo("MainMenu")}
             >Back</button
           >
         </div>
@@ -443,6 +680,8 @@
               <span>Type</span>
               <select
                 value={enemyType}
+                bind:this={editorEnemyTypeSelect}
+                class:editor-ui-selected={editorUiSelected === editorEnemyTypeSelect}
                 on:change={(event) => {
                   const value = (event.target as HTMLSelectElement).value;
                   enemyType = value;
@@ -458,6 +697,8 @@
               <input
                 type="number"
                 value={enemyPatrolRange}
+                bind:this={editorEnemyPatrolRangeInput}
+                class:editor-ui-selected={editorUiSelected === editorEnemyPatrolRangeInput}
                 min="0"
                 step="1"
                 disabled={enemyType !== "patrol"}
@@ -473,6 +714,8 @@
               <input
                 type="number"
                 value={enemyPatrolSpeed}
+                bind:this={editorEnemyPatrolSpeedInput}
+                class:editor-ui-selected={editorUiSelected === editorEnemyPatrolSpeedInput}
                 min="0"
                 step="1"
                 disabled={enemyType !== "patrol"}
@@ -488,6 +731,8 @@
               <input
                 type="number"
                 value={enemyIdleDuration}
+                bind:this={editorEnemyIdleDurationInput}
+                class:editor-ui-selected={editorUiSelected === editorEnemyIdleDurationInput}
                 min="0"
                 step="0.1"
                 on:change={(event) => {
@@ -502,6 +747,8 @@
               <input
                 type="checkbox"
                 checked={enemyGravityEnabled}
+                bind:this={editorEnemyGravityInput}
+                class:editor-ui-selected={editorUiSelected === editorEnemyGravityInput}
                 on:change={(event) => {
                   const value = (event.target as HTMLInputElement).checked;
                   enemyGravityEnabled = value;
@@ -968,6 +1215,12 @@
 
 .action:hover {
   background: #343434;
+}
+
+.editor-ui-selected {
+  outline: 2px solid #3b7cff;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px rgba(59, 124, 255, 0.35);
 }
 
 h2 {

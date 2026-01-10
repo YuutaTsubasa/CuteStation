@@ -127,6 +127,7 @@ Details live in `docs/conventions.md`.
 
 - Keyboard: Arrow keys / A-D to move, Space to jump, J/K to attack, Escape to return to the menu.
 - Touch: Left virtual joystick for horizontal movement, right jump and attack buttons.
+- Gamepad: Left stick to move, A to jump (B also accepted), X to attack (Y also accepted).
 
 ## Rendering
 

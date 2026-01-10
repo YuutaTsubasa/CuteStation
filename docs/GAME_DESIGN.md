@@ -45,6 +45,11 @@
 - Left virtual joystick: move
 - Right buttons: jump and attack
 
+### Gamepad
+- Left stick: move
+- A: jump (B also accepted)
+- X: attack (Y also accepted)
+
 ### HUD
 - Top bar shows level title, HP, timer, and coins.
 - Bottom bar shows controller + keyboard mappings.
@@ -52,3 +57,4 @@
 ## Tools
 
 - Level Editor v0: grid, snap, pan, and JSON export.
+- Level Editor supports gamepad UI focus (D-pad) and cursor control (left stick).

@@ -13,7 +13,8 @@ export class Input {
 
   readGamepad(): GamepadInputState {
     const pads = navigator.getGamepads?.() ?? [];
-    const pad = pads.find((entry) => entry && entry.connected) ?? null;
+    const pad =
+      Array.from(pads).find((entry) => entry && entry.connected) ?? null;
     if (!pad) {
       this.lastGamepadJump = false;
       this.lastGamepadAttack = false;
@@ -26,10 +27,22 @@ export class Input {
       };
     }
 
-    const rawMove = pad.axes[0] ?? 0;
-    const moveX = Math.abs(rawMove) >= this.deadzone ? rawMove : 0;
-    const jumpHeld = Boolean(pad.buttons[0]?.pressed);
-    const attackHeld = Boolean(pad.buttons[2]?.pressed);
+    const buttonsHeld = pad.buttons.map((button) => button.pressed);
+    const dpadLeft = buttonsHeld[14];
+    const dpadRight = buttonsHeld[15];
+
+    let moveX = 0;
+    if (dpadLeft) {
+      moveX = -1;
+    } else if (dpadRight) {
+      moveX = 1;
+    } else {
+      const rawMove = pad.axes[0] ?? 0;
+      moveX = Math.abs(rawMove) >= this.deadzone ? rawMove : 0;
+    }
+
+    const jumpHeld = Boolean(buttonsHeld[0] || buttonsHeld[1]);
+    const attackHeld = Boolean(buttonsHeld[2] || buttonsHeld[3]);
     const jumpDown = jumpHeld && !this.lastGamepadJump;
     const attackDown = attackHeld && !this.lastGamepadAttack;
 

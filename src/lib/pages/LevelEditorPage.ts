@@ -70,6 +70,7 @@ export class LevelEditorPage extends Page {
   private gamepadCursorWorld = { x: GAME_WIDTH * 0.5, y: GAME_HEIGHT * 0.5 };
   private gamepadCursorGraphic: Graphics | null = null;
   private gamepadDragActive = false;
+  private gamepadUiMode = false;
   private lastGamepadButtons = {
     select: false,
     delete: false,
@@ -98,6 +99,23 @@ export class LevelEditorPage extends Page {
   setOnSelectionChange(handler: ((selection: SelectionSnapshot) => void) | null) {
     this.selectionChangeHandler = handler;
     this.notifySelection();
+  }
+
+  setGamepadUiMode(enabled: boolean) {
+    if (this.gamepadUiMode === enabled) {
+      return;
+    }
+    this.gamepadUiMode = enabled;
+    this.lastGamepadButtons = {
+      select: false,
+      delete: false,
+      addSolid: false,
+      addCoin: false,
+      addEnemy: false,
+    };
+    if (this.gamepadCursorGraphic) {
+      this.gamepadCursorGraphic.visible = !enabled;
+    }
   }
 
   override async onEnter() {
@@ -148,10 +166,6 @@ export class LevelEditorPage extends Page {
       abort();
       return;
     }
-    if (!sessionLevel) {
-      level.enemies = [];
-    }
-
     const world = new Container();
     gameRoot.addChild(world);
 
@@ -855,6 +869,13 @@ export class LevelEditorPage extends Page {
       return;
     }
 
+    if (this.gamepadUiMode) {
+      if (this.gamepadCursorGraphic) {
+        this.gamepadCursorGraphic.visible = false;
+      }
+      return;
+    }
+
     this.ensureGamepadCursor();
     if (this.gamepadCursorGraphic) {
       this.gamepadCursorGraphic.visible = true;
@@ -867,7 +888,7 @@ export class LevelEditorPage extends Page {
     const panX = applyDeadzone(pad.axes[2] ?? 0);
     const panY = applyDeadzone(pad.axes[3] ?? 0);
 
-    const cursorSpeed = 540 * this.worldScale;
+    const cursorSpeed = 320 * this.worldScale;
     this.gamepadCursorWorld.x += moveX * cursorSpeed * deltaSeconds;
     this.gamepadCursorWorld.y += moveY * cursorSpeed * deltaSeconds;
 
