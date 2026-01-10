@@ -36,6 +36,14 @@ const toWebpPath = (filePath) => filePath.replace(/\.[^.]+$/, ".webp");
 
 const imageExtensions = new Set([".png", ".jpg", ".jpeg"]);
 
+const rewriteKey = (key) => {
+  const ext = extname(key).toLowerCase();
+  if (imageExtensions.has(ext)) {
+    return key.replace(/\.[^.]+$/, ".webp");
+  }
+  return key;
+};
+
 const rewriteImageExtensions = (value) => {
   if (typeof value === "string") {
     const ext = extname(value).toLowerCase();
@@ -50,7 +58,8 @@ const rewriteImageExtensions = (value) => {
   if (value && typeof value === "object") {
     const updated = {};
     for (const [key, entry] of Object.entries(value)) {
-      updated[key] = rewriteImageExtensions(entry);
+      const nextKey = rewriteKey(key);
+      updated[nextKey] = rewriteImageExtensions(entry);
     }
     return updated;
   }
