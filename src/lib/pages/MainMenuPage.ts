@@ -12,6 +12,7 @@ import {
 import { audioManager } from "../game/audio/AudioManager";
 import { menuBgmPath } from "../game/audio/audioPaths";
 import { GamepadTracker } from "../game/input/GamepadTracker";
+import { assetManifest } from "../game/assets/AssetManifest";
 import { GAME_HEIGHT, GAME_WIDTH } from "../game/view/ResolutionManager";
 import { Page } from "./Page";
 
@@ -33,8 +34,8 @@ export class MainMenuPage extends Page {
     { id: "GamePlay", label: "Start Game" },
     { id: "LevelEditor", label: "Level Editor" },
   ];
-  private readonly logoPath = "/ProjectContent/UI/gameLogo.png";
-  private readonly videoPath = "/ProjectContent/UI/mainMenuBackground.mp4";
+  private readonly logoPath = assetManifest.ui.gameLogo;
+  private readonly videoPath = assetManifest.ui.mainMenuBackgroundVideo;
   private readonly overlayAlpha = 0.45;
   private readonly transitionSeconds = 0.2;
   private app: Application | null = null;

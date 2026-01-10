@@ -1,5 +1,4 @@
-const AUDIO_BASE = "/ProjectContent/Audio";
+import { assetManifest } from "../assets/AssetManifest";
 
-export const menuBgmPath = `${AUDIO_BASE}/BGM/Menu/default.mp3`;
-export const whitePalaceBgmPath =
-  `${AUDIO_BASE}/BGM/Levels/whitePalace/default.mp3`;
+export const menuBgmPath = assetManifest.audio.bgm.menuDefault;
+export const whitePalaceBgmPath = assetManifest.audio.bgm.whitePalaceDefault;

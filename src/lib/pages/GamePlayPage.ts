@@ -14,14 +14,15 @@ import { Input } from "../game/core/Input";
 import { type VirtualInputState, VirtualInput } from "../game/input/VirtualInput";
 import { GAME_HEIGHT, GAME_WIDTH } from "../game/view/ResolutionManager";
 import { LevelSession } from "../game/levels/LevelSession";
+import { assetManifest } from "../game/assets/AssetManifest";
 import { Page } from "./Page";
 
 export class GamePlayPage extends Page {
   private readonly worldScale = 3;
   private readonly baseFloorY = 400;
   private readonly worldPadding = { top: 320, right: 0, bottom: 0, left: 0 };
-  private readonly visualsBasePath = "/ProjectContent/Levels/whitePalace/visuals";
-  private readonly visualsConfigPath = "/ProjectContent/Levels/whitePalace/visuals/visuals.json";
+  private readonly visualsConfigPath =
+    assetManifest.levels.whitePalace.visuals.config;
   private app: Application | null = null;
   private host: HTMLElement | null = null;
   private gameRoot: Container | null = null;
@@ -154,7 +155,9 @@ export class GamePlayPage extends Page {
 
     const previewLevel = LevelSession.getPreviewLevel();
     this.isPlaytest = Boolean(previewLevel);
-    const level = previewLevel ?? (await loadLevel("/ProjectContent/Levels/whitePalace/1-1.json"));
+    const level =
+      previewLevel ??
+      (await loadLevel(assetManifest.levels.whitePalace.level1));
     if (token !== this.enterToken) {
       abort();
       return;
@@ -190,7 +193,8 @@ export class GamePlayPage extends Page {
     const visualsConfig = await this.loadVisualsConfig();
     const visuals = new LevelVisuals(level, runtime, {
       worldScale: this.worldScale,
-      visualsBasePath: this.visualsBasePath,
+      backgroundPaths: assetManifest.levels.whitePalace.visuals.background,
+      platformTilePath: assetManifest.levels.whitePalace.visuals.terrain.platformTile,
       config: visualsConfig,
     });
     await visuals.load(GAME_WIDTH, GAME_HEIGHT);

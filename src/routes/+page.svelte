@@ -7,6 +7,7 @@
   import { SplashScreenPage } from "$lib/pages/SplashScreenPage";
   import VirtualControls from "$lib/components/VirtualControls.svelte";
   import { VirtualInput } from "$lib/game/input/VirtualInput";
+  import { assetManifest } from "$lib/game/assets/AssetManifest";
   import type { LevelEnemy } from "$lib/game/levels/LevelLoader";
 
   let status = $state("Initializing...");
@@ -25,6 +26,7 @@
   let gameLoading = $state(false);
   let showVirtualControls = $state(true);
   const virtualInput = new VirtualInput();
+  const gameBackgroundUrl = assetManifest.ui.gameBackground;
   let selectedEnemy = $state<LevelEnemy | null>(null);
   let enemyType = $state("static");
   let enemyPatrolRange = $state(96);
@@ -182,7 +184,11 @@
 </script>
 
 <main class="container">
-  <div class="stage" bind:this={pixiRoot}>
+  <div
+    class="stage"
+    bind:this={pixiRoot}
+    style={`background-image: url("${gameBackgroundUrl}")`}
+  >
     <div class="stage-frame" bind:this={pixiFrame} style={`transform: ${uiTransform};`}></div>
     <div class="stage-ui" style={`transform: ${uiTransform};`}>
       {#if currentPageId === "GamePlay"}
@@ -410,7 +416,6 @@
   overflow: hidden;
   position: relative;
   background: #0b0b0b;
-  background-image: url("/ProjectContent/UI/gameBackground.png");
   background-size: cover;
   background-position: center;
 }

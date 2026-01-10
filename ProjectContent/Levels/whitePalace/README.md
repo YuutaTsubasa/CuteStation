@@ -2,10 +2,10 @@
 
 ## Visuals
 
-- `visuals/background/far.png`
-- `visuals/background/mid.png`
-- `visuals/background/near.png`
-- `visuals/terrain/platformTile.png`
+- `visuals/background/far.webp`
+- `visuals/background/mid.webp`
+- `visuals/background/near.webp`
+- `visuals/terrain/platformTile.webp`
 - `visuals/visuals.json`
 
 Parallax ordering: far → mid → near (near currently optional).

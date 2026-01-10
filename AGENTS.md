@@ -55,7 +55,8 @@
 ## Architecture Notes
 - Frontend calls Rust commands via Tauri IPC (`invoke()` in TS, `#[tauri::command]` in Rust).
 - SPA mode is enabled; SSR is off. Static build output is served by Tauri.
-- Game rendering targets a 1920x1080 design frame and scales to fit the window; the letterbox area uses `ProjectContent/UI/gameBackground.png`.
+- Game rendering targets a 1920x1080 design frame and scales to fit the window; the letterbox area uses `ProjectContent/UI/gameBackground.webp`.
+- Asset paths should be sourced from `src/lib/game/assets/assetManifest.json`.
 - GamePlay centers the camera at player spawn and hides the world until player assets finish loading.
 - Main menu video background and Press-to-Start prompt are DOM overlays inside the stage frame.
 - Attack hit windows are defined by the `attackHit` animation inside `knight_attacking.json` and `knight_runningAttacking.json`.

@@ -1,0 +1,44 @@
+{
+  "ui": {
+    "gameBackground": "/ProjectContent/UI/gameBackground.webp",
+    "creatorLogo": "/ProjectContent/UI/creatorLogo.webp",
+    "gameLogo": "/ProjectContent/UI/gameLogo.webp",
+    "mainMenuBackgroundVideo": "/ProjectContent/UI/mainMenuBackground.mp4"
+  },
+  "levels": {
+    "whitePalace": {
+      "level1": "/ProjectContent/Levels/whitePalace/1-1.json",
+      "visuals": {
+        "config": "/ProjectContent/Levels/whitePalace/visuals/visuals.json",
+        "background": {
+          "far": "/ProjectContent/Levels/whitePalace/visuals/background/far.webp",
+          "mid": "/ProjectContent/Levels/whitePalace/visuals/background/mid.webp",
+          "near": "/ProjectContent/Levels/whitePalace/visuals/background/near.webp"
+        },
+        "terrain": {
+          "platformTile": "/ProjectContent/Levels/whitePalace/visuals/terrain/platformTile.webp"
+        }
+      }
+    }
+  },
+  "characters": {
+    "knight": {
+      "sheets": {
+        "idle": "/ProjectContent/Characters/knight/knight_idle.json",
+        "walk": "/ProjectContent/Characters/knight/knight_walking.json",
+        "run": "/ProjectContent/Characters/knight/knight_running.json",
+        "jump": "/ProjectContent/Characters/knight/knight_jumping.json",
+        "attack": "/ProjectContent/Characters/knight/knight_attacking.json",
+        "runAttack": "/ProjectContent/Characters/knight/knight_runningAttacking.json",
+        "hit": "/ProjectContent/Characters/knight/knight_hit.json",
+        "dead": "/ProjectContent/Characters/knight/knight_dead.json"
+      }
+    }
+  },
+  "audio": {
+    "bgm": {
+      "menuDefault": "/ProjectContent/Audio/BGM/Menu/default.mp3",
+      "whitePalaceDefault": "/ProjectContent/Audio/BGM/Levels/whitePalace/default.mp3"
+    }
+  }
+}

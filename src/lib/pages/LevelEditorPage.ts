@@ -9,6 +9,7 @@ import {
 import { EditorSession } from "../game/levels/EditorSession";
 import { LevelSession } from "../game/levels/LevelSession";
 import { LevelRuntime } from "../game/levels/LevelRuntime";
+import { assetManifest } from "../game/assets/AssetManifest";
 import { GAME_HEIGHT, GAME_WIDTH } from "../game/view/ResolutionManager";
 import { Page } from "./Page";
 
@@ -142,7 +143,7 @@ export class LevelEditorPage extends Page {
 
     const sessionLevel = EditorSession.getEditorLevel();
     const level =
-      sessionLevel ?? (await loadLevel("/ProjectContent/Levels/whitePalace/1-1.json"));
+      sessionLevel ?? (await loadLevel(assetManifest.levels.whitePalace.level1));
     if (token !== this.enterToken) {
       abort();
       return;

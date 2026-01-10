@@ -15,7 +15,7 @@ Use a consistent hierarchy so tools and scripts can find assets:
 - `ProjectContent/Levels/{world}/visuals/`
   - Example: `ProjectContent/Levels/whitePalace/visuals/`
 - `ProjectContent/UI/`
-  - Example: `ProjectContent/UI/gameBackground.png`
+  - Example: `ProjectContent/UI/gameBackground.webp`
 - `ProjectContent/Fonts/`
   - Example: `ProjectContent/Fonts/Gabarito-Regular.ttf`
 
@@ -31,22 +31,22 @@ Level visuals live under `ProjectContent/Levels/{world}/visuals/`.
 
 ### Parallax Backgrounds
 
-- `background/far.png`: furthest layer, non-tiled, subtle parallax (e.g., 0.2).
-- `background/mid.png`: mid layer, tiled, medium parallax (e.g., 0.5).
-- `background/near.png`: near layer, tiled, stronger parallax (optional).
+- `background/far.webp`: furthest layer, non-tiled, subtle parallax (e.g., 0.2).
+- `background/mid.webp`: mid layer, tiled, medium parallax (e.g., 0.5).
+- `background/near.webp`: near layer, tiled, stronger parallax (optional).
 - Toggle near with `visuals/visuals.json` (`layers.nearEnabled`).
 - Configure parallax factors and `groundHeight` in `visuals/visuals.json`.
 
 ### Terrain Tiles
 
-- `terrain/platformTile.png`: tiled to fill solid rectangles.
+- `terrain/platformTile.webp`: tiled to fill solid rectangles.
 - `visuals/visuals.json`: per-level visuals settings (e.g., groundHeight, parallax).
 
 ## UI Assets
 
-- `ProjectContent/UI/gameBackground.png`: letterbox background image.
-- `ProjectContent/UI/producerLogo.png`: splash logo.
-- `ProjectContent/UI/gameLogo.png`: main menu logo.
+- `ProjectContent/UI/gameBackground.webp`: letterbox background image.
+- `ProjectContent/UI/creatorLogo.webp`: splash logo.
+- `ProjectContent/UI/gameLogo.webp`: main menu logo.
 - `ProjectContent/UI/mainMenuBackground.mp4`: looping main menu background video.
 
 ## Fonts
@@ -70,6 +70,11 @@ Level visuals live under `ProjectContent/Levels/{world}/visuals/`.
 - Use `npm run assets:webp` to convert PNG/JPG assets under `ProjectContent/` to WebP.
 - Options: `--root <path>` to change the source folder, `--quality <n>` (default 82), `--force` to overwrite existing WebP files.
 - The converter uses the `sharp` npm package, so it works on Windows/macOS/Linux without `cwebp`.
+- The script updates `src/lib/game/assets/assetManifest.json` and spritesheet JSON to point at WebP files, then removes the original PNG/JPG files.
+
+## Asset Manifest
+
+- Asset lookups should go through `src/lib/game/assets/assetManifest.json`.
 
 ## Naming Conventions
 
@@ -98,11 +103,11 @@ Actions available:
 - Jumping
 
 Files available:
-- `ProjectContent/Characters/knight/knight_idle.png` + `.json`
-- `ProjectContent/Characters/knight/knight_walking.png` + `.json`
-- `ProjectContent/Characters/knight/knight_running.png` + `.json`
-- `ProjectContent/Characters/knight/knight_attacking.png` + `.json`
-- `ProjectContent/Characters/knight/knight_runningAttacking.png` + `.json`
-- `ProjectContent/Characters/knight/knight_hit.png` + `.json`
-- `ProjectContent/Characters/knight/knight_dead.png` + `.json`
-- `ProjectContent/Characters/knight/knight_jumping.png` + `.json`
+- `ProjectContent/Characters/knight/knight_idle.webp` + `.json`
+- `ProjectContent/Characters/knight/knight_walking.webp` + `.json`
+- `ProjectContent/Characters/knight/knight_running.webp` + `.json`
+- `ProjectContent/Characters/knight/knight_attacking.webp` + `.json`
+- `ProjectContent/Characters/knight/knight_runningAttacking.webp` + `.json`
+- `ProjectContent/Characters/knight/knight_hit.webp` + `.json`
+- `ProjectContent/Characters/knight/knight_dead.webp` + `.json`
+- `ProjectContent/Characters/knight/knight_jumping.webp` + `.json`

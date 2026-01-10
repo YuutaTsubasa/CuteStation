@@ -10,7 +10,7 @@
 ## Expected Files Per Action
 
 Each action should include a spritesheet export and its metadata:
-- `{Action}.png`
+- `{Action}.webp`
 - `{Action}.json`
 
-Example: `Idle.png`, `Idle.json`
+Example: `Idle.webp`, `Idle.json`

@@ -1,10 +1,11 @@
 import { Application, Assets, Container, Graphics, Sprite, Texture } from "pixi.js";
 import { audioManager } from "../game/audio/AudioManager";
+import { assetManifest } from "../game/assets/AssetManifest";
 import { GAME_HEIGHT, GAME_WIDTH } from "../game/view/ResolutionManager";
 import { Page } from "./Page";
 
 export class SplashScreenPage extends Page {
-  private readonly logoPath = "/ProjectContent/UI/creatorLogo.png";
+  private readonly logoPath = assetManifest.ui.creatorLogo;
   private readonly fadeInSeconds = 1;
   private readonly holdSeconds = 2.5;
   private readonly fadeOutSeconds = 1;

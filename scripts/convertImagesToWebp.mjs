@@ -1,4 +1,4 @@
-import { readdirSync, statSync } from "node:fs";
+import { readdirSync, readFileSync, statSync, unlinkSync, writeFileSync } from "node:fs";
 import { extname, join, resolve } from "node:path";
 import sharp from "sharp";
 
@@ -34,6 +34,58 @@ const walkFiles = (dir, entries) => {
 
 const toWebpPath = (filePath) => filePath.replace(/\.[^.]+$/, ".webp");
 
+const imageExtensions = new Set([".png", ".jpg", ".jpeg"]);
+
+const rewriteImageExtensions = (value) => {
+  if (typeof value === "string") {
+    const ext = extname(value).toLowerCase();
+    if (imageExtensions.has(ext)) {
+      return value.replace(/\.[^.]+$/, ".webp");
+    }
+    return value;
+  }
+  if (Array.isArray(value)) {
+    return value.map((entry) => rewriteImageExtensions(entry));
+  }
+  if (value && typeof value === "object") {
+    const updated = {};
+    for (const [key, entry] of Object.entries(value)) {
+      updated[key] = rewriteImageExtensions(entry);
+    }
+    return updated;
+  }
+  return value;
+};
+
+const updateJsonFile = (filePath) => {
+  const raw = readFileSync(filePath, "utf-8");
+  const data = JSON.parse(raw);
+  const next = rewriteImageExtensions(data);
+  const nextRaw = JSON.stringify(next, null, 2) + "\n";
+  if (nextRaw !== raw) {
+    writeFileSync(filePath, nextRaw, "utf-8");
+  }
+};
+
+const updateSpritesheets = (dir) => {
+  for (const name of readdirSync(dir)) {
+    const fullPath = join(dir, name);
+    const stats = statSync(fullPath);
+    if (stats.isDirectory()) {
+      updateSpritesheets(fullPath);
+      continue;
+    }
+    if (extname(fullPath).toLowerCase() === ".json") {
+      updateJsonFile(fullPath);
+    }
+  }
+};
+
+const updateAssetManifest = () => {
+  const manifestPath = resolve("src/lib/game/assets/assetManifest.json");
+  updateJsonFile(manifestPath);
+};
+
 const run = async () => {
   const files = [];
   walkFiles(root, files);
@@ -56,8 +108,23 @@ const run = async () => {
     converted += 1;
   }
 
+  updateSpritesheets(root);
+  updateAssetManifest();
+
+  let removed = 0;
+  for (const filePath of files) {
+    const outputPath = toWebpPath(filePath);
+    try {
+      statSync(outputPath);
+      unlinkSync(filePath);
+      removed += 1;
+    } catch {
+      // Skip removal if output missing.
+    }
+  }
+
   console.log(
-    `WebP conversion done. Converted ${converted}, skipped ${skipped}.`,
+    `WebP conversion done. Converted ${converted}, skipped ${skipped}, removed ${removed}.`,
   );
 };
 

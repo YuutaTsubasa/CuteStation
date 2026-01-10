@@ -5,7 +5,12 @@ import type { VisualsConfig } from "./VisualsConfig";
 
 export type LevelVisualsOptions = {
   worldScale: number;
-  visualsBasePath: string;
+  backgroundPaths: {
+    far: string;
+    mid: string;
+    near: string;
+  };
+  platformTilePath: string;
   config: VisualsConfig;
 };
 
@@ -37,13 +42,12 @@ export class LevelVisuals {
   }
 
   async load(viewWidth: number, viewHeight: number) {
-    const base = this.options.visualsBasePath;
     const includeNear = this.options.config.layers?.nearEnabled ?? false;
     const textures = await Promise.all([
-      Assets.load<Texture>(`${base}/background/far.png`),
-      Assets.load<Texture>(`${base}/background/mid.png`),
-      includeNear ? Assets.load<Texture>(`${base}/background/near.png`) : null,
-      Assets.load<Texture>(`${base}/terrain/platformTile.png`),
+      Assets.load<Texture>(this.options.backgroundPaths.far),
+      Assets.load<Texture>(this.options.backgroundPaths.mid),
+      includeNear ? Assets.load<Texture>(this.options.backgroundPaths.near) : null,
+      Assets.load<Texture>(this.options.platformTilePath),
     ]);
 
     const far = textures[0] as Texture;

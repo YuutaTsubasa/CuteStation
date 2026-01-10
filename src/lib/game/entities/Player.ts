@@ -5,6 +5,7 @@ import {
   type Spritesheet,
   type Texture,
 } from "pixi.js";
+import { assetManifest, getSpriteSheetPaths } from "../assets/AssetManifest";
 import { Physics, type Rect } from "../systems/Physics";
 
 type PlayerInput = {
@@ -110,18 +111,15 @@ export class Player {
       return;
     }
 
-    const basePath = "/ProjectContent/Characters/knight";
-    this.animations.idle = await this.loadFrames(basePath, "knight_idle");
-    this.animations.walk = await this.loadFrames(basePath, "knight_walking");
-    this.animations.run = await this.loadFrames(basePath, "knight_running");
-    const attackSegments = await this.loadAttackSegments(basePath, "knight_attacking");
+    const sheets = assetManifest.characters.knight.sheets;
+    this.animations.idle = await this.loadFrames(sheets.idle);
+    this.animations.walk = await this.loadFrames(sheets.walk);
+    this.animations.run = await this.loadFrames(sheets.run);
+    const attackSegments = await this.loadAttackSegments(sheets.attack);
     this.animations.attack = attackSegments.frames;
     this.attackHitFrames = attackSegments.hitFrames;
-    this.animations.runAttack = await this.loadFrames(
-      basePath,
-      "knight_runningAttacking",
-    );
-    const jumpSegments = await this.loadJumpSegments(basePath, "knight_jumping");
+    this.animations.runAttack = await this.loadFrames(sheets.runAttack);
+    const jumpSegments = await this.loadJumpSegments(sheets.jump);
     this.jumpFrames = jumpSegments;
 
     this.assetsReady = true;
@@ -589,8 +587,8 @@ export class Player {
     this.applyFacing();
   }
 
-  private async loadFrames(basePath: string, fileBase: string) {
-    const jsonPath = `${basePath}/${fileBase}.json`;
+  private async loadFrames(sheetPath: string) {
+    const { json: jsonPath, image: imagePath } = getSpriteSheetPaths(sheetPath);
     try {
       const sheet = (await Assets.load(jsonPath)) as Spritesheet;
       const frames = this.extractFrames(sheet);
@@ -601,14 +599,12 @@ export class Player {
       // Fallback to single texture if spritesheet JSON is missing.
     }
 
-    const texture = (await Assets.load(
-      `${basePath}/${fileBase}.png`,
-    )) as Texture;
+    const texture = (await Assets.load(imagePath)) as Texture;
     return [texture];
   }
 
-  private async loadAttackSegments(basePath: string, fileBase: string) {
-    const jsonPath = `${basePath}/${fileBase}.json`;
+  private async loadAttackSegments(sheetPath: string) {
+    const { json: jsonPath } = getSpriteSheetPaths(sheetPath);
     try {
       const sheet = (await Assets.load(jsonPath)) as Spritesheet;
       const frames = this.extractFrames(sheet);
@@ -638,7 +634,7 @@ export class Player {
       }
       return { frames, hitFrames: hitSet };
     } catch {
-      const frames = await this.loadFrames(basePath, fileBase);
+      const frames = await this.loadFrames(sheetPath);
       const hitSet = new Set<number>();
       if (frames.length >= 10) {
         hitSet.add(8);
@@ -648,8 +644,8 @@ export class Player {
     }
   }
 
-  private async loadJumpSegments(basePath: string, fileBase: string) {
-    const jsonPath = `${basePath}/${fileBase}.json`;
+  private async loadJumpSegments(sheetPath: string) {
+    const { json: jsonPath } = getSpriteSheetPaths(sheetPath);
     try {
       const sheet = (await Assets.load(jsonPath)) as Spritesheet;
       const animations = sheet.animations;

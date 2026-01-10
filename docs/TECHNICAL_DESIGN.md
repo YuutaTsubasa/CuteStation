@@ -24,7 +24,7 @@ src/
 
 - The design resolution is 1920x1080 (16:9).
 - World rendering scales to fit the window while maintaining aspect ratio.
-- Letterboxing uses `ProjectContent/UI/gameBackground.png`.
+- Letterboxing uses `ProjectContent/UI/gameBackground.webp`.
 - DOM overlays (menus, prompts) sit above the Pixi stage.
 
 ## Combat System
