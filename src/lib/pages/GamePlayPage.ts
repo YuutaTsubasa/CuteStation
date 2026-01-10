@@ -157,6 +157,8 @@ export class GamePlayPage extends Page {
       attackHeld: false,
     };
     this.inputState = { move: 0, jump: false, attack: false };
+    this.slashProjectiles = [];
+    this.lastSlashAttackId = -1;
 
     this.enterToken += 1;
     const token = this.enterToken;
@@ -383,6 +385,13 @@ export class GamePlayPage extends Page {
       mergedInput.jumpHeld = mergedInput.jumpHeld || gamepadState.jumpHeld;
       mergedInput.attackDown = mergedInput.attackDown || gamepadState.attackDown;
       mergedInput.attackHeld = mergedInput.attackHeld || gamepadState.attackHeld;
+      if (!this.inputEnabled) {
+        mergedInput.moveX = 0;
+        mergedInput.jumpDown = false;
+        mergedInput.jumpHeld = false;
+        mergedInput.attackDown = false;
+        mergedInput.attackHeld = false;
+      }
 
       this.keyboardInput.jumpDown = false;
       this.keyboardInput.attackDown = false;

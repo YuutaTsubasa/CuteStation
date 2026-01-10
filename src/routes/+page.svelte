@@ -142,7 +142,7 @@
       return;
     }
     introLogoOpacity = 1;
-    await sleep(600);
+    await sleep(1000);
     if (token !== introToken) {
       return;
     }
@@ -257,6 +257,11 @@
     const resizeHandler = () => updateUiLayout();
     window.addEventListener("resize", resizeHandler);
 
+    document.body.style.backgroundImage = `url("${gameBackgroundUrl}")`;
+    document.body.style.backgroundSize = "cover";
+    document.body.style.backgroundPosition = "center";
+    document.body.style.backgroundRepeat = "no-repeat";
+
     const handleKeydown = () => {
       if (currentPageId === "GamePlay") {
         showVirtualControls = false;
@@ -276,6 +281,10 @@
       window.removeEventListener("resize", resizeHandler);
       window.removeEventListener("keydown", handleKeydown);
       window.removeEventListener("pointerdown", handlePointerDown);
+      document.body.style.backgroundImage = "";
+      document.body.style.backgroundSize = "";
+      document.body.style.backgroundPosition = "";
+      document.body.style.backgroundRepeat = "";
       resetGameplayHud();
       gameplay?.setVirtualInput(null);
       gameplay?.onExit();
@@ -302,12 +311,13 @@
 </script>
 
 <main class="container">
-  <div
-    class="stage"
-    bind:this={pixiRoot}
-    style={`background-image: url("${gameBackgroundUrl}")`}
-  >
-    <div class="stage-frame" bind:this={pixiFrame} style={`transform: ${uiTransform};`}></div>
+  <div class="stage" bind:this={pixiRoot}>
+    <div class="stage-frame" bind:this={pixiFrame} style={`transform: ${uiTransform};`}>
+      <div
+        class="frame-fade"
+        style={`opacity: ${pageFadeOpacity}; display: ${pageFadeActive ? "block" : "none"};`}
+      ></div>
+    </div>
     <div class="stage-ui" style={`transform: ${uiTransform};`}>
       {#if currentPageId === "GamePlay"}
         <div class="gameplay-topbar" class:gameplay-topbar-visible={gameplayTopbarVisible}>
@@ -354,10 +364,11 @@
             </span>
           </div>
         </div>
-        <div
-          class="gameplay-intro"
-          style={`opacity: ${introOverlayOpacity}; display: ${introActive ? "flex" : "none"};`}
-        >
+        <div class="gameplay-intro" style={`display: ${introActive ? "flex" : "none"};`}>
+          <div
+            class="gameplay-intro-overlay"
+            style={`opacity: ${introOverlayOpacity};`}
+          ></div>
           <img
             class="gameplay-intro-logo"
             src={assetManifest.levels.whitePalace.visuals.logos.zone1}
@@ -512,10 +523,6 @@
         <!-- Main menu UI is rendered by MainMenuPage in Pixi. -->
       {/if}
     </div>
-    <div
-      class="page-fade"
-      style={`opacity: ${pageFadeOpacity}; display: ${pageFadeActive ? "block" : "none"};`}
-    ></div>
     {#if currentPageId === "GamePlay" && showVirtualControls}
       <VirtualControls input={virtualInput} />
     {/if}
@@ -591,7 +598,7 @@
   margin: 0;
   overflow: hidden;
   position: relative;
-  background: #0b0b0b;
+  background: transparent;
   background-size: cover;
   background-position: center;
 }
@@ -627,6 +634,7 @@
   transform-origin: top left;
   pointer-events: none;
   z-index: 3;
+  overflow: hidden;
 }
 
 :global(.pressStart) {
@@ -828,19 +836,27 @@
 .gameplay-intro {
   position: absolute;
   inset: 0;
-  background: rgba(0, 0, 0, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
   pointer-events: none;
   z-index: 4;
+}
+
+.gameplay-intro-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  opacity: 0;
   transition: opacity 0.3s ease;
 }
 
 .gameplay-intro-logo {
-  width: min(720px, 70%);
+  width: min(960px, 50%);
   height: auto;
   transition: opacity 0.35s ease;
+  position: relative;
+  z-index: 1;
 }
 
 .editor-toolbar {
@@ -908,13 +924,13 @@
   pointer-events: none;
 }
 
-.page-fade {
+.frame-fade {
   position: absolute;
   inset: 0;
   background: #000000;
   opacity: 0;
   transition: opacity 0.22s ease;
-  z-index: 6;
+  z-index: 4;
   pointer-events: none;
 }
 
