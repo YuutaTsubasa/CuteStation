@@ -59,6 +59,7 @@ export class Player {
   private attackJustEnded = false;
   private attackVisualTimer = 0;
   private attackRestartRequested = false;
+  private pendingAttackType: "attack" | "homing" | null = null;
   private invincibleTimer = 0;
   private flickerTimer = 0;
   private flickerOn = false;
@@ -256,6 +257,7 @@ export class Player {
     return this.attackSequence;
   }
 
+
   getFacingDirection() {
     return this.facing;
   }
@@ -301,6 +303,10 @@ export class Player {
   }
 
   updateAttackTimers(deltaSeconds: number, pressed: boolean) {
+    if (!pressed) {
+      this.pendingAttackType = null;
+    }
+
     if (this.attackActiveTimer > 0) {
       this.attackActiveTimer = Math.max(0, this.attackActiveTimer - deltaSeconds);
       if (this.attackActiveTimer === 0 && this.attackState !== "idle") {
@@ -324,7 +330,7 @@ export class Player {
       return;
     }
 
-    const nextState = this.grounded ? "attack" : "homing";
+    const nextState = this.pendingAttackType ?? (this.grounded ? "attack" : "homing");
     this.attackState = nextState;
     this.attackActiveTimer =
       nextState === "homing" ? this.homingDuration : this.attackDuration;
@@ -334,6 +340,11 @@ export class Player {
       nextState === "homing" ? this.homingVisualDuration : this.attackVisualDuration;
     this.lastAttackType = nextState;
     this.attackSequence += 1;
+    this.pendingAttackType = null;
+  }
+
+  setNextAttackType(type: "attack" | "homing" | null) {
+    this.pendingAttackType = type;
   }
 
   private syncVisual() {

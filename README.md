@@ -138,6 +138,7 @@ Details live in `docs/conventions.md`.
 ## Audio
 
 - Background music is managed by `AudioManager` (HTMLAudio) with per-page transitions.
+- Grounded attacks spawn a short slash projectile; homing attacks are still air-only.
 
 ## Asset Pipeline
 

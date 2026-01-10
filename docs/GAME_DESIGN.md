@@ -19,6 +19,7 @@
 
 ### Combat
 - Ground attack: melee strike with a short hit window.
+- Ground attack also emits a short-range slash wave projectile.
 - Homing attack: mid-air dash to a target (requires a valid homing target).
 - Attack hit window: active on attack frames 8-9; the rest of the animation is visual only.
 - Moving attacks: when grounded and moving, use `knight_runningAttacking` to keep the legs in motion.

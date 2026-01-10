@@ -59,5 +59,6 @@
 - Asset paths should be sourced from `src/lib/game/assets/assetManifest.json`.
 - GamePlay centers the camera at player spawn and hides the world until player assets finish loading.
 - Main menu video background and Press-to-Start prompt are DOM overlays inside the stage frame.
+- Grounded attacks emit a slash projectile; homing attacks remain air-only.
 - Attack hit windows are defined by the `attackHit` animation inside `knight_attacking.json` and `knight_runningAttacking.json`.
 - Enemy entries support `enemyType` (`static`/`patrol`) and `gravityEnabled` to toggle falling behavior.

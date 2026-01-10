@@ -17,6 +17,17 @@ import { LevelSession } from "../game/levels/LevelSession";
 import { assetManifest } from "../game/assets/AssetManifest";
 import { Page } from "./Page";
 
+type SlashProjectile = {
+  graphic: Graphics;
+  x: number;
+  y: number;
+  vx: number;
+  width: number;
+  height: number;
+  ttl: number;
+  hitTargets: Set<Enemy>;
+};
+
 export class GamePlayPage extends Page {
   private readonly worldScale = 3;
   private readonly baseFloorY = 400;
@@ -42,6 +53,8 @@ export class GamePlayPage extends Page {
   private homingTarget: Enemy | null = null;
   private homingAttackTarget: Enemy | null = null;
   private homingReticle: Graphics | null = null;
+  private slashProjectiles: SlashProjectile[] = [];
+  private lastSlashAttackId = -1;
   private worldBounds: { minX: number; minY: number; maxX: number; maxY: number } | null =
     null;
   private readonly enemyContactKnockbackSpeed = 420;
@@ -355,6 +368,7 @@ export class GamePlayPage extends Page {
       if (this.hitStopTimer > 0) {
         this.hitStopTimer = Math.max(0, this.hitStopTimer - deltaSeconds);
         this.player.updateAttackTimers(deltaSeconds, false);
+        this.updateSlashProjectiles(deltaSeconds);
         this.updateHitEffects(deltaSeconds);
         return;
       }
@@ -373,6 +387,11 @@ export class GamePlayPage extends Page {
         this.homingHoldLatch = false;
       }
 
+      if (attackTrigger) {
+        this.player.setNextAttackType(homingTrigger ? "homing" : "attack");
+      } else {
+        this.player.setNextAttackType(null);
+      }
       this.inputState.attack = attackTrigger;
 
       this.player.update(deltaSeconds, this.inputState, this.platforms);
@@ -388,10 +407,12 @@ export class GamePlayPage extends Page {
         this.executeHomingAttack(this.homingTarget);
       }
 
+      this.trySpawnSlashProjectile();
       this.resolveCombat();
       if (!this.player.isHomingAttackActive()) {
         this.homingAttackTarget = null;
       }
+      this.updateSlashProjectiles(deltaSeconds);
       this.collectibles?.update(this.player.getRect());
       this.checkLevelCompletion();
       this.updateHitEffects(deltaSeconds);
@@ -489,6 +510,12 @@ export class GamePlayPage extends Page {
     this.hitEffects = [];
     this.hitStopTimer = 0;
     this.homingTarget = null;
+    this.lastSlashAttackId = -1;
+    for (const slash of this.slashProjectiles) {
+      slash.graphic.removeFromParent();
+      slash.graphic.destroy();
+    }
+    this.slashProjectiles = [];
     this.homingAttackTarget = null;
     this.enemyContactTimer = 0;
 
@@ -766,6 +793,119 @@ export class GamePlayPage extends Page {
     this.homingReticle.x = centerX;
     this.homingReticle.y = centerY;
     this.homingReticle.visible = true;
+  }
+
+  private trySpawnSlashProjectile() {
+    if (!this.player || !this.effectsLayer) {
+      return;
+    }
+    if (!this.player.isAttackActive()) {
+      return;
+    }
+    if (this.homingAttackTarget) {
+      return;
+    }
+    const attackId = this.player.getAttackSequence();
+    if (this.player.getAttackHitType() === "homing") {
+      return;
+    }
+    if (attackId === this.lastSlashAttackId) {
+      return;
+    }
+
+    const rect = this.player.getRect();
+    const facing = this.player.getFacingDirection();
+    const width = rect.width * 1.2;
+    const height = rect.height * 0.28;
+    const startX = rect.x + rect.width * 0.5 + facing * rect.width * 0.65;
+    const startY = rect.y + rect.height * 0.45;
+    const speed = 300 * this.worldScale;
+
+    const graphic = new Graphics();
+    graphic.rect(-width * 0.5, -height * 0.5, width, height).fill({
+      color: 0x9ee2ff,
+      alpha: 0.85,
+    });
+    graphic.rect(-width * 0.5, -height * 0.5, width, height).stroke({
+      color: 0xe9f6ff,
+      width: 2,
+      alpha: 0.9,
+    });
+    graphic.x = startX;
+    graphic.y = startY;
+    this.effectsLayer.addChild(graphic);
+
+    this.slashProjectiles.push({
+      graphic,
+      x: startX,
+      y: startY,
+      vx: speed * facing,
+      width,
+      height,
+      ttl: 0.7,
+      hitTargets: new Set<Enemy>(),
+    });
+
+    this.lastSlashAttackId = attackId;
+  }
+
+  private updateSlashProjectiles(deltaSeconds: number) {
+    if (this.slashProjectiles.length === 0) {
+      return;
+    }
+
+    const playerRect = this.player?.getRect();
+    const knockbackBase = playerRect?.width ?? 80;
+    const knockbackY = playerRect ? -playerRect.height * 0.1 : -20;
+    const fadeDuration = 0.18;
+
+    for (const slash of this.slashProjectiles) {
+      slash.ttl = Math.max(0, slash.ttl - deltaSeconds);
+      slash.x += slash.vx * deltaSeconds;
+      slash.graphic.x = slash.x;
+      slash.graphic.y = slash.y;
+      slash.graphic.alpha = slash.ttl <= fadeDuration ? slash.ttl / fadeDuration : 1;
+
+      const hitbox = {
+        x: slash.x - slash.width * 0.5,
+        y: slash.y - slash.height * 0.5,
+        width: slash.width,
+        height: slash.height,
+      };
+
+      for (const enemy of this.enemies) {
+        if (enemy.isDead() || slash.hitTargets.has(enemy)) {
+          continue;
+        }
+        if (Physics.overlaps(hitbox, enemy.getRect())) {
+          const knockbackX = Math.sign(slash.vx) * knockbackBase * 0.8;
+          const hit = enemy.applyHit(1, { x: knockbackX, y: knockbackY });
+          if (hit) {
+            slash.hitTargets.add(enemy);
+            this.playHitSound();
+            this.spawnHitEffect({
+              enemy,
+              position: {
+                x: hitbox.x + hitbox.width * 0.5,
+                y: hitbox.y + hitbox.height * 0.5,
+              },
+              attackType: "attack",
+            });
+            slash.ttl = 0;
+            break;
+          }
+        }
+      }
+    }
+
+    this.slashProjectiles = this.slashProjectiles.filter((slash) => {
+      if (slash.ttl > 0) {
+        return true;
+      }
+      slash.graphic.removeFromParent();
+      slash.graphic.destroy();
+      return false;
+    });
   }
 
   private executeHomingAttack(target: Enemy) {
