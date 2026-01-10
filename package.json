@@ -13,7 +13,8 @@
     "convention:check": "tsx scripts/conventionCheck.ts --mode=check",
     "convention:report": "tsx scripts/conventionCheck.ts --mode=report",
     "pretauri": "node scripts/copyProjectContent.mjs",
-    "tauri": "tauri"
+    "tauri": "tauri",
+    "assets:webp": "node scripts/convertImagesToWebp.mjs"
   },
   "license": "MIT",
   "dependencies": {
@@ -27,6 +28,7 @@
     "@sveltejs/vite-plugin-svelte": "^5.0.0",
     "@tauri-apps/cli": "^2",
     "@types/node": "^25.0.3",
+    "sharp": "^0.33.5",
     "svelte": "^5.0.0",
     "svelte-check": "^4.0.0",
     "tsx": "^4.19.3",

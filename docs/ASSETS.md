@@ -65,6 +65,12 @@ Level visuals live under `ProjectContent/Levels/{world}/visuals/`.
 
 - Frontend builds copy `ProjectContent/` into `static/ProjectContent/` so assets resolve in web builds.
 
+## WebP Conversion
+
+- Use `npm run assets:webp` to convert PNG/JPG assets under `ProjectContent/` to WebP.
+- Options: `--root <path>` to change the source folder, `--quality <n>` (default 82), `--force` to overwrite existing WebP files.
+- The converter uses the `sharp` npm package, so it works on Windows/macOS/Linux without `cwebp`.
+
 ## Naming Conventions
 
 - Prefer `lower_snake_case` for files and folders.
