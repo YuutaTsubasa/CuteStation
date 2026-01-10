@@ -45,6 +45,10 @@
 - Left virtual joystick: move
 - Right buttons: jump and attack
 
+### HUD
+- Top bar shows level title, HP, timer, and coins.
+- Bottom bar shows controller + keyboard mappings.
+
 ## Tools
 
 - Level Editor v0: grid, snap, pan, and JSON export.

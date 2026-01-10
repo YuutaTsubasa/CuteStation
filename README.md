@@ -134,6 +134,8 @@ Details live in `docs/conventions.md`.
 - Letterbox space is filled with `ProjectContent/UI/gameBackground.webp`.
 - Gameplay initializes the camera at the player spawn and reveals the world after player assets load.
 - Splash uses a timed fade sequence, and the main menu uses a looping video background with a Press-to-Start gate.
+- Gameplay HUD shows level title, HP bar, timer, and coin count.
+- Bottom HUD bar shows controller and keyboard mappings.
 
 ## Audio
 

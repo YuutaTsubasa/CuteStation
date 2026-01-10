@@ -7,6 +7,7 @@
   },
   "levels": {
     "whitePalace": {
+      "displayName": "WHITE PALACE ZONE 1",
       "level1": "/ProjectContent/Levels/whitePalace/1-1.json",
       "visuals": {
         "config": "/ProjectContent/Levels/whitePalace/visuals/visuals.json",

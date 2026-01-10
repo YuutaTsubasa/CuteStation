@@ -72,6 +72,8 @@ export class Player {
   position = { x: 0, y: 0 };
   velocity = { x: 0, y: 0 };
   grounded = false;
+  private readonly maxHealth = 3;
+  private health = 3;
 
   private readonly moveSpeed: number;
   private readonly jumpSpeed: number;
@@ -105,6 +107,7 @@ export class Player {
     this.animations = {};
     this.currentAnimation = null;
     this.assetsReady = false;
+    this.health = this.maxHealth;
   }
 
   async loadAssets() {
@@ -161,6 +164,22 @@ export class Player {
 
     this.updateAnimation(input.move, wasGrounded);
     this.syncVisual();
+  }
+
+  getHealth() {
+    return this.health;
+  }
+
+  getMaxHealth() {
+    return this.maxHealth;
+  }
+
+  applyDamage(amount: number) {
+    if (amount <= 0) {
+      return this.health;
+    }
+    this.health = Math.max(0, this.health - amount);
+    return this.health;
   }
 
   clampToBounds(

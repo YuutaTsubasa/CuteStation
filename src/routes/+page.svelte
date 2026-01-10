@@ -18,6 +18,10 @@
   let pixiFrame: HTMLDivElement | null = null;
   let coinCount = $state(0);
   let coinTotal = $state(0);
+  let playerHp = $state(3);
+  let playerHpMax = $state(3);
+  let levelTime = $state(0);
+  let levelName = $state("WHITE PALACE ZONE 1");
   let levelClear = $state(false);
   let levelClearTimeout: number | null = null;
   let editor: LevelEditorPage | null = null;
@@ -64,6 +68,10 @@
     coinCount = 0;
     coinTotal = 0;
     levelClear = false;
+    levelTime = 0;
+    playerHp = 3;
+    playerHpMax = 3;
+    levelName = "WHITE PALACE ZONE 1";
     gameLoading = true;
     showVirtualControls = false;
     if (levelClearTimeout) {
@@ -115,6 +123,16 @@
     gameplay.setOnCoinChange((count, total) => {
       coinCount = count;
       coinTotal = total;
+    });
+    gameplay.setOnHealthChange((current, max) => {
+      playerHp = current;
+      playerHpMax = max;
+    });
+    gameplay.setOnTimeChange((seconds) => {
+      levelTime = seconds;
+    });
+    gameplay.setOnLevelName((name) => {
+      levelName = name;
     });
     gameplay.setOnLevelClear(() => {
       levelClear = true;
@@ -181,6 +199,22 @@
       levelEditor.onExit();
     };
   });
+
+  const formatTime = (seconds: number) => {
+    const total = Math.max(0, Math.floor(seconds));
+    const mins = Math.floor(total / 60)
+      .toString()
+      .padStart(2, "0");
+    const secs = (total % 60).toString().padStart(2, "0");
+    return `${mins}:${secs}`;
+  };
+
+  const hpPercent = () => {
+    if (playerHpMax <= 0) {
+      return 0;
+    }
+    return Math.max(0, Math.min(100, (playerHp / playerHpMax) * 100));
+  };
 </script>
 
 <main class="container">
@@ -192,7 +226,50 @@
     <div class="stage-frame" bind:this={pixiFrame} style={`transform: ${uiTransform};`}></div>
     <div class="stage-ui" style={`transform: ${uiTransform};`}>
       {#if currentPageId === "GamePlay"}
-        <div class="hud">Coins {coinCount}/{coinTotal}</div>
+        <div class="gameplay-topbar">
+          <div class="gameplay-topbar-title">{levelName}</div>
+          <div class="gameplay-topbar-stats">
+            <div class="stat-block">
+              <div class="stat-label">HP</div>
+              <div class="stat-value">{playerHp}/{playerHpMax}</div>
+              <div class="hp-bar">
+                <div class="hp-bar-fill" style={`width: ${hpPercent()}%;`}></div>
+              </div>
+            </div>
+            <div class="stat-block">
+              <div class="stat-label">TIME</div>
+              <div class="stat-value">{formatTime(levelTime)}</div>
+            </div>
+            <div class="stat-block">
+              <div class="stat-label">COINS</div>
+              <div class="stat-value">{coinCount}/{coinTotal}</div>
+            </div>
+          </div>
+        </div>
+        <div class="gameplay-bottombar">
+          <div class="gameplay-controls">
+            <span class="controls-label">操作按鍵：</span>
+            <span class="control-item">
+              <span class="pad-icon">LS</span> 移動
+            </span>
+            <span class="control-item">
+              <span class="pad-icon">X</span> 攻擊
+            </span>
+            <span class="control-item">
+              <span class="pad-icon">A</span> 跳躍
+            </span>
+            <span class="control-divider">|</span>
+            <span class="control-item">
+              <span class="key-icon">A/D</span> 移動
+            </span>
+            <span class="control-item">
+              <span class="key-icon">J/K</span> 攻擊
+            </span>
+            <span class="control-item">
+              <span class="key-icon">Space</span> 跳躍
+            </span>
+          </div>
+        </div>
         {#if gameLoading}
           <div class="stage-overlay">
             <div class="panel">Loading...</div>
@@ -502,6 +579,139 @@
   background: rgba(0, 0, 0, 0.55);
   color: #ffffff;
   font-size: 28px;
+}
+
+.gameplay-topbar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 72px;
+  display: flex;
+  z-index: 2;
+  pointer-events: none;
+}
+
+.gameplay-topbar-title {
+  width: 33.33%;
+  background: #ffffff;
+  color: #000000;
+  display: flex;
+  align-items: center;
+  padding: 0 24px;
+  font-weight: 700;
+  font-size: 28px;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  box-sizing: border-box;
+}
+
+.gameplay-topbar-stats {
+  width: 66.67%;
+  background: #0b0b0b;
+  color: #ffffff;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: center;
+  gap: 16px;
+  padding: 0 24px;
+  box-sizing: border-box;
+}
+
+.stat-block {
+  display: grid;
+  gap: 6px;
+}
+
+.stat-label {
+  font-size: 14px;
+  letter-spacing: 2px;
+  opacity: 0.75;
+}
+
+.stat-value {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+.hp-bar {
+  width: 100%;
+  height: 8px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.hp-bar-fill {
+  height: 100%;
+  background: #ffffff;
+  transition: width 0.15s linear;
+}
+
+.gameplay-bottombar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  background: #0b0b0b;
+  pointer-events: none;
+}
+
+.gameplay-controls {
+  color: #ffffff;
+  padding: 12px 28px;
+  font-size: 18px;
+  letter-spacing: 1px;
+  text-align: right;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  width: 100%;
+  justify-content: flex-end;
+  box-sizing: border-box;
+}
+
+.controls-label {
+  opacity: 0.8;
+}
+
+.control-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.control-divider {
+  opacity: 0.35;
+}
+
+.pad-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 999px;
+  border: 2px solid #ffffff;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.key-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  height: 28px;
+  padding: 0 8px;
+  border-radius: 8px;
+  border: 2px solid #ffffff;
+  font-weight: 700;
+  font-size: 12px;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
 }
 
 .editor-toolbar {

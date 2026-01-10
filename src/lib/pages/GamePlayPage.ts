@@ -67,9 +67,13 @@ export class GamePlayPage extends Page {
   private onRequestExit: (() => void) | null = null;
   private onCoinChange: ((count: number, total: number) => void) | null = null;
   private onLevelClear: (() => void) | null = null;
+  private onHealthChange: ((current: number, max: number) => void) | null = null;
+  private onTimeChange: ((seconds: number) => void) | null = null;
+  private onLevelName: ((name: string) => void) | null = null;
   private onReady: (() => void) | null = null;
   private onRequestPlaytestExit: (() => void) | null = null;
   private isPlaytest = false;
+  private elapsedSeconds = 0;
   private inputState = {
     move: 0,
     jump: false,
@@ -108,6 +112,18 @@ export class GamePlayPage extends Page {
 
   setOnLevelClear(handler: (() => void) | null) {
     this.onLevelClear = handler;
+  }
+
+  setOnHealthChange(handler: ((current: number, max: number) => void) | null) {
+    this.onHealthChange = handler;
+  }
+
+  setOnTimeChange(handler: ((seconds: number) => void) | null) {
+    this.onTimeChange = handler;
+  }
+
+  setOnLevelName(handler: ((name: string) => void) | null) {
+    this.onLevelName = handler;
   }
 
   setOnRequestPlaytestExit(handler: (() => void) | null) {
@@ -175,6 +191,7 @@ export class GamePlayPage extends Page {
       abort();
       return;
     }
+    this.onLevelName?.(assetManifest.levels.whitePalace.displayName ?? level.name);
 
     const world = new Container();
     const background = new Container();
@@ -259,8 +276,13 @@ export class GamePlayPage extends Page {
     });
     this.collectibles.setCoins(level.coins);
     this.levelCleared = false;
+    this.elapsedSeconds = 0;
     this.centerCameraOnPlayer();
     this.gameRoot.visible = true;
+    if (this.player) {
+      this.onHealthChange?.(this.player.getHealth(), this.player.getMaxHealth());
+    }
+    this.onTimeChange?.(this.elapsedSeconds);
     this.onReady?.();
 
     this.keyDownHandler = (event) => {
@@ -395,6 +417,10 @@ export class GamePlayPage extends Page {
       this.inputState.attack = attackTrigger;
 
       this.player.update(deltaSeconds, this.inputState, this.platforms);
+      if (!this.levelCleared) {
+        this.elapsedSeconds += deltaSeconds;
+        this.onTimeChange?.(this.elapsedSeconds);
+      }
       for (const enemy of this.enemies) {
         enemy.update(deltaSeconds, this.platforms);
       }
@@ -507,6 +533,7 @@ export class GamePlayPage extends Page {
     this.collectibles?.destroy();
     this.collectibles = null;
     this.levelCleared = false;
+    this.elapsedSeconds = 0;
     this.hitEffects = [];
     this.hitStopTimer = 0;
     this.homingTarget = null;
@@ -683,6 +710,8 @@ export class GamePlayPage extends Page {
       this.player.velocity.y = -this.player.getHomingBounceSpeed() * 0.6;
       this.player.grounded = false;
       this.player.triggerInvincibility();
+      this.player.applyDamage(1);
+      this.onHealthChange?.(this.player.getHealth(), this.player.getMaxHealth());
       this.enemyContactTimer = 0.35;
       break;
     }
