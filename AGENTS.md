@@ -63,4 +63,5 @@
 - Attack hit windows are defined by the `attackHit` animation inside `knight_attacking.json` and `knight_runningAttacking.json`.
 - Gameplay HUD shows level title, HP bar, timer, and coins in a top bar, with control hints at the bottom.
 - Control hints show both controller and keyboard icons in the bottom bar.
+- Page transitions fade out/in; gameplay intro uses a dark overlay + zone logo before controls unlock.
 - Enemy entries support `enemyType` (`static`/`patrol`) and `gravityEnabled` to toggle falling behavior.

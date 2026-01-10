@@ -11,6 +11,9 @@
       "level1": "/ProjectContent/Levels/whitePalace/1-1.json",
       "visuals": {
         "config": "/ProjectContent/Levels/whitePalace/visuals/visuals.json",
+        "logos": {
+          "zone1": "/ProjectContent/Levels/whitePalace/visuals/logos/zone1.webp"
+        },
         "background": {
           "far": "/ProjectContent/Levels/whitePalace/visuals/background/far.webp",
           "mid": "/ProjectContent/Levels/whitePalace/visuals/background/mid.webp",

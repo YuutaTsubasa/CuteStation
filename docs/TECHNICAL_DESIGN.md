@@ -27,6 +27,7 @@ src/
 - Letterboxing uses `ProjectContent/UI/gameBackground.webp`.
 - DOM overlays (menus, prompts) sit above the Pixi stage.
 - Gameplay HUD uses a top bar for level title, HP, timer, and coins, plus a bottom controls hint bar (controller + keyboard).
+- Page transitions fade out/in, and gameplay intro shows a zone logo overlay before controls unlock.
 
 ## Combat System
 

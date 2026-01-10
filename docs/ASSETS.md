@@ -42,6 +42,10 @@ Level visuals live under `ProjectContent/Levels/{world}/visuals/`.
 - `terrain/platformTile.webp`: tiled to fill solid rectangles.
 - `visuals/visuals.json`: per-level visuals settings (e.g., groundHeight, parallax).
 
+### Zone Logos
+
+- `visuals/logos/zone1.webp`: zone intro logo.
+
 ## UI Assets
 
 - `ProjectContent/UI/gameBackground.webp`: letterbox background image.

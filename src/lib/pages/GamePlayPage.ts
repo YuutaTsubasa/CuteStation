@@ -74,6 +74,7 @@ export class GamePlayPage extends Page {
   private onRequestPlaytestExit: (() => void) | null = null;
   private isPlaytest = false;
   private elapsedSeconds = 0;
+  private inputEnabled = true;
   private inputState = {
     move: 0,
     jump: false,
@@ -124,6 +125,10 @@ export class GamePlayPage extends Page {
 
   setOnLevelName(handler: ((name: string) => void) | null) {
     this.onLevelName = handler;
+  }
+
+  setInputEnabled(enabled: boolean) {
+    this.inputEnabled = enabled;
   }
 
   setOnRequestPlaytestExit(handler: (() => void) | null) {
@@ -395,7 +400,7 @@ export class GamePlayPage extends Page {
         return;
       }
 
-      const attackHeld = mergedInput.attackHeld;
+      const attackHeld = mergedInput.attackHeld && this.inputEnabled;
       if (!attackHeld) {
         this.homingHoldLatch = false;
       } else if (!this.homingHoldLatch) {
@@ -404,7 +409,7 @@ export class GamePlayPage extends Page {
       const canHoming =
         !this.player.grounded && this.homingTarget && this.player.canStartAttack();
       const homingTrigger = this.homingHoldLatch && canHoming;
-      const attackTrigger = mergedInput.attackDown || homingTrigger;
+      const attackTrigger = this.inputEnabled && (mergedInput.attackDown || homingTrigger);
       if (homingTrigger) {
         this.homingHoldLatch = false;
       }
@@ -417,7 +422,7 @@ export class GamePlayPage extends Page {
       this.inputState.attack = attackTrigger;
 
       this.player.update(deltaSeconds, this.inputState, this.platforms);
-      if (!this.levelCleared) {
+      if (!this.levelCleared && this.inputEnabled) {
         this.elapsedSeconds += deltaSeconds;
         this.onTimeChange?.(this.elapsedSeconds);
       }

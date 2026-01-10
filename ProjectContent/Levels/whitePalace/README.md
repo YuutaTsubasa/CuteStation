@@ -6,6 +6,7 @@
 - `visuals/background/mid.webp`
 - `visuals/background/near.webp`
 - `visuals/terrain/platformTile.webp`
+- `visuals/logos/zone1.webp`
 - `visuals/visuals.json`
 
 Parallax ordering: far → mid → near (near currently optional).

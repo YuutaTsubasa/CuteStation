@@ -37,6 +37,15 @@
   let enemyPatrolSpeed = $state(80);
   let enemyIdleDuration = $state(0.5);
   let enemyGravityEnabled = $state(true);
+  let gameplayHudVisible = $state(false);
+  let gameplayTopbarVisible = $state(false);
+  let introOverlayOpacity = $state(0);
+  let introLogoOpacity = $state(0);
+  let introActive = $state(false);
+  let introToken = 0;
+  let pageFadeOpacity = $state(0);
+  let pageFadeActive = $state(false);
+  let pageTransitioning = false;
 
   let uiScale = $state(1);
   let uiOffsetX = $state(0);
@@ -73,6 +82,11 @@
     playerHpMax = 3;
     levelName = "WHITE PALACE ZONE 1";
     gameLoading = true;
+    gameplayHudVisible = false;
+    gameplayTopbarVisible = false;
+    introOverlayOpacity = 0;
+    introLogoOpacity = 0;
+    introActive = false;
     showVirtualControls = false;
     if (levelClearTimeout) {
       window.clearTimeout(levelClearTimeout);
@@ -80,10 +94,18 @@
     }
   }
 
-  function goTo(id: string) {
+  async function goTo(id: string) {
+    if (pageTransitioning) {
+      return;
+    }
     if (id === "GamePlay") {
       resetGameplayHud();
     }
+    introToken += 1;
+    pageTransitioning = true;
+    pageFadeActive = true;
+    pageFadeOpacity = 1;
+    await sleep(220);
     if (id === "LevelEditor") {
       gridEnabled = true;
       snapEnabled = true;
@@ -92,7 +114,61 @@
     updateStatus();
     updateUiLayout();
     window.requestAnimationFrame(() => updateUiLayout());
+    await sleep(80);
+    pageFadeOpacity = 0;
+    await sleep(220);
+    pageFadeActive = false;
+    pageTransitioning = false;
   }
+
+  const sleep = (ms: number) =>
+    new Promise((resolve) => {
+      window.setTimeout(resolve, ms);
+    });
+
+  const startGameplayIntro = async () => {
+    if (!gameplay) {
+      return;
+    }
+    const token = ++introToken;
+    introActive = true;
+    introOverlayOpacity = 0.6;
+    introLogoOpacity = 0;
+    gameplayHudVisible = false;
+    gameplayTopbarVisible = false;
+    gameplay.setInputEnabled(false);
+    await sleep(120);
+    if (token !== introToken) {
+      return;
+    }
+    introLogoOpacity = 1;
+    await sleep(600);
+    if (token !== introToken) {
+      return;
+    }
+    introLogoOpacity = 0;
+    await sleep(400);
+    if (token !== introToken) {
+      return;
+    }
+    introOverlayOpacity = 0;
+    await sleep(360);
+    if (token !== introToken) {
+      return;
+    }
+    introActive = false;
+    gameplayHudVisible = true;
+    await sleep(60);
+    if (token !== introToken) {
+      return;
+    }
+    gameplayTopbarVisible = true;
+    await sleep(300);
+    if (token !== introToken) {
+      return;
+    }
+    gameplay.setInputEnabled(true);
+  };
 
   function exportLevel() {
     void editor?.exportLevel();
@@ -118,8 +194,14 @@
     menu.setHost(pixiFrame);
     menu.setOnNavigate((id) => goTo(id));
     gameplay.setHost(pixiFrame);
-    gameplay.setOnRequestExit(() => goTo("MainMenu"));
-    gameplay.setOnRequestPlaytestExit(() => goTo("LevelEditor"));
+    gameplay.setOnRequestExit(() => {
+      introToken += 1;
+      goTo("MainMenu");
+    });
+    gameplay.setOnRequestPlaytestExit(() => {
+      introToken += 1;
+      goTo("LevelEditor");
+    });
     gameplay.setOnCoinChange((count, total) => {
       coinCount = count;
       coinTotal = total;
@@ -143,6 +225,7 @@
     });
     gameplay.setOnReady(() => {
       gameLoading = false;
+      void startGameplayIntro();
     });
     gameplay.setVirtualInput(virtualInput);
 
@@ -196,6 +279,7 @@
       resetGameplayHud();
       gameplay?.setVirtualInput(null);
       gameplay?.onExit();
+      introToken += 1;
       levelEditor.onExit();
     };
   });
@@ -226,7 +310,7 @@
     <div class="stage-frame" bind:this={pixiFrame} style={`transform: ${uiTransform};`}></div>
     <div class="stage-ui" style={`transform: ${uiTransform};`}>
       {#if currentPageId === "GamePlay"}
-        <div class="gameplay-topbar">
+        <div class="gameplay-topbar" class:gameplay-topbar-visible={gameplayTopbarVisible}>
           <div class="gameplay-topbar-title">{levelName}</div>
           <div class="gameplay-topbar-stats">
             <div class="stat-block">
@@ -246,7 +330,7 @@
             </div>
           </div>
         </div>
-        <div class="gameplay-bottombar">
+        <div class="gameplay-bottombar" class:gameplay-bottombar-visible={gameplayHudVisible}>
           <div class="gameplay-controls">
             <span class="controls-label">操作按鍵：</span>
             <span class="control-item">
@@ -269,6 +353,17 @@
               <span class="key-icon">Space</span> 跳躍
             </span>
           </div>
+        </div>
+        <div
+          class="gameplay-intro"
+          style={`opacity: ${introOverlayOpacity}; display: ${introActive ? "flex" : "none"};`}
+        >
+          <img
+            class="gameplay-intro-logo"
+            src={assetManifest.levels.whitePalace.visuals.logos.zone1}
+            alt="White Palace Zone 1"
+            style={`opacity: ${introLogoOpacity};`}
+          />
         </div>
         {#if gameLoading}
           <div class="stage-overlay">
@@ -417,6 +512,10 @@
         <!-- Main menu UI is rendered by MainMenuPage in Pixi. -->
       {/if}
     </div>
+    <div
+      class="page-fade"
+      style={`opacity: ${pageFadeOpacity}; display: ${pageFadeActive ? "block" : "none"};`}
+    ></div>
     {#if currentPageId === "GamePlay" && showVirtualControls}
       <VirtualControls input={virtualInput} />
     {/if}
@@ -590,6 +689,12 @@
   display: flex;
   z-index: 2;
   pointer-events: none;
+  transform: translateY(-100%);
+  transition: transform 0.35s ease;
+}
+
+.gameplay-topbar.gameplay-topbar-visible {
+  transform: translateY(0);
 }
 
 .gameplay-topbar-title {
@@ -657,6 +762,12 @@
   justify-content: flex-end;
   background: #0b0b0b;
   pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.25s ease;
+}
+
+.gameplay-bottombar.gameplay-bottombar-visible {
+  opacity: 1;
 }
 
 .gameplay-controls {
@@ -712,6 +823,24 @@
   font-size: 12px;
   letter-spacing: 0.5px;
   text-transform: uppercase;
+}
+
+.gameplay-intro {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  z-index: 4;
+  transition: opacity 0.3s ease;
+}
+
+.gameplay-intro-logo {
+  width: min(720px, 70%);
+  height: auto;
+  transition: opacity 0.35s ease;
 }
 
 .editor-toolbar {
@@ -776,6 +905,16 @@
   inset: 0;
   display: grid;
   place-items: center;
+  pointer-events: none;
+}
+
+.page-fade {
+  position: absolute;
+  inset: 0;
+  background: #000000;
+  opacity: 0;
+  transition: opacity 0.22s ease;
+  z-index: 6;
   pointer-events: none;
 }
 
