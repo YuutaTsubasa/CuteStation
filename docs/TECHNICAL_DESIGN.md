@@ -38,6 +38,7 @@ src/
 - Homing attacks are available in mid-air when a target is in range.
 - Homing attacks spawn a blue silhouette trail along the dash path that can collect overlapping coins.
 - Grounded attacks emit a slash projectile that travels along X and disappears on hit.
+- Player hurt/death states lock inputs and drive hit/death animations; death triggers a fade-out restart.
 
 ## Input
 

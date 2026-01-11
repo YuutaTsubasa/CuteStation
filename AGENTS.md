@@ -61,6 +61,7 @@
 - Main menu video background and Press-to-Start prompt are DOM overlays inside the stage frame.
 - Grounded attacks emit a slash projectile; homing attacks remain air-only.
 - Homing attacks spawn a blue silhouette trail that can collect overlapping coins.
+- Player hit/death states lock inputs and trigger a fade-out restart on death.
 - Attack hit windows are defined by the `attackHit` animation inside `knight_attacking.json` and `knight_runningAttacking.json`.
 - Gameplay HUD shows level title, HP bar, timer, and coins in a top bar, with control hints at the bottom.
 - Control hints show both controller and keyboard icons in the bottom bar.

@@ -32,6 +32,8 @@ export class Player {
     | "run"
     | "attack"
     | "runAttack"
+    | "hit"
+    | "dead"
     | "jumpUp"
     | "jumpHold"
     | "jumpFall"
@@ -44,6 +46,15 @@ export class Player {
   private facing = 1;
   private jumpPhase: "none" | "jumpUp" | "hold" | "fall" | "land" = "none";
   private readonly fallEps = 5;
+  private lifeState: "alive" | "hurt" | "dead" = "alive";
+  private hurtTimer = 0;
+  private hurtDuration = 0;
+  private hurtRestartRequested = false;
+  private hurtJustEnded = false;
+  private deathHoldTimer = 0;
+  private readonly deathHoldDuration = 1.5;
+  private deathAnimationComplete = false;
+  private deathAnimationStarted = false;
   private attackState: "idle" | "attack" | "homing" = "idle";
   private lastAttackType: "attack" | "homing" | null = null;
   private attackActiveTimer = 0;
@@ -61,11 +72,14 @@ export class Player {
   private attackVisualTimer = 0;
   private attackRestartRequested = false;
   private pendingAttackType: "attack" | "homing" | null = null;
+  private lastAttackAnimationId = -1;
   private invincibleTimer = 0;
   private flickerTimer = 0;
   private flickerOn = false;
   private readonly flickerInterval = 0.08;
   private invincibleFlicker = false;
+  private readonly baseAnimationSpeed = 0.24;
+  private readonly animationFps = 60;
 
   width: number;
   height: number;
@@ -109,6 +123,15 @@ export class Player {
     this.currentAnimation = null;
     this.assetsReady = false;
     this.health = this.maxHealth;
+    this.lifeState = "alive";
+    this.hurtTimer = 0;
+    this.hurtDuration = 0;
+    this.hurtRestartRequested = false;
+    this.hurtJustEnded = false;
+    this.deathHoldTimer = 0;
+    this.deathAnimationComplete = false;
+    this.deathAnimationStarted = false;
+    this.lastAttackAnimationId = -1;
   }
 
   async loadAssets() {
@@ -124,6 +147,8 @@ export class Player {
     this.animations.attack = attackSegments.frames;
     this.attackHitFrames = attackSegments.hitFrames;
     this.animations.runAttack = await this.loadFrames(sheets.runAttack);
+    this.animations.hit = await this.loadFrames(sheets.hit);
+    this.animations.dead = await this.loadFrames(sheets.dead);
     const jumpSegments = await this.loadJumpSegments(sheets.jump);
     this.jumpFrames = jumpSegments;
 
@@ -134,13 +159,25 @@ export class Player {
 
   update(deltaSeconds: number, input: PlayerInput, solids: Rect[]) {
     const wasGrounded = this.grounded;
-    const move = Math.max(-1, Math.min(1, input.move));
-    this.velocity.x = move * this.moveSpeed;
+    const controlLocked = this.isControlLocked();
+    const move = controlLocked ? 0 : Math.max(-1, Math.min(1, input.move));
+    if (!controlLocked) {
+      this.velocity.x = move * this.moveSpeed;
+    }
 
-    this.updateAttackTimers(deltaSeconds, input.attack);
+    this.updateAttackTimers(deltaSeconds, controlLocked ? false : input.attack);
     this.updateInvincibility(deltaSeconds);
+    this.updateLifeTimers(deltaSeconds);
 
-    if (this.grounded && input.jump) {
+    if (this.lifeState === "dead") {
+      this.velocity.x = 0;
+      this.velocity.y = 0;
+      this.updateAnimation(0, wasGrounded);
+      this.syncVisual();
+      return;
+    }
+
+    if (this.grounded && !controlLocked && input.jump) {
       this.velocity.y = -this.jumpSpeed;
       this.grounded = false;
     }
@@ -164,7 +201,7 @@ export class Player {
     this.velocity.y = resolved.vy / safeDelta;
     this.grounded = resolved.grounded;
 
-    this.updateAnimation(input.move, wasGrounded);
+    this.updateAnimation(move, wasGrounded);
     this.syncVisual();
   }
 
@@ -230,6 +267,22 @@ export class Player {
     return this.attackState !== "idle" || this.attackVisualTimer > 0;
   }
 
+  isDead() {
+    return this.lifeState === "dead";
+  }
+
+  isControlLocked() {
+    return this.lifeState !== "alive";
+  }
+
+  isDeathSequenceComplete() {
+    return (
+      this.lifeState === "dead" &&
+      this.deathAnimationComplete &&
+      this.deathHoldTimer <= 0
+    );
+  }
+
   isAttackHitActive() {
     if (this.attackVisualTimer <= 0) {
       return false;
@@ -264,6 +317,7 @@ export class Player {
     this.attackVisualTimer = this.homingVisualDuration;
     this.lastAttackType = "homing";
     this.attackSequence += 1;
+    this.lastAttackAnimationId = -1;
     this.attackRestartRequested = true;
   }
 
@@ -276,6 +330,46 @@ export class Player {
 
   getAttackSequence() {
     return this.attackSequence;
+  }
+
+  triggerHurt(invincibleDurationSeconds: number) {
+    if (this.lifeState === "dead") {
+      return;
+    }
+    const duration = Math.max(0, invincibleDurationSeconds * 0.5);
+    this.lifeState = "hurt";
+    this.hurtDuration = duration;
+    this.hurtTimer = duration;
+    this.hurtRestartRequested = true;
+    this.hurtJustEnded = false;
+    this.attackState = "idle";
+    this.lastAttackType = null;
+    this.attackActiveTimer = 0;
+    this.attackCooldownTimer = 0;
+    this.attackVisualTimer = 0;
+    this.attackJustEnded = false;
+    this.attackRestartRequested = false;
+    this.pendingAttackType = null;
+  }
+
+  triggerDeath() {
+    if (this.lifeState === "dead") {
+      return;
+    }
+    this.lifeState = "dead";
+    this.deathAnimationStarted = false;
+    this.deathAnimationComplete = false;
+    this.deathHoldTimer = 0;
+    this.attackState = "idle";
+    this.lastAttackType = null;
+    this.attackActiveTimer = 0;
+    this.attackCooldownTimer = 0;
+    this.attackVisualTimer = 0;
+    this.attackJustEnded = false;
+    this.attackRestartRequested = false;
+    this.pendingAttackType = null;
+    this.velocity.x = 0;
+    this.velocity.y = 0;
   }
 
 
@@ -361,6 +455,7 @@ export class Player {
       nextState === "homing" ? this.homingVisualDuration : this.attackVisualDuration;
     this.lastAttackType = nextState;
     this.attackSequence += 1;
+    this.lastAttackAnimationId = -1;
     this.pendingAttackType = null;
   }
 
@@ -385,6 +480,20 @@ export class Player {
     this.container.x = this.position.x + this.width * 0.5;
     this.container.y =
       this.position.y + this.height + this.footOffset * this.scale;
+  }
+
+  private updateLifeTimers(deltaSeconds: number) {
+    if (this.lifeState === "hurt") {
+      this.hurtTimer = Math.max(0, this.hurtTimer - deltaSeconds);
+      if (this.hurtTimer === 0) {
+        this.lifeState = "alive";
+        this.hurtJustEnded = true;
+      }
+    }
+
+    if (this.lifeState === "dead" && this.deathAnimationComplete) {
+      this.deathHoldTimer = Math.max(0, this.deathHoldTimer - deltaSeconds);
+    }
   }
 
   private updateInvincibility(deltaSeconds: number) {
@@ -436,6 +545,51 @@ export class Player {
     }
 
     const moving = Math.abs(moveInput) > 0.1;
+
+    if (this.lifeState === "dead") {
+      if (!this.deathAnimationStarted) {
+        this.deathAnimationStarted = true;
+        this.deathAnimationComplete = false;
+        this.playAnimation("dead", this.animations.dead ?? [], {
+          loop: false,
+          holdLastFrame: true,
+          forceRestart: true,
+          onComplete: () => {
+            this.deathAnimationComplete = true;
+            this.deathHoldTimer = this.deathHoldDuration;
+          },
+        });
+      }
+      this.applyFacing();
+      return;
+    }
+
+    if (this.lifeState === "hurt") {
+      const frames = this.animations.hit ?? [];
+      const speed =
+        this.hurtDuration > 0 && frames.length > 0
+          ? frames.length / (this.hurtDuration * this.animationFps)
+          : undefined;
+      this.playAnimation("hit", frames, {
+        loop: false,
+        holdLastFrame: true,
+        forceRestart: this.hurtRestartRequested,
+        speed,
+      });
+      this.hurtRestartRequested = false;
+      this.applyFacing();
+      return;
+    }
+
+    if (this.hurtJustEnded) {
+      this.hurtJustEnded = false;
+      if (this.grounded) {
+        this.jumpPhase = "none";
+        this.playGroundedAnimation(moving);
+        this.applyFacing();
+        return;
+      }
+    }
     if (moveInput < -0.1) {
       this.facing = -1;
     } else if (moveInput > 0.1) {
@@ -450,6 +604,11 @@ export class Player {
         : this.animations.attack ?? [];
       let startFrame: number | undefined;
       let forceRestart = false;
+      if (this.attackSequence !== this.lastAttackAnimationId) {
+        this.lastAttackAnimationId = this.attackSequence;
+        startFrame = this.attackStartFrame;
+        forceRestart = true;
+      }
       if (
         this.currentAnimation !== "attack" &&
         this.currentAnimation !== "runAttack"
@@ -575,6 +734,8 @@ export class Player {
       | "run"
       | "attack"
       | "runAttack"
+      | "hit"
+      | "dead"
       | "jumpUp"
       | "jumpHold"
       | "jumpFall"
@@ -586,6 +747,7 @@ export class Player {
       holdLastFrame?: boolean;
       startFrame?: number;
       forceRestart?: boolean;
+      speed?: number;
     },
   ) {
     if (this.currentAnimation === name && !options.forceRestart) {
@@ -602,7 +764,11 @@ export class Player {
 
     const sprite = new AnimatedSprite(frames);
     sprite.anchor.set(0.5, 1);
-    sprite.animationSpeed = 0.24;
+    if (options.speed !== undefined) {
+      sprite.animationSpeed = Math.max(0.05, Math.min(1, options.speed));
+    } else {
+      sprite.animationSpeed = this.baseAnimationSpeed;
+    }
     sprite.loop = options.loop;
     const startFrame =
       options.startFrame !== undefined

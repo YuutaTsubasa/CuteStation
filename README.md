@@ -140,6 +140,7 @@ Details live in `docs/conventions.md`.
 - Page transitions use a global fade, and gameplay starts with a logo intro before controls unlock.
 - Gameplay input is locked while the intro logo is visible.
 - Homing attacks leave a blue silhouette trail that can collect overlapping coins.
+- Player hit/death animations lock control; deaths fade out and restart the level.
 
 ## Audio
 

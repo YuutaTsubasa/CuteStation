@@ -24,6 +24,8 @@
 - Homing attacks leave a blue silhouette trail that can collect overlapping coins.
 - Attack hit window: active on attack frames 8-9; the rest of the animation is visual only.
 - Moving attacks: when grounded and moving, use `knight_runningAttacking` to keep the legs in motion.
+- Taking damage triggers a hit animation and temporary invincibility; inputs are locked while hurt.
+- Death plays the `knight_dead` animation, holds briefly, then the level restarts (no life limit).
 
 ## Level Structure
 - White Palace world is the current focus (Level 1-1).

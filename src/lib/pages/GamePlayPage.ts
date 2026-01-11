@@ -90,6 +90,11 @@ export class GamePlayPage extends Page {
   private isPlaytest = false;
   private elapsedSeconds = 0;
   private inputEnabled = true;
+  private deathState: "none" | "waiting" | "fading" = "none";
+  private deathOverlay: Graphics | null = null;
+  private deathFadeTimer = 0;
+  private readonly deathFadeDuration = 0.6;
+  private isRestarting = false;
   private inputState = {
     move: 0,
     jump: false,
@@ -175,6 +180,8 @@ export class GamePlayPage extends Page {
     this.slashProjectiles = [];
     this.lastSlashAttackId = -1;
     this.homingTrails = [];
+    this.deathState = "none";
+    this.deathFadeTimer = 0;
 
     this.enterToken += 1;
     const token = this.enterToken;
@@ -204,6 +211,12 @@ export class GamePlayPage extends Page {
     gameRoot.visible = false;
 
     this.gameRoot = gameRoot;
+
+    const deathOverlay = new Graphics();
+    deathOverlay.rect(0, 0, GAME_WIDTH, GAME_HEIGHT).fill(0x000000);
+    deathOverlay.alpha = 0;
+    app.stage.addChild(deathOverlay);
+    this.deathOverlay = deathOverlay;
 
     const previewLevel = LevelSession.getPreviewLevel();
     this.isPlaytest = Boolean(previewLevel);
@@ -408,14 +421,36 @@ export class GamePlayPage extends Page {
         mergedInput.attackDown = false;
         mergedInput.attackHeld = false;
       }
+      const controlLocked = this.deathState !== "none" || this.player.isControlLocked();
+      if (controlLocked) {
+        mergedInput.moveX = 0;
+        mergedInput.jumpDown = false;
+        mergedInput.jumpHeld = false;
+        mergedInput.attackDown = false;
+        mergedInput.attackHeld = false;
+      }
 
       this.keyboardInput.jumpDown = false;
       this.keyboardInput.attackDown = false;
       this.inputState.move = mergedInput.moveX;
       this.inputState.jump = mergedInput.jumpDown;
 
-      this.homingTarget = this.findHomingTarget();
-      this.updateHomingReticle(this.homingTarget);
+      if (controlLocked) {
+        this.homingTarget = null;
+        this.updateHomingReticle(null);
+      } else {
+        this.homingTarget = this.findHomingTarget();
+        this.updateHomingReticle(this.homingTarget);
+      }
+
+      if (this.deathState !== "none") {
+        this.inputState.attack = false;
+        this.player.update(deltaSeconds, this.inputState, this.platforms);
+        this.updateHomingTrails(deltaSeconds);
+        this.updateHitEffects(deltaSeconds);
+        this.updateDeathSequence(deltaSeconds);
+        return;
+      }
 
       if (this.hitStopTimer > 0) {
         this.hitStopTimer = Math.max(0, this.hitStopTimer - deltaSeconds);
@@ -448,7 +483,7 @@ export class GamePlayPage extends Page {
       this.inputState.attack = attackTrigger;
 
       this.player.update(deltaSeconds, this.inputState, this.platforms);
-      if (!this.levelCleared && this.inputEnabled) {
+      if (!this.levelCleared && this.inputEnabled && this.deathState === "none") {
         this.elapsedSeconds += deltaSeconds;
         this.onTimeChange?.(this.elapsedSeconds);
       }
@@ -459,7 +494,16 @@ export class GamePlayPage extends Page {
         this.player.clampToBounds(this.worldBounds, { clampY: false });
       }
 
-      this.resolveEnemyContacts(deltaSeconds);
+      if (this.checkFallDeath()) {
+        this.updateDeathSequence(deltaSeconds);
+        return;
+      }
+
+      const diedFromContact = this.resolveEnemyContacts(deltaSeconds);
+      if (diedFromContact) {
+        this.updateDeathSequence(deltaSeconds);
+        return;
+      }
       if (attackTrigger && !this.player.grounded && this.homingTarget) {
         this.executeHomingAttack(this.homingTarget);
       }
@@ -554,6 +598,11 @@ export class GamePlayPage extends Page {
       this.effectsLayer = null;
     }
     this.homingReticle = null;
+    if (this.deathOverlay) {
+      this.deathOverlay.removeFromParent();
+      this.deathOverlay.destroy();
+      this.deathOverlay = null;
+    }
 
     if (this.gameRoot) {
       this.gameRoot.removeFromParent();
@@ -582,6 +631,8 @@ export class GamePlayPage extends Page {
     this.homingTrails = [];
     this.homingAttackTarget = null;
     this.enemyContactTimer = 0;
+    this.deathState = "none";
+    this.deathFadeTimer = 0;
 
     if (this.app) {
       const canvas = this.app.canvas;
@@ -599,10 +650,10 @@ export class GamePlayPage extends Page {
     };
     this.inputState = { move: 0, jump: false, attack: false };
 
-    if (this.isPlaytest) {
+    if (this.isPlaytest && !this.isRestarting) {
       LevelSession.clearPreviewLevel();
-      this.isPlaytest = false;
     }
+    this.isPlaytest = false;
 
     if (this.audioContext) {
       void this.audioContext.close();
@@ -704,18 +755,23 @@ export class GamePlayPage extends Page {
     this.hitEffects.push({ graphic: gfx, ttl: 0.25, duration: 0.25 });
   }
 
-  private resolveEnemyContacts(deltaSeconds: number) {
+  private resolveEnemyContacts(deltaSeconds: number): boolean {
     if (!this.player || this.enemies.length === 0) {
-      return;
+      return false;
     }
 
-    if (this.player.isInvincible() || this.player.isHomingAttackActive()) {
-      return;
+    if (
+      this.player.isDead() ||
+      this.deathState !== "none" ||
+      this.player.isInvincible() ||
+      this.player.isHomingAttackActive()
+    ) {
+      return false;
     }
 
     if (this.enemyContactTimer > 0) {
       this.enemyContactTimer = Math.max(0, this.enemyContactTimer - deltaSeconds);
-      return;
+      return false;
     }
 
     const playerRect = this.player.getRect();
@@ -746,12 +802,22 @@ export class GamePlayPage extends Page {
       this.player.velocity.x = direction * this.enemyContactKnockbackSpeed * this.worldScale;
       this.player.velocity.y = -this.player.getHomingBounceSpeed() * 0.6;
       this.player.grounded = false;
-      this.player.triggerInvincibility();
+      const invincibilitySeconds = 1;
       this.player.applyDamage(1);
-      this.onHealthChange?.(this.player.getHealth(), this.player.getMaxHealth());
+      const health = this.player.getHealth();
+      this.onHealthChange?.(health, this.player.getMaxHealth());
+      if (health <= 0) {
+        this.player.triggerDeath();
+        this.startDeathSequence("hit");
+        return true;
+      }
+      this.player.triggerInvincibility(invincibilitySeconds);
+      this.player.triggerHurt(invincibilitySeconds);
       this.enemyContactTimer = 0.35;
       break;
     }
+
+    return false;
   }
 
   private updateHitEffects(deltaSeconds: number) {
@@ -1140,6 +1206,65 @@ export class GamePlayPage extends Page {
       a.y < b.y + b.height &&
       a.y + a.height > b.y
     );
+  }
+
+  private checkFallDeath() {
+    if (!this.player || !this.worldBounds || this.deathState !== "none") {
+      return false;
+    }
+
+    const threshold = this.worldBounds.maxY + this.player.height;
+    if (this.player.position.y > threshold) {
+      this.startDeathSequence("fall");
+      return true;
+    }
+
+    return false;
+  }
+
+  private startDeathSequence(mode: "hit" | "fall") {
+    if (this.deathState !== "none") {
+      return;
+    }
+
+    this.deathFadeTimer = 0;
+    if (this.deathOverlay) {
+      this.deathOverlay.alpha = 0;
+    }
+    this.deathState = mode === "hit" ? "waiting" : "fading";
+  }
+
+  private updateDeathSequence(deltaSeconds: number) {
+    if (this.deathState === "waiting") {
+      if (this.player?.isDeathSequenceComplete()) {
+        this.deathState = "fading";
+        this.deathFadeTimer = 0;
+      }
+      return;
+    }
+
+    if (this.deathState !== "fading") {
+      return;
+    }
+
+    this.deathFadeTimer += deltaSeconds;
+    const t = Math.min(1, this.deathFadeTimer / this.deathFadeDuration);
+    if (this.deathOverlay) {
+      this.deathOverlay.alpha = t;
+    }
+    if (t >= 1) {
+      this.restartLevel();
+    }
+  }
+
+  private restartLevel() {
+    if (!this.host) {
+      return;
+    }
+    this.isRestarting = true;
+    this.onExit();
+    this.isRestarting = false;
+    void this.onEnter();
   }
 
   private async loadVisualsConfig(): Promise<VisualsConfig> {
