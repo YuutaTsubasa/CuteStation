@@ -36,6 +36,7 @@ src/
 - Hit windows are defined by the `attackHit` animation in the spritesheet JSON.
 - Grounded moving attacks use `knight_runningAttacking`, aligned frame-for-frame with `knight_attacking`.
 - Homing attacks are available in mid-air when a target is in range.
+- Homing attacks spawn a blue silhouette trail along the dash path that can collect overlapping coins.
 - Grounded attacks emit a slash projectile that travels along X and disappears on hit.
 
 ## Input

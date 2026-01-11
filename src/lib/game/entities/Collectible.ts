@@ -44,6 +44,54 @@ export class Collectible {
     return this.collected.size >= this.coins.length;
   }
 
+  collectAlongSegment(
+    start: { x: number; y: number },
+    end: { x: number; y: number },
+    halfThickness: number,
+  ) {
+    if (this.coins.length === 0) {
+      return;
+    }
+
+    const dx = end.x - start.x;
+    const dy = end.y - start.y;
+    const length = Math.hypot(dx, dy);
+    if (length <= 0.001) {
+      return;
+    }
+
+    const invLength = 1 / length;
+    const dirX = dx * invLength;
+    const dirY = dy * invLength;
+    const perpX = -dirY;
+    const perpY = dirX;
+    const radius = this.pickupRadius * this.worldScale;
+    const thickness = halfThickness + radius;
+
+    for (const coin of this.coins) {
+      if (this.collected.has(coin.id)) {
+        continue;
+      }
+
+      const worldPoint = this.runtime.toWorldPoint(coin);
+      const vx = worldPoint.x - start.x;
+      const vy = worldPoint.y - start.y;
+      const along = vx * dirX + vy * dirY;
+      if (along < -radius || along > length + radius) {
+        continue;
+      }
+      const across = vx * perpX + vy * perpY;
+      if (Math.abs(across) > thickness) {
+        continue;
+      }
+
+      this.collected.add(coin.id);
+      this.runtime.collectCoin(coin.id);
+      this.playPickupSound();
+      this.onCollect?.(this.collected.size, this.coins.length);
+    }
+  }
+
   update(playerRect: Rect) {
     if (this.coins.length === 0) {
       return;

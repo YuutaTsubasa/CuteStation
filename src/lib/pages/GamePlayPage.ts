@@ -1,4 +1,4 @@
-import { Application, Container, Graphics } from "pixi.js";
+import { Application, Container, Graphics, Sprite } from "pixi.js";
 import { loadLevel, type LevelEnemy } from "../game/levels/LevelLoader";
 import { LevelRuntime } from "../game/levels/LevelRuntime";
 import { LevelVisuals } from "../game/visuals/LevelVisuals";
@@ -28,6 +28,19 @@ type SlashProjectile = {
   hitTargets: Set<Enemy>;
 };
 
+type HomingTrail = {
+  sprites: Sprite[];
+  baseAlphas: number[];
+  start: { x: number; y: number };
+  end: { x: number; y: number };
+  pickupStart: { x: number; y: number };
+  pickupEnd: { x: number; y: number };
+  halfThickness: number;
+  pickupHalfThickness: number;
+  ttl: number;
+  duration: number;
+};
+
 export class GamePlayPage extends Page {
   private readonly worldScale = 3;
   private readonly baseFloorY = 400;
@@ -55,6 +68,8 @@ export class GamePlayPage extends Page {
   private homingReticle: Graphics | null = null;
   private slashProjectiles: SlashProjectile[] = [];
   private lastSlashAttackId = -1;
+  private homingTrails: HomingTrail[] = [];
+  private readonly homingTrailDuration = 1.5;
   private worldBounds: { minX: number; minY: number; maxX: number; maxY: number } | null =
     null;
   private readonly enemyContactKnockbackSpeed = 420;
@@ -159,6 +174,7 @@ export class GamePlayPage extends Page {
     this.inputState = { move: 0, jump: false, attack: false };
     this.slashProjectiles = [];
     this.lastSlashAttackId = -1;
+    this.homingTrails = [];
 
     this.enterToken += 1;
     const token = this.enterToken;
@@ -405,6 +421,7 @@ export class GamePlayPage extends Page {
         this.hitStopTimer = Math.max(0, this.hitStopTimer - deltaSeconds);
         this.player.updateAttackTimers(deltaSeconds, false);
         this.updateSlashProjectiles(deltaSeconds);
+        this.updateHomingTrails(deltaSeconds);
         this.updateHitEffects(deltaSeconds);
         return;
       }
@@ -453,6 +470,7 @@ export class GamePlayPage extends Page {
         this.homingAttackTarget = null;
       }
       this.updateSlashProjectiles(deltaSeconds);
+      this.updateHomingTrails(deltaSeconds);
       this.collectibles?.update(this.player.getRect());
       this.checkLevelCompletion();
       this.updateHitEffects(deltaSeconds);
@@ -557,6 +575,11 @@ export class GamePlayPage extends Page {
       slash.graphic.destroy();
     }
     this.slashProjectiles = [];
+    for (const trail of this.homingTrails) {
+      trail.sprite.removeFromParent();
+      trail.sprite.destroy();
+    }
+    this.homingTrails = [];
     this.homingAttackTarget = null;
     this.enemyContactTimer = 0;
 
@@ -951,11 +974,101 @@ export class GamePlayPage extends Page {
     });
   }
 
+  private spawnHomingTrail(
+    start: { x: number; y: number },
+    end: { x: number; y: number },
+    thickness: number,
+    pickupStart: { x: number; y: number },
+    pickupEnd: { x: number; y: number },
+    pickupThickness: number,
+  ) {
+    if (!this.effectsLayer || !this.player) {
+      return;
+    }
+
+    const dx = end.x - start.x;
+    const dy = end.y - start.y;
+    const length = Math.hypot(dx, dy);
+    if (length <= 1) {
+      return;
+    }
+
+    const spacing = Math.max(12, this.player.width * 0.55);
+    const count = Math.min(10, Math.max(4, Math.ceil(length / spacing)));
+    const sprites: Sprite[] = [];
+    const baseAlphas: number[] = [];
+    for (let i = 0; i < count; i += 1) {
+      const t = count <= 1 ? 1 : i / (count - 1);
+      const sprite = this.player.createTrailSprite();
+      if (!sprite) {
+        continue;
+      }
+      sprite.x = start.x + dx * t;
+      sprite.y = start.y + dy * t;
+      sprite.tint = 0x5ca6ff;
+      const baseAlpha = 0.12 + (0.7 - 0.12) * t;
+      sprite.alpha = baseAlpha;
+      sprites.push(sprite);
+      baseAlphas.push(baseAlpha);
+      this.effectsLayer.addChild(sprite);
+    }
+
+    if (sprites.length === 0) {
+      return;
+    }
+
+    this.homingTrails.push({
+      start: { x: start.x, y: start.y },
+      end: { x: end.x, y: end.y },
+      pickupStart: { x: pickupStart.x, y: pickupStart.y },
+      pickupEnd: { x: pickupEnd.x, y: pickupEnd.y },
+      halfThickness: thickness * 0.5,
+      pickupHalfThickness: pickupThickness * 0.5,
+      sprites,
+      baseAlphas,
+      ttl: this.homingTrailDuration,
+      duration: this.homingTrailDuration,
+    });
+  }
+
+  private updateHomingTrails(deltaSeconds: number) {
+    if (this.homingTrails.length === 0) {
+      return;
+    }
+
+    for (const trail of this.homingTrails) {
+      trail.ttl = Math.max(0, trail.ttl - deltaSeconds);
+      const ratio = trail.duration > 0 ? trail.ttl / trail.duration : 0;
+      const fade = Math.max(0, Math.min(1, ratio));
+      for (let i = 0; i < trail.sprites.length; i += 1) {
+        trail.sprites[i].alpha = trail.baseAlphas[i] * fade;
+      }
+      this.collectibles?.collectAlongSegment(
+        trail.pickupStart,
+        trail.pickupEnd,
+        trail.pickupHalfThickness,
+      );
+    }
+
+    this.homingTrails = this.homingTrails.filter((trail) => {
+      if (trail.ttl > 0) {
+        return true;
+      }
+      for (const sprite of trail.sprites) {
+        sprite.removeFromParent();
+        sprite.destroy();
+      }
+      return false;
+    });
+  }
+
   private executeHomingAttack(target: Enemy) {
     if (!this.player) {
       return;
     }
 
+    const startCenterX = this.player.position.x + this.player.width * 0.5;
+    const startBottomY = this.player.position.y + this.player.height;
     this.homingAttackTarget = target;
     this.player.triggerHomingAttackVisual();
     const rect = target.getRect();
@@ -974,6 +1087,17 @@ export class GamePlayPage extends Page {
     this.player.position.x = desiredX;
     this.player.position.y = desiredBottom - this.player.height;
     this.resolvePlayerHomingOverlap();
+    const endCenterX = this.player.position.x + this.player.width * 0.5;
+    const endBottomY = this.player.position.y + this.player.height;
+    const pickupCenterOffset = this.player.height * 0.5;
+    this.spawnHomingTrail(
+      { x: startCenterX, y: startBottomY },
+      { x: endCenterX, y: endBottomY },
+      this.player.height * (1 / 3),
+      { x: startCenterX, y: startBottomY - pickupCenterOffset },
+      { x: endCenterX, y: endBottomY - pickupCenterOffset },
+      this.player.height,
+    );
     this.player.velocity.x = 0;
     this.player.velocity.y = -this.player.getHomingAttackBounceSpeed();
     this.player.triggerHomingInvincibility();

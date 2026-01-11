@@ -2,6 +2,7 @@ import {
   AnimatedSprite,
   Assets,
   Container,
+  Sprite,
   type Spritesheet,
   type Texture,
 } from "pixi.js";
@@ -66,8 +67,8 @@ export class Player {
   private readonly flickerInterval = 0.08;
   private invincibleFlicker = false;
 
-  readonly width: number;
-  readonly height: number;
+  width: number;
+  height: number;
 
   position = { x: 0, y: 0 };
   velocity = { x: 0, y: 0 };
@@ -128,6 +129,7 @@ export class Player {
 
     this.assetsReady = true;
     this.playAnimation("idle", this.animations.idle, { loop: true });
+    this.syncBoundsToSprite();
   }
 
   update(deltaSeconds: number, input: PlayerInput, solids: Rect[]) {
@@ -364,6 +366,19 @@ export class Player {
 
   setNextAttackType(type: "attack" | "homing" | null) {
     this.pendingAttackType = type;
+  }
+
+  createTrailSprite() {
+    if (!this.sprite) {
+      return null;
+    }
+    const trail = new Sprite(this.sprite.texture);
+    trail.anchor.set(0.5, 1);
+    trail.scale.set(
+      this.baseScale * this.scale * this.facing,
+      this.baseScale * this.scale,
+    );
+    return trail;
   }
 
   private syncVisual() {
@@ -718,5 +733,23 @@ export class Player {
         this.baseScale * this.scale,
       );
     }
+  }
+
+  private syncBoundsToSprite() {
+    if (!this.sprite) {
+      return;
+    }
+    const texture = this.sprite.texture;
+    const frameHeight = texture?.orig?.height ?? texture.height;
+    if (!frameHeight) {
+      return;
+    }
+    const scaledHeight = frameHeight * this.baseScale * this.scale;
+    if (!Number.isFinite(scaledHeight) || scaledHeight <= 0) {
+      return;
+    }
+    const oldBottom = this.position.y + this.height;
+    this.height = scaledHeight;
+    this.position.y = oldBottom - this.height;
   }
 }
