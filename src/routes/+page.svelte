@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { Assets } from "pixi.js";
   import { GamePlayPage } from "$lib/pages/GamePlayPage";
   import { LevelEditorPage } from "$lib/pages/LevelEditorPage";
   import { MainMenuPage } from "$lib/pages/MainMenuPage";
@@ -208,6 +209,19 @@
   }
 
   onMount(() => {
+    if (/SamsungBrowser/i.test(navigator.userAgent)) {
+      Assets.setPreferences({ preferCreateImageBitmap: false });
+    }
+
+    const preventTouchMove = (event: TouchEvent) => {
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("input, textarea, select")) {
+        return;
+      }
+      event.preventDefault();
+    };
+    window.addEventListener("touchmove", preventTouchMove, { passive: false });
+
     const manager = new PageManager();
     const splash = new SplashScreenPage();
     const menu = new MainMenuPage();
@@ -386,6 +400,7 @@
     editorGamepadRaf = window.requestAnimationFrame(updateEditorGamepad);
 
     return () => {
+      window.removeEventListener("touchmove", preventTouchMove);
       window.removeEventListener("resize", resizeHandler);
       window.removeEventListener("keydown", handleKeydown);
       window.removeEventListener("pointerdown", handlePointerDown);
@@ -851,6 +866,9 @@
   user-select: none;
   -webkit-tap-highlight-color: transparent;
   touch-action: none;
+  overflow: hidden;
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
 }
 
 .container {
