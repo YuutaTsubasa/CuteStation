@@ -141,9 +141,10 @@ export class Player {
 
     const sheets = assetManifest.characters.knight.sheets;
     const idleFrames = await this.loadFrames(sheets.idle);
+    const runFrames = await this.loadFrames(sheets.run);
     this.animations.idle = idleFrames;
     this.animations.walk = idleFrames;
-    this.animations.run = idleFrames;
+    this.animations.run = runFrames;
     this.animations.attack = idleFrames;
     this.animations.runAttack = idleFrames;
     this.animations.hit = idleFrames;
