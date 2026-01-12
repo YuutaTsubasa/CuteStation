@@ -1,11 +1,13 @@
 <script lang="ts">
-  import { onDestroy } from "svelte";
+  import { onDestroy, onMount } from "svelte";
   import type { VirtualInput } from "$lib/game/input/VirtualInput";
 
   const { input } = $props<{ input: VirtualInput }>();
 
   const deadzone = 0.15;
   let joystickBase: HTMLDivElement | null = null;
+  let attackButton: HTMLButtonElement | null = null;
+  let jumpButton: HTMLButtonElement | null = null;
   let activePointerId: number | null = null;
   let stickOffset = $state({ x: 0, y: 0 });
 
@@ -70,9 +72,35 @@
     input.setMoveX(0);
   }
 
-  function onTouchBlock(event: TouchEvent) {
+  const blockTouch = (event: TouchEvent) => {
     event.preventDefault();
-  }
+  };
+
+  const bindTouchBlock = (element: HTMLElement | null) => {
+    if (!element) {
+      return () => {};
+    }
+
+    element.addEventListener("touchstart", blockTouch, { passive: false });
+    element.addEventListener("touchmove", blockTouch, { passive: false });
+    element.addEventListener("touchend", blockTouch, { passive: false });
+    return () => {
+      element.removeEventListener("touchstart", blockTouch);
+      element.removeEventListener("touchmove", blockTouch);
+      element.removeEventListener("touchend", blockTouch);
+    };
+  };
+
+  onMount(() => {
+    const cleanupJoystick = bindTouchBlock(joystickBase);
+    const cleanupAttack = bindTouchBlock(attackButton);
+    const cleanupJump = bindTouchBlock(jumpButton);
+    return () => {
+      cleanupJoystick();
+      cleanupAttack();
+      cleanupJump();
+    };
+  });
 
   function onJumpDown(event: PointerEvent) {
     if (event.button !== 0 && event.pointerType === "mouse") {
@@ -115,9 +143,6 @@
       onpointerup={onStickUp}
       onpointercancel={onStickUp}
       onpointerleave={onStickUp}
-      ontouchstart={onTouchBlock}
-      ontouchmove={onTouchBlock}
-      ontouchend={onTouchBlock}
     >
       <div
         class="joystick-thumb"
@@ -129,28 +154,24 @@
     <button
       class="attack"
       type="button"
+      bind:this={attackButton}
       aria-label="Attack"
       onpointerdown={onAttackDown}
       onpointerup={onAttackUp}
       onpointercancel={onAttackUp}
       onpointerleave={onAttackUp}
-      ontouchstart={onTouchBlock}
-      ontouchmove={onTouchBlock}
-      ontouchend={onTouchBlock}
     >
       Attack
     </button>
     <button
       class="jump"
       type="button"
+      bind:this={jumpButton}
       aria-label="Jump"
       onpointerdown={onJumpDown}
       onpointerup={onJumpUp}
       onpointercancel={onJumpUp}
       onpointerleave={onJumpUp}
-      ontouchstart={onTouchBlock}
-      ontouchmove={onTouchBlock}
-      ontouchend={onTouchBlock}
     >
       Jump
     </button>
