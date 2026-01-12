@@ -3,6 +3,8 @@
     "gameBackground": "/ProjectContent/UI/gameBackground.webp",
     "creatorLogo": "/ProjectContent/UI/creatorLogo.webp",
     "gameLogo": "/ProjectContent/UI/gameLogo.webp",
+    "backgroundWhite": "/ProjectContent/UI/backgroundWhite.webp",
+    "backgroundWhiteButton": "/ProjectContent/UI/backgroundWhiteButton.webp",
     "mainMenuBackgroundVideo": "/ProjectContent/UI/mainMenuBackground.mp4"
   },
   "levels": {
@@ -43,6 +45,9 @@
     "bgm": {
       "menuDefault": "/ProjectContent/Audio/BGM/Menu/default.mp3",
       "whitePalaceDefault": "/ProjectContent/Audio/BGM/Levels/whitePalace/default.mp3"
+    },
+    "sfx": {
+      "confirm": "/ProjectContent/Audio/SFX/confirm.mp3"
     }
   }
 }

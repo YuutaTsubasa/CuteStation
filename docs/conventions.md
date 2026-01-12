@@ -12,3 +12,4 @@ Reports are written to:
 - `reports/convention-report.md`
 
 Run the checker after adding or renaming assets in `ProjectContent/`.
+This includes UI backgrounds, fonts, and audio SFX referenced by `assetManifest.json`.

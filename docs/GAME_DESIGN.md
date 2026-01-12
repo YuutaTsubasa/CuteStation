@@ -61,3 +61,4 @@
 
 - Level Editor v0: grid, snap, pan, and JSON export.
 - Level Editor supports gamepad UI focus (D-pad) and cursor control (left stick).
+- UI popups are used for confirmations and loading feedback.

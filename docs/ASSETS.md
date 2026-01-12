@@ -51,6 +51,8 @@ Level visuals live under `ProjectContent/Levels/{world}/visuals/`.
 - `ProjectContent/UI/gameBackground.webp`: letterbox background image.
 - `ProjectContent/UI/creatorLogo.webp`: splash logo.
 - `ProjectContent/UI/gameLogo.webp`: main menu logo.
+- `ProjectContent/UI/backgroundWhite.webp`: popup background image.
+- `ProjectContent/UI/backgroundWhiteButton.webp`: UI button background image.
 - `ProjectContent/UI/mainMenuBackground.mp4`: looping main menu background video.
 
 ## Fonts
@@ -59,6 +61,8 @@ Level visuals live under `ProjectContent/Levels/{world}/visuals/`.
 - `ProjectContent/Fonts/Gabarito-Bold.ttf`
 - `ProjectContent/Fonts/NotoSansTC-Regular.ttf`
 - `ProjectContent/Fonts/NotoSansTC-Bold.ttf`
+- `ProjectContent/Fonts/NotoSerifTC-Regular.ttf`
+- `ProjectContent/Fonts/NotoSerifTC-Bold.ttf`
 
 ## Audio Conventions
 

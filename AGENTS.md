@@ -5,8 +5,9 @@
 - `src-tauri/`: Rust backend and Tauri config (`src-tauri/src/`, `src-tauri/tauri.conf.json`).
 - `static/`: Static assets served by the frontend.
 - `docs/`: Game and technical design docs (`docs/GAME_DESIGN.md`, `docs/TECHNICAL_DESIGN.md`).
+- `src/lib/components/`: Shared Svelte UI components (Button, Popup).
 - `src/lib/game/view/ResolutionManager.ts`: 16:9 design resolution (1920x1080) constants for view sizing.
-- `ProjectContent/Fonts/`: UI fonts used by the Svelte overlays and Pixi text.
+- `ProjectContent/Fonts/`: UI fonts used by the Svelte overlays and Pixi text (Gabarito, Noto Sans TC, Noto Serif TC).
 
 ## Build, Test, and Development Commands
 - `npm run tauri dev`: Desktop app with hot reload (Tauri + Vite).

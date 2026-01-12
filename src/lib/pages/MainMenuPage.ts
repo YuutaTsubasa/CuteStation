@@ -2,7 +2,6 @@ import {
   Application,
   Assets,
   Container,
-  Graphics,
   Rectangle,
   Sprite,
   Text,
@@ -23,7 +22,7 @@ type MenuEntry = {
 
 type MenuButton = {
   container: Container;
-  background: Graphics;
+  background: Sprite;
   onClick: () => void;
   width: number;
   height: number;
@@ -73,7 +72,6 @@ export class MainMenuPage extends Page {
 
   override async onEnter() {
     super.onEnter();
-    audioManager.stopBgm({ fadeOutMs: 200 });
     void audioManager.playBgm(menuBgmPath, { loop: true, crossfadeMs: 400 });
 
     if (!this.host || this.app) {
@@ -121,6 +119,9 @@ export class MainMenuPage extends Page {
     this.createVideoBackgroundDom();
 
     const logoTexture = await Assets.load<Texture>(this.logoPath);
+    const buttonTexture = await Assets.load<Texture>(
+      assetManifest.ui.backgroundWhiteButton,
+    );
     if (!this.isActive) {
       app.destroy(true);
       app.canvas.remove();
@@ -149,6 +150,7 @@ export class MainMenuPage extends Page {
       buttonWidth,
       buttonHeight,
       buttonStyle,
+      buttonTexture,
       () => this.onNavigate?.("GamePlay"),
     );
     const editorButton = this.createMenuButton(
@@ -157,6 +159,7 @@ export class MainMenuPage extends Page {
       buttonWidth,
       buttonHeight,
       buttonStyle,
+      buttonTexture,
       () => this.onNavigate?.("LevelEditor"),
     );
     this.menuButtons = [startButton, editorButton];
@@ -365,6 +368,7 @@ export class MainMenuPage extends Page {
     width: number,
     height: number,
     style: TextStyle,
+    texture: Texture,
     onClick: () => void,
   ) {
     const container = new Container();
@@ -372,8 +376,10 @@ export class MainMenuPage extends Page {
     container.cursor = "pointer";
     container.hitArea = new Rectangle(0, 0, width, height);
 
-    const bg = new Graphics();
-    bg.roundRect(0, 0, width, height, height * 0.5).fill(0x1f1f1f);
+    const bg = new Sprite(texture);
+    bg.width = width;
+    bg.height = height;
+    bg.tint = 0x1f1f1f;
     container.addChild(bg);
 
     const text = new Text({ text: label, style });
@@ -382,7 +388,10 @@ export class MainMenuPage extends Page {
     container.addChild(text);
 
     container.position.set((GAME_WIDTH - width) * 0.5, y);
-    container.on("pointertap", onClick);
+    container.on("pointertap", () => {
+      audioManager.playSfx(assetManifest.audio.sfx.confirm);
+      onClick();
+    });
     container.on("pointerover", () => {
       if (this.enteringState !== "options") {
         return;
@@ -399,10 +408,7 @@ export class MainMenuPage extends Page {
   private applyMenuSelection() {
     this.menuButtons.forEach((button, index) => {
       const selected = index === this.selectedIndex;
-      button.background.clear();
-      button.background
-        .roundRect(0, 0, button.width, button.height, 44)
-        .fill(selected ? 0x3b7cff : 0x1f1f1f);
+      button.background.tint = selected ? 0x3b7cff : 0x1f1f1f;
     });
   }
 

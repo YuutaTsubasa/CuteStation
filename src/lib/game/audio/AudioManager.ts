@@ -153,6 +153,17 @@ export class AudioManager {
     }
   }
 
+  playSfx(path: string, options: { volume?: number } = {}) {
+    if (!path) {
+      return;
+    }
+    const audio = this.createAudio(path, false);
+    audio.volume = Math.max(0, Math.min(1, options.volume ?? 1));
+    void audio.play().catch(() => {
+      // Ignore autoplay errors.
+    });
+  }
+
   private createAudio(path: string, loop: boolean) {
     const audio = new Audio(path);
     audio.loop = loop;

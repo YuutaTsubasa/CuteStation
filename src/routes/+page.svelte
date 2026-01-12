@@ -6,6 +6,8 @@
   import { MainMenuPage } from "$lib/pages/MainMenuPage";
   import { PageManager } from "$lib/pages/PageManager";
   import { SplashScreenPage } from "$lib/pages/SplashScreenPage";
+  import Button from "$lib/components/Button.svelte";
+  import PopupHost from "$lib/components/PopupHost.svelte";
   import VirtualControls from "$lib/components/VirtualControls.svelte";
   import { VirtualInput } from "$lib/game/input/VirtualInput";
   import { assetManifest } from "$lib/game/assets/AssetManifest";
@@ -586,111 +588,87 @@
         {/if}
       {:else if currentPageId === "LevelEditor"}
         <div class="editor-toolbar">
-          <button
-            class="action"
-            type="button"
-            bind:this={editorButtonAddSolid}
-            class:editor-ui-selected={editorUiSelected === editorButtonAddSolid}
+          <Button
+            className={`editor-action ${editorUiSelected === editorButtonAddSolid ? "editor-ui-selected" : ""}`}
+            bind:element={editorButtonAddSolid}
             on:click={() => editor?.addSolid()}
-            >Add Solid</button
+            >Add Solid</Button
           >
-          <button
-            class="action"
-            type="button"
-            bind:this={editorButtonAddCoin}
-            class:editor-ui-selected={editorUiSelected === editorButtonAddCoin}
+          <Button
+            className={`editor-action ${editorUiSelected === editorButtonAddCoin ? "editor-ui-selected" : ""}`}
+            bind:element={editorButtonAddCoin}
             on:click={() => editor?.addCoin()}
-            >Add Coin</button
+            >Add Coin</Button
           >
-          <button
-            class="action"
-            type="button"
-            bind:this={editorButtonAddEnemy}
-            class:editor-ui-selected={editorUiSelected === editorButtonAddEnemy}
+          <Button
+            className={`editor-action ${editorUiSelected === editorButtonAddEnemy ? "editor-ui-selected" : ""}`}
+            bind:element={editorButtonAddEnemy}
             on:click={() => editor?.addEnemy()}
-            >Add Enemy</button
+            >Add Enemy</Button
           >
-          <button
-            class="action"
-            type="button"
-            bind:this={editorButtonDelete}
-            class:editor-ui-selected={editorUiSelected === editorButtonDelete}
+          <Button
+            className={`editor-action ${editorUiSelected === editorButtonDelete ? "editor-ui-selected" : ""}`}
+            bind:element={editorButtonDelete}
             on:click={() => editor?.deleteSelected()}
-            >Delete</button
+            >Delete</Button
           >
-          <button
-            class="action"
-            type="button"
-            data-active={gridEnabled}
-            bind:this={editorButtonGrid}
-            class:editor-ui-selected={editorUiSelected === editorButtonGrid}
+          <Button
+            className={`editor-action ${editorUiSelected === editorButtonGrid ? "editor-ui-selected" : ""}`}
+            variant="toggle"
+            active={gridEnabled}
+            bind:element={editorButtonGrid}
             on:click={toggleGrid}
-            >Grid</button
+            >Grid</Button
           >
-          <button
-            class="action"
-            type="button"
-            data-active={snapEnabled}
-            bind:this={editorButtonSnap}
-            class:editor-ui-selected={editorUiSelected === editorButtonSnap}
+          <Button
+            className={`editor-action ${editorUiSelected === editorButtonSnap ? "editor-ui-selected" : ""}`}
+            variant="toggle"
+            active={snapEnabled}
+            bind:element={editorButtonSnap}
             on:click={toggleSnap}
-            >Snap</button
+            >Snap</Button
           >
-          <button
-            class="action"
-            type="button"
-            bind:this={editorButtonWidthPlus}
-            class:editor-ui-selected={editorUiSelected === editorButtonWidthPlus}
+          <Button
+            className={`editor-action ${editorUiSelected === editorButtonWidthPlus ? "editor-ui-selected" : ""}`}
+            bind:element={editorButtonWidthPlus}
             on:click={() => editor?.resizeWorld(200, 0)}
-            >Width +</button
+            >Width +</Button
           >
-          <button
-            class="action"
-            type="button"
-            bind:this={editorButtonWidthMinus}
-            class:editor-ui-selected={editorUiSelected === editorButtonWidthMinus}
+          <Button
+            className={`editor-action ${editorUiSelected === editorButtonWidthMinus ? "editor-ui-selected" : ""}`}
+            bind:element={editorButtonWidthMinus}
             on:click={() => editor?.resizeWorld(-200, 0)}
-            >Width -</button
+            >Width -</Button
           >
-          <button
-            class="action"
-            type="button"
-            bind:this={editorButtonHeightPlus}
-            class:editor-ui-selected={editorUiSelected === editorButtonHeightPlus}
+          <Button
+            className={`editor-action ${editorUiSelected === editorButtonHeightPlus ? "editor-ui-selected" : ""}`}
+            bind:element={editorButtonHeightPlus}
             on:click={() => editor?.resizeWorld(0, 200)}
-            >Height +</button
+            >Height +</Button
           >
-          <button
-            class="action"
-            type="button"
-            bind:this={editorButtonHeightMinus}
-            class:editor-ui-selected={editorUiSelected === editorButtonHeightMinus}
+          <Button
+            className={`editor-action ${editorUiSelected === editorButtonHeightMinus ? "editor-ui-selected" : ""}`}
+            bind:element={editorButtonHeightMinus}
             on:click={() => editor?.resizeWorld(0, -200)}
-            >Height -</button
+            >Height -</Button
           >
-          <button
-            class="action"
-            type="button"
-            bind:this={editorButtonPlayTest}
-            class:editor-ui-selected={editorUiSelected === editorButtonPlayTest}
+          <Button
+            className={`editor-action ${editorUiSelected === editorButtonPlayTest ? "editor-ui-selected" : ""}`}
+            bind:element={editorButtonPlayTest}
             on:click={() => editor?.playTest()}
-            >Play Test</button
+            >Play Test</Button
           >
-          <button
-            class="action"
-            type="button"
-            bind:this={editorButtonExport}
-            class:editor-ui-selected={editorUiSelected === editorButtonExport}
+          <Button
+            className={`editor-action ${editorUiSelected === editorButtonExport ? "editor-ui-selected" : ""}`}
+            bind:element={editorButtonExport}
             on:click={exportLevel}
-            >Export Level</button
+            >Export Level</Button
           >
-          <button
-            class="action"
-            type="button"
-            bind:this={editorButtonBack}
-            class:editor-ui-selected={editorUiSelected === editorButtonBack}
+          <Button
+            className={`editor-action ${editorUiSelected === editorButtonBack ? "editor-ui-selected" : ""}`}
+            bind:element={editorButtonBack}
             on:click={() => goTo("MainMenu")}
-            >Back</button
+            >Back</Button
           >
         </div>
         {#if selectedEnemy}
@@ -794,6 +772,7 @@
       <VirtualControls input={virtualInput} />
     {/if}
   </div>
+  <PopupHost />
 </main>
 
 <style>
@@ -827,6 +806,22 @@
   font-weight: 700;
   font-display: swap;
   src: url("/ProjectContent/Fonts/NotoSansTC-Bold.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Noto Serif TC";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/ProjectContent/Fonts/NotoSerifTC-Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: "Noto Serif TC";
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+  src: url("/ProjectContent/Fonts/NotoSerifTC-Bold.ttf") format("truetype");
 }
 
 :global(body),
@@ -1236,31 +1231,37 @@
   pointer-events: auto;
 }
 
-.action {
-  padding: 16px 32px;
-  border-radius: 999px;
-  border: none;
-  background: #1f1f1f;
-  color: #ffffff;
-  font-weight: 600;
-  font-size: 28px;
-  cursor: pointer;
+:global(.editor-action) {
+  padding: 10px 18px;
+  border-radius: 0;
+  border: 1px solid #2b2b2b;
+  font-weight: 500;
+  font-size: 22px;
   pointer-events: auto;
+  background-image: none !important;
+  color: #f5f5f5;
+  --btn-color: #1f1f1f;
 }
 
-.action[data-active="true"] {
-  background: #3b7cff;
+:global(.editor-action)::before {
+  background-color: #1f1f1f;
+  mix-blend-mode: normal;
+  opacity: 1;
 }
 
-.action[data-active="true"]:hover {
-  background: #2f64d2;
+:global(.editor-action:hover),
+:global(.editor-action:active) {
+  filter: none;
+  background-color: #2b2b2b;
+  border-color: #3a3a3a;
 }
 
-.action:hover {
-  background: #343434;
+:global(.editor-action.toggle[data-active="true"]) {
+  --btn-color: #3b7cff;
+  border-color: #3b7cff;
 }
 
-.editor-ui-selected {
+:global(.editor-ui-selected) {
   outline: 2px solid #3b7cff;
   outline-offset: 2px;
   box-shadow: 0 0 0 2px rgba(59, 124, 255, 0.35);

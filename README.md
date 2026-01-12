@@ -145,6 +145,7 @@ Details live in `docs/conventions.md`.
 ## Audio
 
 - Background music is managed by `AudioManager` (HTMLAudio) with per-page transitions.
+- UI sound effects (e.g., confirm clicks) are played via `AudioManager.playSfx`.
 - Grounded attacks spawn a short slash projectile; homing attacks are still air-only.
 
 ## Asset Pipeline
