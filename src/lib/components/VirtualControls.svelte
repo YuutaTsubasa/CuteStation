@@ -50,12 +50,17 @@
     event.preventDefault();
   }
 
+  function onStickTouch(event: TouchEvent) {
+    event.preventDefault();
+  }
+
   function onStickMove(event: PointerEvent) {
     if (activePointerId !== event.pointerId) {
       return;
     }
 
     updateStick(event);
+    event.preventDefault();
   }
 
   function onStickUp(event: PointerEvent) {
@@ -82,6 +87,10 @@
     input.releaseJump();
   }
 
+  function onJumpTouch(event: TouchEvent) {
+    event.preventDefault();
+  }
+
   function onAttackDown(event: PointerEvent) {
     if (event.button !== 0 && event.pointerType === "mouse") {
       return;
@@ -93,6 +102,10 @@
 
   function onAttackUp() {
     input.releaseAttack();
+  }
+
+  function onAttackTouch(event: TouchEvent) {
+    event.preventDefault();
   }
 
   onDestroy(() => {
@@ -110,6 +123,8 @@
       onpointerup={onStickUp}
       onpointercancel={onStickUp}
       onpointerleave={onStickUp}
+      ontouchstart={onStickTouch}
+      ontouchmove={onStickTouch}
     >
       <div
         class="joystick-thumb"
@@ -126,6 +141,8 @@
       onpointerup={onAttackUp}
       onpointercancel={onAttackUp}
       onpointerleave={onAttackUp}
+      ontouchstart={onAttackTouch}
+      ontouchmove={onAttackTouch}
     >
       Attack
     </button>
@@ -137,6 +154,8 @@
       onpointerup={onJumpUp}
       onpointercancel={onJumpUp}
       onpointerleave={onJumpUp}
+      ontouchstart={onJumpTouch}
+      ontouchmove={onJumpTouch}
     >
       Jump
     </button>
