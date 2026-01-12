@@ -155,8 +155,10 @@ export class LevelVisuals {
     farSprite.x = -marginX;
     farSprite.y = -marginY;
 
-    const midSprite = new TilingSprite(mid, viewWidth, viewHeight);
-    const nearSprite = near ? new TilingSprite(near, viewWidth, viewHeight) : undefined;
+    const midSprite = new TilingSprite({ texture: mid, width: viewWidth, height: viewHeight });
+    const nearSprite = near
+      ? new TilingSprite({ texture: near, width: viewWidth, height: viewHeight })
+      : undefined;
 
     return { far: farSprite, mid: midSprite, near: nearSprite };
   }
@@ -164,17 +166,17 @@ export class LevelVisuals {
   private createSolids(tile: Texture) {
     const solids: SolidVisual[] = [];
     const groundHeight = this.options.config.groundHeight;
-    const tileHeight = tile.baseTexture.height;
+    const tileHeight = tile.source.height;
     const decorationHeight = Math.max(0, tileHeight - groundHeight);
     for (const solid of this.level.solids) {
       const worldRect = this.runtime.toWorldRect(solid);
       const scale = worldRect.height / groundHeight;
       const decorationScaled = decorationHeight * scale;
-      const sprite = new TilingSprite(
-        tile,
-        worldRect.width,
-        tileHeight * scale,
-      );
+      const sprite = new TilingSprite({
+        texture: tile,
+        width: worldRect.width,
+        height: tileHeight * scale,
+      });
       sprite.roundPixels = true;
       sprite.tileScale.set(scale, scale);
       sprite.tilePosition.y = 0;

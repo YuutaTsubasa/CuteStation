@@ -44,6 +44,7 @@
   "audio": {
     "bgm": {
       "menuDefault": "/ProjectContent/Audio/BGM/Menu/default.mp3",
+      "settingsDefault": "/ProjectContent/Audio/BGM/Settings/default.mp3",
       "whitePalaceDefault": "/ProjectContent/Audio/BGM/Levels/whitePalace/default.mp3"
     },
     "sfx": {

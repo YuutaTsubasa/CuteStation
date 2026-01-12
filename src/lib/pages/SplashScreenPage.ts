@@ -1,7 +1,10 @@
 import { Application, Assets, Container, Graphics, Sprite, Texture } from "pixi.js";
+import { get } from "svelte/store";
 import { audioManager } from "../game/audio/AudioManager";
 import { assetManifest } from "../game/assets/AssetManifest";
 import { GAME_HEIGHT, GAME_WIDTH } from "../game/view/ResolutionManager";
+import { PopupResult, PopupStore } from "../systems/PopupStore";
+import { t } from "../systems/LocalizationStore";
 import { Page } from "./Page";
 
 export class SplashScreenPage extends Page {
@@ -16,6 +19,8 @@ export class SplashScreenPage extends Page {
   private onComplete: (() => void) | null = null;
   private elapsedSeconds = 0;
   private enterToken = 0;
+  private popupShown = false;
+  private popupPaused = false;
 
   constructor() {
     super("SplashScreen");
@@ -78,6 +83,9 @@ export class SplashScreenPage extends Page {
     this.elapsedSeconds = 0;
     const totalSeconds = this.fadeInSeconds + this.holdSeconds + this.fadeOutSeconds;
     this.tickerHandler = () => {
+      if (this.popupPaused) {
+        return;
+      }
       this.elapsedSeconds += app.ticker.deltaMS / 1000;
       const t = this.elapsedSeconds;
       let alpha = 0;
@@ -86,6 +94,14 @@ export class SplashScreenPage extends Page {
         alpha = t / this.fadeInSeconds;
       } else if (t < this.fadeInSeconds + this.holdSeconds) {
         alpha = 1;
+        const holdMidpoint = this.fadeInSeconds + this.holdSeconds * 0.5;
+        if (!this.popupShown && t >= holdMidpoint) {
+          this.popupShown = true;
+          this.popupPaused = true;
+          void this.openWelcomePopup().finally(() => {
+            this.popupPaused = false;
+          });
+        }
       } else if (t < totalSeconds) {
         alpha = 1 - (t - this.fadeInSeconds - this.holdSeconds) / this.fadeOutSeconds;
       }
@@ -108,6 +124,7 @@ export class SplashScreenPage extends Page {
 
   override onExit() {
     this.enterToken += 1;
+    this.popupPaused = false;
 
     if (this.app && this.tickerHandler) {
       this.app.ticker.remove(this.tickerHandler);
@@ -128,5 +145,19 @@ export class SplashScreenPage extends Page {
     }
 
     super.onExit();
+  }
+
+  private async openWelcomePopup() {
+    const translate = get(t);
+    await PopupStore.open({
+      title: translate("WELCOME_TITLE"),
+      content: translate("WELCOME_CONTENT"),
+      buttons: [
+        {
+          text: translate("WELCOME_CONFIRM"),
+          onClick: () => PopupResult.Close,
+        },
+      ],
+    });
   }
 }

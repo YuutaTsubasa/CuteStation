@@ -44,6 +44,7 @@
 <div bind:this={rootElement} class="popupBackdrop" data-visible={backdropVisible}>
   <div
     class="popupBackground"
+    data-visible={boxVisible}
     style={`background-image: url(${assetManifest.ui.backgroundWhite});`}
   >
     <div
@@ -106,6 +107,13 @@
     justify-content: center;
     align-items: center;
     background-size: cover;
+    transform: scaleY(0);
+    transform-origin: center center;
+    transition: transform 0.3s ease;
+  }
+
+  .popupBackground[data-visible="true"] {
+    transform: scaleY(1);
   }
 
   .popupBox {
@@ -114,13 +122,11 @@
     width: 100%;
     max-width: 600px;
     overflow: hidden;
-    transform: scaleY(0.9);
     opacity: 0;
-    transition: transform 0.3s ease, opacity 0.3s ease;
+    transition: opacity 0.3s ease;
   }
 
   .popupBox[data-visible="true"] {
-    transform: scaleY(1);
     opacity: 1;
   }
 

@@ -73,6 +73,7 @@ Level visuals live under `ProjectContent/Levels/{world}/visuals/`.
 ## Audio Conventions
 
 - `ProjectContent/Audio/BGM/`: background music grouped by category (e.g., `Levels/whitePalace/default.mp3`).
+- `ProjectContent/Audio/BGM/Settings/default.mp3`: settings screen background music.
 - `ProjectContent/Audio/SFX/`: sound effects grouped by usage (e.g., `UI/`, `Player/`, `Enemies/`).
 - Prefer descriptive SFX names (e.g., `footstep_01.mp3`, `attack_swing_01.mp3`, `coin_pickup_01.mp3`).
 

@@ -467,10 +467,6 @@ export class LevelRuntime {
     return solids.reduce((maxY, solid) => Math.max(maxY, solid.y + solid.h), 0);
   }
 
-  private getWorldRect() {
-    return this.getWorldRectInternal();
-  }
-
   private getWorldRectInternal() {
     if (!this.level.world) {
       return null;

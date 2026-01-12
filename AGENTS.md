@@ -5,7 +5,7 @@
 - `src-tauri/`: Rust backend and Tauri config (`src-tauri/src/`, `src-tauri/tauri.conf.json`).
 - `static/`: Static assets served by the frontend.
 - `docs/`: Game and technical design docs (`docs/GAME_DESIGN.md`, `docs/TECHNICAL_DESIGN.md`).
-- `src/lib/components/`: Shared Svelte UI components (Button, Popup).
+- `src/lib/components/`: Shared Svelte UI components (Button, Popup, TopBar).
 - `src/lib/game/view/ResolutionManager.ts`: 16:9 design resolution (1920x1080) constants for view sizing.
 - `ProjectContent/Fonts/`: UI fonts used by the Svelte overlays and Pixi text (Gabarito, Noto Sans TC, Noto Serif TC).
 
@@ -58,6 +58,7 @@
 - SPA mode is enabled; SSR is off. Static build output is served by Tauri.
 - Game rendering targets a 1920x1080 design frame and scales to fit the window; the letterbox area uses `ProjectContent/UI/gameBackground.webp`.
 - Asset paths should be sourced from `src/lib/game/assets/assetManifest.json`.
+- Localization strings live in `ProjectContent/Localization/localization.csv` and are accessed via `LocalizationStore`.
 - GamePlay centers the camera at player spawn and hides the world until player assets finish loading.
 - Main menu video background and Press-to-Start prompt are DOM overlays inside the stage frame.
 - Grounded attacks emit a slash projectile; homing attacks remain air-only.

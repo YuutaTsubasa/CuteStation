@@ -63,24 +63,24 @@
   let editorLastDpad = { up: false, down: false, left: false, right: false };
   let editorLastConfirm = false;
   const editorGamepadDeadzone = 0.3;
-  let editorButtonAddSolid: HTMLButtonElement | null = null;
-  let editorButtonAddCoin: HTMLButtonElement | null = null;
-  let editorButtonAddEnemy: HTMLButtonElement | null = null;
-  let editorButtonDelete: HTMLButtonElement | null = null;
-  let editorButtonGrid: HTMLButtonElement | null = null;
-  let editorButtonSnap: HTMLButtonElement | null = null;
-  let editorButtonWidthPlus: HTMLButtonElement | null = null;
-  let editorButtonWidthMinus: HTMLButtonElement | null = null;
-  let editorButtonHeightPlus: HTMLButtonElement | null = null;
-  let editorButtonHeightMinus: HTMLButtonElement | null = null;
-  let editorButtonPlayTest: HTMLButtonElement | null = null;
-  let editorButtonExport: HTMLButtonElement | null = null;
-  let editorButtonBack: HTMLButtonElement | null = null;
-  let editorEnemyTypeSelect: HTMLSelectElement | null = null;
-  let editorEnemyPatrolRangeInput: HTMLInputElement | null = null;
-  let editorEnemyPatrolSpeedInput: HTMLInputElement | null = null;
-  let editorEnemyIdleDurationInput: HTMLInputElement | null = null;
-  let editorEnemyGravityInput: HTMLInputElement | null = null;
+  let editorButtonAddSolid = $state<HTMLButtonElement | null>(null);
+  let editorButtonAddCoin = $state<HTMLButtonElement | null>(null);
+  let editorButtonAddEnemy = $state<HTMLButtonElement | null>(null);
+  let editorButtonDelete = $state<HTMLButtonElement | null>(null);
+  let editorButtonGrid = $state<HTMLButtonElement | null>(null);
+  let editorButtonSnap = $state<HTMLButtonElement | null>(null);
+  let editorButtonWidthPlus = $state<HTMLButtonElement | null>(null);
+  let editorButtonWidthMinus = $state<HTMLButtonElement | null>(null);
+  let editorButtonHeightPlus = $state<HTMLButtonElement | null>(null);
+  let editorButtonHeightMinus = $state<HTMLButtonElement | null>(null);
+  let editorButtonPlayTest = $state<HTMLButtonElement | null>(null);
+  let editorButtonExport = $state<HTMLButtonElement | null>(null);
+  let editorButtonBack = $state<HTMLButtonElement | null>(null);
+  let editorEnemyTypeSelect = $state<HTMLSelectElement | null>(null);
+  let editorEnemyPatrolRangeInput = $state<HTMLInputElement | null>(null);
+  let editorEnemyPatrolSpeedInput = $state<HTMLInputElement | null>(null);
+  let editorEnemyIdleDurationInput = $state<HTMLInputElement | null>(null);
+  let editorEnemyGravityInput = $state<HTMLInputElement | null>(null);
 
   let uiScale = $state(1);
   let uiOffsetX = $state(0);
@@ -756,7 +756,7 @@
                 value={enemyType}
                 bind:this={editorEnemyTypeSelect}
                 class:editor-ui-selected={editorUiSelected === editorEnemyTypeSelect}
-                on:change={(event) => {
+                onchange={(event) => {
                   const value = (event.target as HTMLSelectElement).value;
                   enemyType = value;
                   editor?.updateSelectedEnemy({ enemyType: value as "static" | "patrol" });
@@ -776,7 +776,7 @@
                 min="0"
                 step="1"
                 disabled={enemyType !== "patrol"}
-                on:change={(event) => {
+                onchange={(event) => {
                   const value = Number((event.target as HTMLInputElement).value);
                   enemyPatrolRange = value;
                   editor?.updateSelectedEnemy({ patrolRange: value });
@@ -793,7 +793,7 @@
                 min="0"
                 step="1"
                 disabled={enemyType !== "patrol"}
-                on:change={(event) => {
+                onchange={(event) => {
                   const value = Number((event.target as HTMLInputElement).value);
                   enemyPatrolSpeed = value;
                   editor?.updateSelectedEnemy({ patrolSpeed: value });
@@ -809,7 +809,7 @@
                 class:editor-ui-selected={editorUiSelected === editorEnemyIdleDurationInput}
                 min="0"
                 step="0.1"
-                on:change={(event) => {
+                onchange={(event) => {
                   const value = Number((event.target as HTMLInputElement).value);
                   enemyIdleDuration = value;
                   editor?.updateSelectedEnemy({ idleDuration: value });
@@ -823,7 +823,7 @@
                 checked={enemyGravityEnabled}
                 bind:this={editorEnemyGravityInput}
                 class:editor-ui-selected={editorUiSelected === editorEnemyGravityInput}
-                on:change={(event) => {
+                onchange={(event) => {
                   const value = (event.target as HTMLInputElement).checked;
                   enemyGravityEnabled = value;
                   editor?.updateSelectedEnemy({ gravityEnabled: value });
@@ -856,7 +856,7 @@
                 max="100"
                 step="1"
                 value={musicVolume}
-                on:input={(event) =>
+                oninput={(event) =>
                   setMusicVolume(Number((event.target as HTMLInputElement).value))}
               />
               <div class="settings-value">{musicVolume}%</div>
@@ -869,7 +869,7 @@
                 max="100"
                 step="1"
                 value={sfxVolume}
-                on:input={(event) =>
+                oninput={(event) =>
                   setSfxVolume(Number((event.target as HTMLInputElement).value))}
               />
               <div class="settings-value">{sfxVolume}%</div>
@@ -878,7 +878,7 @@
               <div class="settings-label">{$t("SETTINGS_LANGUAGE")}</div>
               <select
                 value={selectedLocale}
-                on:change={(event) => {
+                onchange={(event) => {
                   const value = (event.target as HTMLSelectElement).value;
                   selectedLocale = value;
                   LocalizationStore.setLocale(value);
@@ -1087,17 +1087,6 @@
   100% {
     opacity: 0.7;
   }
-}
-
-.hud {
-  position: absolute;
-  top: 24px;
-  left: 24px;
-  padding: 12px 20px;
-  border-radius: 16px;
-  background: rgba(0, 0, 0, 0.55);
-  color: #ffffff;
-  font-size: 28px;
 }
 
 .gameplay-topbar {
@@ -1442,11 +1431,6 @@
   outline: 2px solid #3b7cff;
   outline-offset: 2px;
   box-shadow: 0 0 0 2px rgba(59, 124, 255, 0.35);
-}
-
-h2 {
-  margin: 0;
-  font-size: 40px;
 }
 
 @media (prefers-color-scheme: dark) {
