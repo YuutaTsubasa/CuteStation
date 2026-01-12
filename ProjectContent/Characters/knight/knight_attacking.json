@@ -4,600 +4,600 @@
       "frame": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_attacking_01.webp": {
       "frame": {
-        "x": 1024,
+        "x": 512,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_attacking_02.webp": {
       "frame": {
-        "x": 2048,
+        "x": 1024,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_attacking_03.webp": {
       "frame": {
-        "x": 3072,
+        "x": 1536,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_attacking_04.webp": {
       "frame": {
-        "x": 4096,
+        "x": 2048,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_attacking_05.webp": {
       "frame": {
-        "x": 5120,
+        "x": 2560,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_attacking_06.webp": {
       "frame": {
         "x": 0,
-        "y": 1024,
-        "w": 1024,
-        "h": 1024
+        "y": 512,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_attacking_07.webp": {
       "frame": {
-        "x": 1024,
-        "y": 1024,
-        "w": 1024,
-        "h": 1024
+        "x": 512,
+        "y": 512,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_attacking_08.webp": {
       "frame": {
-        "x": 2048,
-        "y": 1024,
-        "w": 1024,
-        "h": 1024
+        "x": 1024,
+        "y": 512,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_attacking_09.webp": {
       "frame": {
-        "x": 3072,
-        "y": 1024,
-        "w": 1024,
-        "h": 1024
+        "x": 1536,
+        "y": 512,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_attacking_10.webp": {
       "frame": {
-        "x": 4096,
-        "y": 1024,
-        "w": 1024,
-        "h": 1024
+        "x": 2048,
+        "y": 512,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_attacking_11.webp": {
       "frame": {
-        "x": 5120,
-        "y": 1024,
-        "w": 1024,
-        "h": 1024
+        "x": 2560,
+        "y": 512,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_attacking_12.webp": {
       "frame": {
         "x": 0,
-        "y": 2048,
-        "w": 1024,
-        "h": 1024
+        "y": 1024,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_attacking_13.webp": {
       "frame": {
-        "x": 1024,
-        "y": 2048,
-        "w": 1024,
-        "h": 1024
+        "x": 512,
+        "y": 1024,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_attacking_14.webp": {
       "frame": {
-        "x": 2048,
-        "y": 2048,
-        "w": 1024,
-        "h": 1024
+        "x": 1024,
+        "y": 1024,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_attacking_15.webp": {
       "frame": {
-        "x": 3072,
-        "y": 2048,
-        "w": 1024,
-        "h": 1024
+        "x": 1536,
+        "y": 1024,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_attacking_16.webp": {
       "frame": {
-        "x": 4096,
-        "y": 2048,
-        "w": 1024,
-        "h": 1024
+        "x": 2048,
+        "y": 1024,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_attacking_17.webp": {
       "frame": {
-        "x": 5120,
-        "y": 2048,
-        "w": 1024,
-        "h": 1024
+        "x": 2560,
+        "y": 1024,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_attacking_18.webp": {
       "frame": {
         "x": 0,
-        "y": 3072,
-        "w": 1024,
-        "h": 1024
+        "y": 1536,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_attacking_19.webp": {
       "frame": {
-        "x": 1024,
-        "y": 3072,
-        "w": 1024,
-        "h": 1024
+        "x": 512,
+        "y": 1536,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_attacking_20.webp": {
       "frame": {
-        "x": 2048,
-        "y": 3072,
-        "w": 1024,
-        "h": 1024
+        "x": 1024,
+        "y": 1536,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_attacking_21.webp": {
       "frame": {
-        "x": 3072,
-        "y": 3072,
-        "w": 1024,
-        "h": 1024
+        "x": 1536,
+        "y": 1536,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_attacking_22.webp": {
       "frame": {
-        "x": 4096,
-        "y": 3072,
-        "w": 1024,
-        "h": 1024
+        "x": 2048,
+        "y": 1536,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_attacking_23.webp": {
       "frame": {
-        "x": 5120,
-        "y": 3072,
-        "w": 1024,
-        "h": 1024
+        "x": 2560,
+        "y": 1536,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_attacking_24.webp": {
       "frame": {
         "x": 0,
-        "y": 4096,
-        "w": 1024,
-        "h": 1024
+        "y": 2048,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_attacking_25.webp": {
       "frame": {
-        "x": 1024,
-        "y": 4096,
-        "w": 1024,
-        "h": 1024
+        "x": 512,
+        "y": 2048,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_attacking_26.webp": {
       "frame": {
-        "x": 2048,
-        "y": 4096,
-        "w": 1024,
-        "h": 1024
+        "x": 1024,
+        "y": 2048,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_attacking_27.webp": {
       "frame": {
-        "x": 3072,
-        "y": 4096,
-        "w": 1024,
-        "h": 1024
+        "x": 1536,
+        "y": 2048,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_attacking_28.webp": {
       "frame": {
-        "x": 4096,
-        "y": 4096,
-        "w": 1024,
-        "h": 1024
+        "x": 2048,
+        "y": 2048,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_attacking_29.webp": {
       "frame": {
-        "x": 5120,
-        "y": 4096,
-        "w": 1024,
-        "h": 1024
+        "x": 2560,
+        "y": 2048,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     }
   },
@@ -643,8 +643,8 @@
     "image": "knight_attacking.webp",
     "format": "RGBA8888",
     "size": {
-      "w": 6144,
-      "h": 5120
+      "w": 3072,
+      "h": 2560
     },
     "scale": "1"
   }
