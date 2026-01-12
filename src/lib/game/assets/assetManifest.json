@@ -49,5 +49,8 @@
     "sfx": {
       "confirm": "/ProjectContent/Audio/SFX/confirm.mp3"
     }
+  },
+  "localization": {
+    "main": "/ProjectContent/Localization/localization.csv"
   }
 }

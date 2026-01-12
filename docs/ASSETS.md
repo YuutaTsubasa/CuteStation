@@ -18,6 +18,8 @@ Use a consistent hierarchy so tools and scripts can find assets:
   - Example: `ProjectContent/UI/gameBackground.webp`
 - `ProjectContent/Fonts/`
   - Example: `ProjectContent/Fonts/Gabarito-Regular.ttf`
+- `ProjectContent/Localization/`
+  - Example: `ProjectContent/Localization/localization.csv`
 
 ## Level Data v0 Notes
 
@@ -54,6 +56,10 @@ Level visuals live under `ProjectContent/Levels/{world}/visuals/`.
 - `ProjectContent/UI/backgroundWhite.webp`: popup background image.
 - `ProjectContent/UI/backgroundWhiteButton.webp`: UI button background image.
 - `ProjectContent/UI/mainMenuBackground.mp4`: looping main menu background video.
+
+## Localization
+
+- `ProjectContent/Localization/localization.csv`: translation table with `key` + locale columns.
 
 ## Fonts
 

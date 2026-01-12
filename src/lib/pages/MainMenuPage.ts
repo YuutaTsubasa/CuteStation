@@ -8,11 +8,13 @@ import {
   TextStyle,
   Texture,
 } from "pixi.js";
+import { get } from "svelte/store";
 import { audioManager } from "../game/audio/AudioManager";
 import { menuBgmPath } from "../game/audio/audioPaths";
 import { GamepadTracker } from "../game/input/GamepadTracker";
 import { assetManifest } from "../game/assets/AssetManifest";
 import { GAME_HEIGHT, GAME_WIDTH } from "../game/view/ResolutionManager";
+import { LocalizationStore, t } from "../systems/LocalizationStore";
 import { Page } from "./Page";
 
 type MenuEntry = {
@@ -23,6 +25,8 @@ type MenuEntry = {
 type MenuButton = {
   container: Container;
   background: Sprite;
+  labelKey: string;
+  text: Text;
   onClick: () => void;
   width: number;
   height: number;
@@ -32,6 +36,7 @@ export class MainMenuPage extends Page {
   readonly entries: MenuEntry[] = [
     { id: "GamePlay", label: "Start Game" },
     { id: "LevelEditor", label: "Level Editor" },
+    { id: "Settings", label: "Settings" },
   ];
   private readonly logoPath = assetManifest.ui.gameLogo;
   private readonly videoPath = assetManifest.ui.mainMenuBackgroundVideo;
@@ -57,6 +62,7 @@ export class MainMenuPage extends Page {
   private gamepadInput: GamepadTracker | null = null;
   private lastGamepadNav = 0;
   private readonly gamepadNavCooldownMs = 180;
+  private localeUnsubscribe: (() => void) | null = null;
 
   constructor() {
     super("MainMenu");
@@ -145,7 +151,7 @@ export class MainMenuPage extends Page {
     const buttonWidth = 520;
     const buttonHeight = 88;
     const startButton = this.createMenuButton(
-      "START GAME",
+      "MENU_START",
       GAME_HEIGHT * 0.54,
       buttonWidth,
       buttonHeight,
@@ -154,7 +160,7 @@ export class MainMenuPage extends Page {
       () => this.onNavigate?.("GamePlay"),
     );
     const editorButton = this.createMenuButton(
-      "LEVEL EDITOR",
+      "MENU_LEVEL_EDITOR",
       GAME_HEIGHT * 0.66,
       buttonWidth,
       buttonHeight,
@@ -162,9 +168,26 @@ export class MainMenuPage extends Page {
       buttonTexture,
       () => this.onNavigate?.("LevelEditor"),
     );
-    this.menuButtons = [startButton, editorButton];
-    optionsLayer.addChild(startButton.container, editorButton.container);
+    const settingsButton = this.createMenuButton(
+      "MENU_SETTINGS",
+      GAME_HEIGHT * 0.78,
+      buttonWidth,
+      buttonHeight,
+      buttonStyle,
+      buttonTexture,
+      () => this.onNavigate?.("Settings"),
+    );
+    this.menuButtons = [startButton, editorButton, settingsButton];
+    optionsLayer.addChild(
+      startButton.container,
+      editorButton.container,
+      settingsButton.container,
+    );
     this.applyMenuSelection();
+    this.localeUnsubscribe = LocalizationStore.locale.subscribe(() => {
+      this.refreshMenuLabels();
+    });
+    this.refreshMenuLabels();
 
     this.keyHandler = (event) => {
       if (this.enteringState === "press") {
@@ -222,6 +245,10 @@ export class MainMenuPage extends Page {
   }
 
   override onExit() {
+    if (this.localeUnsubscribe) {
+      this.localeUnsubscribe();
+      this.localeUnsubscribe = null;
+    }
     if (this.app && this.tickerHandler) {
       this.app.ticker.remove(this.tickerHandler);
       this.tickerHandler = null;
@@ -363,7 +390,7 @@ export class MainMenuPage extends Page {
   }
 
   private createMenuButton(
-    label: string,
+    labelKey: string,
     y: number,
     width: number,
     height: number,
@@ -382,7 +409,7 @@ export class MainMenuPage extends Page {
     bg.tint = 0x1f1f1f;
     container.addChild(bg);
 
-    const text = new Text({ text: label, style });
+    const text = new Text({ text: this.translate(labelKey), style });
     text.anchor.set(0.5);
     text.position.set(width * 0.5, height * 0.5);
     container.addChild(text);
@@ -402,7 +429,7 @@ export class MainMenuPage extends Page {
         this.applyMenuSelection();
       }
     });
-    return { container, background: bg, onClick, width, height };
+    return { container, background: bg, labelKey, text, onClick, width, height };
   }
 
   private applyMenuSelection() {
@@ -429,6 +456,17 @@ export class MainMenuPage extends Page {
       return;
     }
     button.onClick();
+  }
+
+  private translate(key: string) {
+    const translator = get(t);
+    return translator(key);
+  }
+
+  private refreshMenuLabels() {
+    this.menuButtons.forEach((button) => {
+      button.text.text = this.translate(button.labelKey);
+    });
   }
 
   private handleGamepadMenuInput(

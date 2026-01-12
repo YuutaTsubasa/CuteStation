@@ -12,6 +12,7 @@ type AudioState = {
   bgm: HTMLAudioElement | null;
   bgmPath: string | null;
   bgmVolume: number;
+  sfxVolume: number;
   fadeTimers: Map<HTMLAudioElement, number>;
 };
 
@@ -25,6 +26,7 @@ const getAudioState = (): AudioState => {
       bgm: null,
       bgmPath: null,
       bgmVolume: 1,
+      sfxVolume: 1,
       fadeTimers: new Map<HTMLAudioElement, number>(),
     };
   }
@@ -153,12 +155,25 @@ export class AudioManager {
     }
   }
 
+  getBgmVolume() {
+    return this.state.bgmVolume;
+  }
+
+  setSfxVolume(volume: number) {
+    this.state.sfxVolume = Math.max(0, Math.min(1, volume));
+  }
+
+  getSfxVolume() {
+    return this.state.sfxVolume;
+  }
+
   playSfx(path: string, options: { volume?: number } = {}) {
     if (!path) {
       return;
     }
     const audio = this.createAudio(path, false);
-    audio.volume = Math.max(0, Math.min(1, options.volume ?? 1));
+    const base = Math.max(0, Math.min(1, options.volume ?? 1));
+    audio.volume = Math.max(0, Math.min(1, base * this.state.sfxVolume));
     void audio.play().catch(() => {
       // Ignore autoplay errors.
     });

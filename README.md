@@ -141,6 +141,7 @@ Details live in `docs/conventions.md`.
 - Gameplay input is locked while the intro logo is visible.
 - Homing attacks leave a blue silhouette trail that can collect overlapping coins.
 - Player hit/death animations lock control; deaths fade out and restart the level.
+- Settings screen includes audio volume sliders and language selection.
 
 ## Audio
 

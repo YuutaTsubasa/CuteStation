@@ -1,0 +1,21 @@
+key,zh-TW,en,ja,ko
+MENU_START,開始遊戲,Start Game,ゲーム開始,게임 시작
+MENU_LEVEL_EDITOR,關卡編輯器,Level Editor,レベルエディタ,레벨 에디터
+MENU_SETTINGS,設定,Settings,設定,설정
+SETTINGS_TITLE,設定,Settings,設定,설정
+SETTINGS_MUSIC_VOLUME,音樂音量,Music Volume,音楽音量,음악 볼륨
+SETTINGS_SFX_VOLUME,音效音量,SFX Volume,効果音音量,효과음 볼륨
+SETTINGS_LANGUAGE,語言,Language,言語,언어
+EDITOR_ADD_SOLID,新增地形,Add Solid,ソリッド追加,솔리드 추가
+EDITOR_ADD_COIN,新增硬幣,Add Coin,コイン追加,코인 추가
+EDITOR_ADD_ENEMY,新增敵人,Add Enemy,敵追加,적 추가
+EDITOR_DELETE,刪除,Delete,削除,삭제
+EDITOR_GRID,網格,Grid,グリッド,그리드
+EDITOR_SNAP,對齊,Snap,スナップ,스냅
+EDITOR_WIDTH_PLUS,寬度 +,Width +,幅 +,너비 +
+EDITOR_WIDTH_MINUS,寬度 -,Width -,幅 -,너비 -
+EDITOR_HEIGHT_PLUS,高度 +,Height +,高さ +,높이 +
+EDITOR_HEIGHT_MINUS,高度 -,Height -,高さ -,높이 -
+EDITOR_PLAY_TEST,試玩,Play Test,プレイテスト,플레이 테스트
+EDITOR_EXPORT,匯出關卡,Export Level,レベル書き出し,레벨 내보내기
+EDITOR_BACK,返回,Back,戻る,뒤로

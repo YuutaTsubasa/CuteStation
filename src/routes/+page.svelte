@@ -5,13 +5,19 @@
   import { LevelEditorPage } from "$lib/pages/LevelEditorPage";
   import { MainMenuPage } from "$lib/pages/MainMenuPage";
   import { PageManager } from "$lib/pages/PageManager";
+  import { SettingsPage } from "$lib/pages/SettingsPage";
   import { SplashScreenPage } from "$lib/pages/SplashScreenPage";
   import Button from "$lib/components/Button.svelte";
   import PopupHost from "$lib/components/PopupHost.svelte";
+  import TopBar from "$lib/components/TopBar.svelte";
   import VirtualControls from "$lib/components/VirtualControls.svelte";
   import { VirtualInput } from "$lib/game/input/VirtualInput";
   import { assetManifest } from "$lib/game/assets/AssetManifest";
+  import { audioManager } from "$lib/game/audio/AudioManager";
   import type { LevelEnemy } from "$lib/game/levels/LevelLoader";
+  import { LocalizationStore } from "$lib/systems/LocalizationStore";
+  import { t } from "$lib/systems/LocalizationStore";
+  import { onDestroy } from "svelte";
 
   let status = $state("Initializing...");
   let currentPageId = $state("None");
@@ -28,6 +34,7 @@
   let levelClear = $state(false);
   let levelClearTimeout: number | null = null;
   let editor: LevelEditorPage | null = null;
+  let settings: SettingsPage | null = null;
   let gridEnabled = $state(true);
   let snapEnabled = $state(true);
   let gameLoading = $state(false);
@@ -81,6 +88,48 @@
   let uiTransform = $state("");
   const frameWidth = 1920;
   const frameHeight = 1080;
+
+  let musicVolume = $state(100);
+  let sfxVolume = $state(100);
+  let selectedLocale = $state(LocalizationStore.getLocale());
+  let localeUnsubscribe: (() => void) | null = null;
+
+  const availableLocales = LocalizationStore.availableLocales;
+
+  const localeLabelMap: Record<string, string> = {
+    "zh-tw": "Traditional Chinese",
+    en: "English",
+    ja: "Japanese",
+    ko: "Korean",
+  };
+
+  const getLocaleLabel = (locale: string) =>
+    localeLabelMap[locale] ?? locale.toUpperCase();
+
+  const syncVolumesFromAudio = () => {
+    musicVolume = Math.round(audioManager.getBgmVolume() * 100);
+    sfxVolume = Math.round(audioManager.getSfxVolume() * 100);
+  };
+
+  const setMusicVolume = (value: number) => {
+    const normalized = Math.max(0, Math.min(100, value));
+    musicVolume = normalized;
+    const volume = normalized / 100;
+    audioManager.setBgmVolume(volume);
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem("cutestation.bgmVolume", volume.toString());
+    }
+  };
+
+  const setSfxVolume = (value: number) => {
+    const normalized = Math.max(0, Math.min(100, value));
+    sfxVolume = normalized;
+    const volume = normalized / 100;
+    audioManager.setSfxVolume(volume);
+    if (typeof localStorage !== "undefined") {
+      localStorage.setItem("cutestation.sfxVolume", volume.toString());
+    }
+  };
 
   function updateUiLayout() {
     if (!pixiRoot) {
@@ -211,6 +260,23 @@
   }
 
   onMount(() => {
+    void LocalizationStore.initialize();
+    const storedBgm = typeof localStorage !== "undefined"
+      ? Number(localStorage.getItem("cutestation.bgmVolume"))
+      : NaN;
+    if (!Number.isNaN(storedBgm)) {
+      audioManager.setBgmVolume(storedBgm);
+    }
+    const storedSfx = typeof localStorage !== "undefined"
+      ? Number(localStorage.getItem("cutestation.sfxVolume"))
+      : NaN;
+    if (!Number.isNaN(storedSfx)) {
+      audioManager.setSfxVolume(storedSfx);
+    }
+    syncVolumesFromAudio();
+    localeUnsubscribe = LocalizationStore.locale.subscribe((value) => {
+      selectedLocale = value;
+    });
     if (/SamsungBrowser/i.test(navigator.userAgent)) {
       Assets.setPreferences({ preferCreateImageBitmap: false });
     }
@@ -233,6 +299,7 @@
     const menu = new MainMenuPage();
     gameplay = new GamePlayPage();
     const levelEditor = new LevelEditorPage();
+    const settingsPage = new SettingsPage();
 
     splash.setHost(pixiFrame);
     splash.setOnComplete(() => goTo("MainMenu"));
@@ -290,11 +357,13 @@
       selectedEnemy = null;
     });
     editor = levelEditor;
+    settings = settingsPage;
 
     manager.register(splash);
     manager.register(menu);
     manager.register(gameplay);
     manager.register(levelEditor);
+    manager.register(settingsPage);
 
     pageManager = manager;
     goTo("SplashScreen");
@@ -422,6 +491,13 @@
       introToken += 1;
       levelEditor.onExit();
     };
+  });
+
+  onDestroy(() => {
+    if (localeUnsubscribe) {
+      localeUnsubscribe();
+      localeUnsubscribe = null;
+    }
   });
 
   const formatTime = (seconds: number) => {
@@ -592,25 +668,25 @@
             className={`editor-action ${editorUiSelected === editorButtonAddSolid ? "editor-ui-selected" : ""}`}
             bind:element={editorButtonAddSolid}
             on:click={() => editor?.addSolid()}
-            >Add Solid</Button
+            >{$t("EDITOR_ADD_SOLID")}</Button
           >
           <Button
             className={`editor-action ${editorUiSelected === editorButtonAddCoin ? "editor-ui-selected" : ""}`}
             bind:element={editorButtonAddCoin}
             on:click={() => editor?.addCoin()}
-            >Add Coin</Button
+            >{$t("EDITOR_ADD_COIN")}</Button
           >
           <Button
             className={`editor-action ${editorUiSelected === editorButtonAddEnemy ? "editor-ui-selected" : ""}`}
             bind:element={editorButtonAddEnemy}
             on:click={() => editor?.addEnemy()}
-            >Add Enemy</Button
+            >{$t("EDITOR_ADD_ENEMY")}</Button
           >
           <Button
             className={`editor-action ${editorUiSelected === editorButtonDelete ? "editor-ui-selected" : ""}`}
             bind:element={editorButtonDelete}
             on:click={() => editor?.deleteSelected()}
-            >Delete</Button
+            >{$t("EDITOR_DELETE")}</Button
           >
           <Button
             className={`editor-action ${editorUiSelected === editorButtonGrid ? "editor-ui-selected" : ""}`}
@@ -618,7 +694,7 @@
             active={gridEnabled}
             bind:element={editorButtonGrid}
             on:click={toggleGrid}
-            >Grid</Button
+            >{$t("EDITOR_GRID")}</Button
           >
           <Button
             className={`editor-action ${editorUiSelected === editorButtonSnap ? "editor-ui-selected" : ""}`}
@@ -626,49 +702,49 @@
             active={snapEnabled}
             bind:element={editorButtonSnap}
             on:click={toggleSnap}
-            >Snap</Button
+            >{$t("EDITOR_SNAP")}</Button
           >
           <Button
             className={`editor-action ${editorUiSelected === editorButtonWidthPlus ? "editor-ui-selected" : ""}`}
             bind:element={editorButtonWidthPlus}
             on:click={() => editor?.resizeWorld(200, 0)}
-            >Width +</Button
+            >{$t("EDITOR_WIDTH_PLUS")}</Button
           >
           <Button
             className={`editor-action ${editorUiSelected === editorButtonWidthMinus ? "editor-ui-selected" : ""}`}
             bind:element={editorButtonWidthMinus}
             on:click={() => editor?.resizeWorld(-200, 0)}
-            >Width -</Button
+            >{$t("EDITOR_WIDTH_MINUS")}</Button
           >
           <Button
             className={`editor-action ${editorUiSelected === editorButtonHeightPlus ? "editor-ui-selected" : ""}`}
             bind:element={editorButtonHeightPlus}
             on:click={() => editor?.resizeWorld(0, 200)}
-            >Height +</Button
+            >{$t("EDITOR_HEIGHT_PLUS")}</Button
           >
           <Button
             className={`editor-action ${editorUiSelected === editorButtonHeightMinus ? "editor-ui-selected" : ""}`}
             bind:element={editorButtonHeightMinus}
             on:click={() => editor?.resizeWorld(0, -200)}
-            >Height -</Button
+            >{$t("EDITOR_HEIGHT_MINUS")}</Button
           >
           <Button
             className={`editor-action ${editorUiSelected === editorButtonPlayTest ? "editor-ui-selected" : ""}`}
             bind:element={editorButtonPlayTest}
             on:click={() => editor?.playTest()}
-            >Play Test</Button
+            >{$t("EDITOR_PLAY_TEST")}</Button
           >
           <Button
             className={`editor-action ${editorUiSelected === editorButtonExport ? "editor-ui-selected" : ""}`}
             bind:element={editorButtonExport}
             on:click={exportLevel}
-            >Export Level</Button
+            >{$t("EDITOR_EXPORT")}</Button
           >
           <Button
             className={`editor-action ${editorUiSelected === editorButtonBack ? "editor-ui-selected" : ""}`}
             bind:element={editorButtonBack}
             on:click={() => goTo("MainMenu")}
-            >Back</Button
+            >{$t("EDITOR_BACK")}</Button
           >
         </div>
         {#if selectedEnemy}
@@ -763,6 +839,57 @@
           <br />
           Gamepad: Left stick move cursor. A drag/select. X add solid. Y add coin. LB add enemy.
           B delete. Right stick pans.
+        </div>
+      {:else if currentPageId === "Settings"}
+        <div class="settings-page">
+          <TopBar
+            primaryTitle={$t("SETTINGS_TITLE")}
+            secondaryTitle={selectedLocale.startsWith("en") ? "" : "Settings"}
+            onBack={() => goTo("MainMenu")}
+          />
+          <div class="settings-panel">
+            <div class="settings-row">
+              <div class="settings-label">{$t("SETTINGS_MUSIC_VOLUME")}</div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                value={musicVolume}
+                on:input={(event) =>
+                  setMusicVolume(Number((event.target as HTMLInputElement).value))}
+              />
+              <div class="settings-value">{musicVolume}%</div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-label">{$t("SETTINGS_SFX_VOLUME")}</div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                step="1"
+                value={sfxVolume}
+                on:input={(event) =>
+                  setSfxVolume(Number((event.target as HTMLInputElement).value))}
+              />
+              <div class="settings-value">{sfxVolume}%</div>
+            </div>
+            <div class="settings-row">
+              <div class="settings-label">{$t("SETTINGS_LANGUAGE")}</div>
+              <select
+                value={selectedLocale}
+                on:change={(event) => {
+                  const value = (event.target as HTMLSelectElement).value;
+                  selectedLocale = value;
+                  LocalizationStore.setLocale(value);
+                }}
+              >
+                {#each $availableLocales as locale}
+                  <option value={locale}>{getLocaleLabel(locale)}</option>
+                {/each}
+              </select>
+            </div>
+          </div>
         </div>
       {:else}
         <!-- Main menu UI is rendered by MainMenuPage in Pixi. -->
@@ -1199,6 +1326,56 @@
   border-radius: 10px;
   border: none;
   font-size: 18px;
+}
+
+.settings-page {
+  position: absolute;
+  inset: 0;
+  pointer-events: auto;
+}
+
+.settings-panel {
+  margin: 120px auto 0;
+  width: 80%;
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 16px;
+  padding: 24px 32px;
+  display: grid;
+  gap: 18px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+}
+
+.settings-row {
+  display: grid;
+  grid-template-columns: 15% 70% 15%;
+  align-items: center;
+  gap: 16px;
+}
+
+.settings-label {
+  font-weight: 600;
+  font-size: 22px;
+  color: #1f2937;
+}
+
+.settings-value {
+  text-align: left;
+  color: #4b5563;
+  font-variant-numeric: tabular-nums;
+  font-size: 20px;
+  padding-left: 8px;
+}
+
+.settings-row input[type="range"] {
+  width: 100%;
+}
+
+.settings-row select {
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid #cbd5e1;
+  background: #ffffff;
+  font-size: 20px;
 }
 
 .stage-overlay {
