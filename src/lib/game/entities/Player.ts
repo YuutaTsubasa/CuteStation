@@ -43,6 +43,7 @@ export class Player {
   private readonly scale: number;
   private readonly baseScale = 144 / 1024;
   private readonly footOffset = 14;
+  private readonly textureScale = 0.5;
   private facing = 1;
   private jumpPhase: "none" | "jumpUp" | "hold" | "fall" | "land" = "none";
   private readonly fallEps = 5;
@@ -140,17 +141,17 @@ export class Player {
     }
 
     const sheets = assetManifest.characters.knight.sheets;
-    const idleFrames = await this.loadFrames(sheets.idle);
-    const runFrames = await this.loadFrames(sheets.run);
-    this.animations.idle = idleFrames;
-    this.animations.walk = idleFrames;
-    this.animations.run = runFrames;
-    this.animations.attack = idleFrames;
-    this.animations.runAttack = idleFrames;
-    this.animations.hit = idleFrames;
-    this.animations.dead = idleFrames;
-    this.attackHitFrames = new Set<number>([0]);
-    this.jumpFrames = null;
+    this.animations.idle = await this.loadFrames(sheets.idle);
+    this.animations.walk = await this.loadFrames(sheets.walk);
+    this.animations.run = await this.loadFrames(sheets.run);
+    const attackSegments = await this.loadAttackSegments(sheets.attack);
+    this.animations.attack = attackSegments.frames;
+    this.attackHitFrames = attackSegments.hitFrames;
+    this.animations.runAttack = await this.loadFrames(sheets.runAttack);
+    this.animations.hit = await this.loadFrames(sheets.hit);
+    this.animations.dead = await this.loadFrames(sheets.dead);
+    const jumpSegments = await this.loadJumpSegments(sheets.jump);
+    this.jumpFrames = jumpSegments;
 
     this.assetsReady = true;
     this.playAnimation("idle", this.animations.idle, { loop: true });
@@ -804,21 +805,22 @@ export class Player {
       const sheet = (await Assets.load(jsonPath)) as Spritesheet;
       const frames = this.extractFrames(sheet);
       if (frames.length > 0) {
-        return frames;
+        return this.downscaleFrames(frames);
       }
     } catch {
       // Fallback to single texture if spritesheet JSON is missing.
     }
 
     const texture = (await Assets.load(imagePath)) as Texture;
-    return [texture];
+    return this.downscaleFrames([texture]);
   }
 
   private async loadAttackSegments(sheetPath: string) {
     const { json: jsonPath } = getSpriteSheetPaths(sheetPath);
     try {
       const sheet = (await Assets.load(jsonPath)) as Spritesheet;
-      const frames = this.extractFrames(sheet);
+      const originalFrames = this.extractFrames(sheet);
+      const frames = await this.downscaleFrames(originalFrames);
       const animations = sheet.animations;
       const hitFrames =
         animations?.attackHit ??
@@ -829,7 +831,7 @@ export class Player {
         animations?.Attackhit;
       const hitSet = new Set<number>();
       const frameIndex = new Map<Texture, number>();
-      frames.forEach((frame, index) => {
+      originalFrames.forEach((frame, index) => {
         frameIndex.set(frame, index);
       });
       if (hitFrames && hitFrames.length > 0) {
@@ -866,11 +868,17 @@ export class Player {
       const jumpLand = animations?.jumpLand ?? animations?.JumpLand;
 
       if (jumpUp && jumpHold && jumpFall && jumpLand) {
+        const [scaledUp, scaledHold, scaledFall, scaledLand] = await Promise.all([
+          this.downscaleFrames(jumpUp),
+          this.downscaleFrames(jumpHold),
+          this.downscaleFrames(jumpFall),
+          this.downscaleFrames(jumpLand),
+        ]);
         return {
-          jumpUp,
-          hold: jumpHold,
-          fall: jumpFall,
-          land: jumpLand,
+          jumpUp: scaledUp,
+          hold: scaledHold,
+          fall: scaledFall,
+          land: scaledLand,
         };
       }
     } catch {
@@ -878,6 +886,36 @@ export class Player {
     }
 
     return null;
+  }
+
+  private async downscaleFrames(frames: Texture[]) {
+    if (this.textureScale >= 1) {
+      return frames;
+    }
+
+    const scaledFrames: Texture[] = [];
+    for (const frame of frames) {
+      const resource = frame.source?.resource as CanvasImageSource | undefined;
+      if (!resource) {
+        scaledFrames.push(frame);
+        continue;
+      }
+      const { x, y, width, height } = frame.frame;
+      const targetWidth = Math.max(1, Math.round(width * this.textureScale));
+      const targetHeight = Math.max(1, Math.round(height * this.textureScale));
+      const canvas = document.createElement("canvas");
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        scaledFrames.push(frame);
+        continue;
+      }
+      ctx.drawImage(resource, x, y, width, height, 0, 0, targetWidth, targetHeight);
+      scaledFrames.push(Texture.from(canvas));
+    }
+
+    return scaledFrames;
   }
 
   private extractFrames(sheet: Spritesheet) {
