@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte";
+  import { Assets } from "pixi.js";
   import { GamePlayPage } from "$lib/pages/GamePlayPage";
   import { LevelEditorPage } from "$lib/pages/LevelEditorPage";
   import { MainMenuPage } from "$lib/pages/MainMenuPage";
@@ -208,6 +209,23 @@
   }
 
   onMount(() => {
+    if (/SamsungBrowser/i.test(navigator.userAgent)) {
+      Assets.setPreferences({ preferCreateImageBitmap: false });
+    }
+
+    const preventTouchRefresh = (event: TouchEvent) => {
+      if (currentPageId !== "GamePlay") {
+        return;
+      }
+      const target = event.target as HTMLElement | null;
+      if (target?.closest("input, textarea, select, [contenteditable='true']")) {
+        return;
+      }
+      event.preventDefault();
+    };
+    window.addEventListener("touchstart", preventTouchRefresh, { passive: false });
+    window.addEventListener("touchmove", preventTouchRefresh, { passive: false });
+
     const manager = new PageManager();
     const splash = new SplashScreenPage();
     const menu = new MainMenuPage();
@@ -386,6 +404,8 @@
     editorGamepadRaf = window.requestAnimationFrame(updateEditorGamepad);
 
     return () => {
+      window.removeEventListener("touchstart", preventTouchRefresh);
+      window.removeEventListener("touchmove", preventTouchRefresh);
       window.removeEventListener("resize", resizeHandler);
       window.removeEventListener("keydown", handleKeydown);
       window.removeEventListener("pointerdown", handlePointerDown);
@@ -817,6 +837,14 @@
   font-family: "Gabarito", "Noto Sans TC", sans-serif;
 }
 
+:global(input),
+:global(textarea),
+:global(select) {
+  -webkit-user-select: text;
+  user-select: text;
+  touch-action: manipulation;
+}
+
 :root {
   font-family: "Gabarito", "Noto Sans TC", sans-serif;
   font-size: 16px;
@@ -831,6 +859,21 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+}
+
+:global(html),
+:global(body) {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
+  overflow: hidden;
+  overscroll-behavior: none;
+  overscroll-behavior-y: none;
 }
 
 .container {

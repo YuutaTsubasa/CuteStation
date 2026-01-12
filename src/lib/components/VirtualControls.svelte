@@ -56,6 +56,7 @@
     }
 
     updateStick(event);
+    event.preventDefault();
   }
 
   function onStickUp(event: PointerEvent) {
@@ -67,6 +68,10 @@
     activePointerId = null;
     stickOffset = { x: 0, y: 0 };
     input.setMoveX(0);
+  }
+
+  function onTouchBlock(event: TouchEvent) {
+    event.preventDefault();
   }
 
   function onJumpDown(event: PointerEvent) {
@@ -110,6 +115,9 @@
       onpointerup={onStickUp}
       onpointercancel={onStickUp}
       onpointerleave={onStickUp}
+      ontouchstart={onTouchBlock}
+      ontouchmove={onTouchBlock}
+      ontouchend={onTouchBlock}
     >
       <div
         class="joystick-thumb"
@@ -126,6 +134,9 @@
       onpointerup={onAttackUp}
       onpointercancel={onAttackUp}
       onpointerleave={onAttackUp}
+      ontouchstart={onTouchBlock}
+      ontouchmove={onTouchBlock}
+      ontouchend={onTouchBlock}
     >
       Attack
     </button>
@@ -137,6 +148,9 @@
       onpointerup={onJumpUp}
       onpointercancel={onJumpUp}
       onpointerleave={onJumpUp}
+      ontouchstart={onTouchBlock}
+      ontouchmove={onTouchBlock}
+      ontouchend={onTouchBlock}
     >
       Jump
     </button>
