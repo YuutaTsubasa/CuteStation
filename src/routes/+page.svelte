@@ -817,6 +817,14 @@
   font-family: "Gabarito", "Noto Sans TC", sans-serif;
 }
 
+:global(input),
+:global(textarea),
+:global(select) {
+  -webkit-user-select: text;
+  user-select: text;
+  touch-action: manipulation;
+}
+
 :root {
   font-family: "Gabarito", "Noto Sans TC", sans-serif;
   font-size: 16px;
@@ -831,6 +839,18 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   -webkit-text-size-adjust: 100%;
+}
+
+:global(html),
+:global(body) {
+  margin: 0;
+  width: 100%;
+  height: 100%;
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: none;
 }
 
 .container {
