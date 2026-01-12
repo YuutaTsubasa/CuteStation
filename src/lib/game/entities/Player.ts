@@ -41,7 +41,7 @@ export class Player {
     | null = null;
   private assetsReady = false;
   private readonly scale: number;
-  private readonly baseScale = 144 / 1024;
+  private readonly baseScale = 144 / 512;
   private readonly footOffset = 14;
   private facing = 1;
   private jumpPhase: "none" | "jumpUp" | "hold" | "fall" | "land" = "none";
@@ -879,6 +879,7 @@ export class Player {
 
     return null;
   }
+
 
   private extractFrames(sheet: Spritesheet) {
     const animationKeys = Object.keys(sheet.animations);

@@ -4,600 +4,600 @@
       "frame": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_idle_01.webp": {
       "frame": {
-        "x": 1024,
+        "x": 512,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_idle_02.webp": {
       "frame": {
-        "x": 2048,
+        "x": 1024,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_idle_03.webp": {
       "frame": {
-        "x": 3072,
+        "x": 1536,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_idle_04.webp": {
       "frame": {
-        "x": 4096,
+        "x": 2048,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_idle_05.webp": {
       "frame": {
-        "x": 5120,
+        "x": 2560,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_idle_06.webp": {
       "frame": {
         "x": 0,
-        "y": 1024,
-        "w": 1024,
-        "h": 1024
+        "y": 512,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_idle_07.webp": {
       "frame": {
-        "x": 1024,
-        "y": 1024,
-        "w": 1024,
-        "h": 1024
+        "x": 512,
+        "y": 512,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_idle_08.webp": {
       "frame": {
-        "x": 2048,
-        "y": 1024,
-        "w": 1024,
-        "h": 1024
+        "x": 1024,
+        "y": 512,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_idle_09.webp": {
       "frame": {
-        "x": 3072,
-        "y": 1024,
-        "w": 1024,
-        "h": 1024
+        "x": 1536,
+        "y": 512,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_idle_10.webp": {
       "frame": {
-        "x": 4096,
-        "y": 1024,
-        "w": 1024,
-        "h": 1024
+        "x": 2048,
+        "y": 512,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_idle_11.webp": {
       "frame": {
-        "x": 5120,
-        "y": 1024,
-        "w": 1024,
-        "h": 1024
+        "x": 2560,
+        "y": 512,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_idle_12.webp": {
       "frame": {
         "x": 0,
-        "y": 2048,
-        "w": 1024,
-        "h": 1024
+        "y": 1024,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_idle_13.webp": {
       "frame": {
-        "x": 1024,
-        "y": 2048,
-        "w": 1024,
-        "h": 1024
+        "x": 512,
+        "y": 1024,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_idle_14.webp": {
       "frame": {
-        "x": 2048,
-        "y": 2048,
-        "w": 1024,
-        "h": 1024
+        "x": 1024,
+        "y": 1024,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_idle_15.webp": {
       "frame": {
-        "x": 3072,
-        "y": 2048,
-        "w": 1024,
-        "h": 1024
+        "x": 1536,
+        "y": 1024,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_idle_16.webp": {
       "frame": {
-        "x": 4096,
-        "y": 2048,
-        "w": 1024,
-        "h": 1024
+        "x": 2048,
+        "y": 1024,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_idle_17.webp": {
       "frame": {
-        "x": 5120,
-        "y": 2048,
-        "w": 1024,
-        "h": 1024
+        "x": 2560,
+        "y": 1024,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_idle_18.webp": {
       "frame": {
         "x": 0,
-        "y": 3072,
-        "w": 1024,
-        "h": 1024
+        "y": 1536,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_idle_19.webp": {
       "frame": {
-        "x": 1024,
-        "y": 3072,
-        "w": 1024,
-        "h": 1024
+        "x": 512,
+        "y": 1536,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_idle_20.webp": {
       "frame": {
-        "x": 2048,
-        "y": 3072,
-        "w": 1024,
-        "h": 1024
+        "x": 1024,
+        "y": 1536,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_idle_21.webp": {
       "frame": {
-        "x": 3072,
-        "y": 3072,
-        "w": 1024,
-        "h": 1024
+        "x": 1536,
+        "y": 1536,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_idle_22.webp": {
       "frame": {
-        "x": 4096,
-        "y": 3072,
-        "w": 1024,
-        "h": 1024
+        "x": 2048,
+        "y": 1536,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_idle_23.webp": {
       "frame": {
-        "x": 5120,
-        "y": 3072,
-        "w": 1024,
-        "h": 1024
+        "x": 2560,
+        "y": 1536,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_idle_24.webp": {
       "frame": {
         "x": 0,
-        "y": 4096,
-        "w": 1024,
-        "h": 1024
+        "y": 2048,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_idle_25.webp": {
       "frame": {
-        "x": 1024,
-        "y": 4096,
-        "w": 1024,
-        "h": 1024
+        "x": 512,
+        "y": 2048,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_idle_26.webp": {
       "frame": {
-        "x": 2048,
-        "y": 4096,
-        "w": 1024,
-        "h": 1024
+        "x": 1024,
+        "y": 2048,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_idle_27.webp": {
       "frame": {
-        "x": 3072,
-        "y": 4096,
-        "w": 1024,
-        "h": 1024
+        "x": 1536,
+        "y": 2048,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_idle_28.webp": {
       "frame": {
-        "x": 4096,
-        "y": 4096,
-        "w": 1024,
-        "h": 1024
+        "x": 2048,
+        "y": 2048,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     },
     "knight_idle_29.webp": {
       "frame": {
-        "x": 5120,
-        "y": 4096,
-        "w": 1024,
-        "h": 1024
+        "x": 2560,
+        "y": 2048,
+        "w": 512,
+        "h": 512
       },
       "rotated": false,
       "trimmed": false,
       "spriteSourceSize": {
         "x": 0,
         "y": 0,
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       },
       "sourceSize": {
-        "w": 1024,
-        "h": 1024
+        "w": 512,
+        "h": 512
       }
     }
   },
@@ -639,8 +639,8 @@
     "image": "knight_idle.webp",
     "format": "RGBA8888",
     "size": {
-      "w": 6144,
-      "h": 5120
+      "w": 3072,
+      "h": 2560
     },
     "scale": "1"
   }
