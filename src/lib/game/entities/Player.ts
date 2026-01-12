@@ -140,17 +140,16 @@ export class Player {
     }
 
     const sheets = assetManifest.characters.knight.sheets;
-    this.animations.idle = await this.loadFrames(sheets.idle);
-    this.animations.walk = await this.loadFrames(sheets.walk);
-    this.animations.run = await this.loadFrames(sheets.run);
-    const attackSegments = await this.loadAttackSegments(sheets.attack);
-    this.animations.attack = attackSegments.frames;
-    this.attackHitFrames = attackSegments.hitFrames;
-    this.animations.runAttack = await this.loadFrames(sheets.runAttack);
-    this.animations.hit = await this.loadFrames(sheets.hit);
-    this.animations.dead = await this.loadFrames(sheets.dead);
-    const jumpSegments = await this.loadJumpSegments(sheets.jump);
-    this.jumpFrames = jumpSegments;
+    const idleFrames = await this.loadFrames(sheets.idle);
+    this.animations.idle = idleFrames;
+    this.animations.walk = idleFrames;
+    this.animations.run = idleFrames;
+    this.animations.attack = idleFrames;
+    this.animations.runAttack = idleFrames;
+    this.animations.hit = idleFrames;
+    this.animations.dead = idleFrames;
+    this.attackHitFrames = new Set<number>([0]);
+    this.jumpFrames = null;
 
     this.assetsReady = true;
     this.playAnimation("idle", this.animations.idle, { loop: true });
