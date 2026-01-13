@@ -185,7 +185,7 @@
     display: flex;
     justify-content: space-between;
     align-items: flex-end;
-    padding: 3vh 4vw calc(3vh + env(safe-area-inset-bottom)) 4vw;
+    padding: 3vh 4vw calc(6vh + env(safe-area-inset-bottom)) 4vw;
     pointer-events: none;
     z-index: 5;
   }

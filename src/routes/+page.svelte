@@ -89,8 +89,8 @@
   const frameWidth = 1920;
   const frameHeight = 1080;
 
-  let musicVolume = $state(100);
-  let sfxVolume = $state(100);
+  let musicVolume = $state(50);
+  let sfxVolume = $state(50);
   let selectedLocale = $state(LocalizationStore.getLocale());
   let localeUnsubscribe: (() => void) | null = null;
 
@@ -261,17 +261,29 @@
 
   onMount(() => {
     void LocalizationStore.initialize();
-    const storedBgm = typeof localStorage !== "undefined"
-      ? Number(localStorage.getItem("cutestation.bgmVolume"))
-      : NaN;
-    if (!Number.isNaN(storedBgm)) {
-      audioManager.setBgmVolume(storedBgm);
-    }
-    const storedSfx = typeof localStorage !== "undefined"
-      ? Number(localStorage.getItem("cutestation.sfxVolume"))
-      : NaN;
-    if (!Number.isNaN(storedSfx)) {
-      audioManager.setSfxVolume(storedSfx);
+    const defaultVolume = 0.5;
+    if (typeof localStorage !== "undefined") {
+      const storedBgm = localStorage.getItem("cutestation.bgmVolume");
+      if (storedBgm !== null) {
+        const parsedBgm = Number(storedBgm);
+        if (!Number.isNaN(parsedBgm)) {
+          audioManager.setBgmVolume(parsedBgm);
+        }
+      } else {
+        audioManager.setBgmVolume(defaultVolume);
+      }
+      const storedSfx = localStorage.getItem("cutestation.sfxVolume");
+      if (storedSfx !== null) {
+        const parsedSfx = Number(storedSfx);
+        if (!Number.isNaN(parsedSfx)) {
+          audioManager.setSfxVolume(parsedSfx);
+        }
+      } else {
+        audioManager.setSfxVolume(defaultVolume);
+      }
+    } else {
+      audioManager.setBgmVolume(defaultVolume);
+      audioManager.setSfxVolume(defaultVolume);
     }
     syncVolumesFromAudio();
     localeUnsubscribe = LocalizationStore.locale.subscribe((value) => {
@@ -1357,6 +1369,35 @@
 
 .settings-row input[type="range"] {
   width: 100%;
+  height: 18px;
+  appearance: none;
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 999px;
+}
+
+.settings-row input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #0f172a;
+  border: 2px solid #ffffff;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+}
+
+.settings-row input[type="range"]::-moz-range-thumb {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: #0f172a;
+  border: 2px solid #ffffff;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+}
+
+.settings-row input[type="range"]::-moz-range-track {
+  height: 18px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.4);
 }
 
 .settings-row select {

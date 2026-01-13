@@ -46,12 +46,24 @@
     background-color: #000000;
     color: #ffffff;
     border: none;
-    font-size: 1.5rem;
-    padding: 0 4rem 0 0.5rem;
+    font-size: 1.6rem;
+    padding: 0.6rem 2.6rem;
+    min-width: 84px;
+    min-height: 48px;
+    border-radius: 12px;
     box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
     margin-left: 1rem;
     margin-right: 1rem;
     cursor: pointer;
+  }
+
+  @media (max-width: 900px) {
+    .backButton {
+      font-size: 1.8rem;
+      padding: 0.8rem 3rem;
+      min-width: 96px;
+      min-height: 56px;
+    }
   }
 
   .backButton:global(.navFocused),

@@ -39,8 +39,8 @@ const getAudioState = (): AudioState => {
     globalScope[globalKey] = {
       bgm: null,
       bgmPath: null,
-      bgmVolume: 1,
-      sfxVolume: 1,
+      bgmVolume: 0.5,
+      sfxVolume: 0.5,
       audioContext: null,
       sfxGain: null,
       audioNodes: new WeakMap<HTMLAudioElement, MediaElementAudioSourceNode>(),
