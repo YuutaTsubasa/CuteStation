@@ -97,10 +97,10 @@
   const availableLocales = LocalizationStore.availableLocales;
 
   const localeLabelMap: Record<string, string> = {
-    "zh-tw": "Traditional Chinese",
+    "zh-tw": "繁體中文",
     en: "English",
-    ja: "Japanese",
-    ko: "Korean",
+    ja: "日本語",
+    ko: "한국어",
   };
 
   const getLocaleLabel = (locale: string) =>
@@ -1365,6 +1365,39 @@
   border: 1px solid #cbd5e1;
   background: #ffffff;
   font-size: 20px;
+}
+
+@media (max-width: 900px) {
+  .settings-panel {
+    margin: 96px auto 0;
+    width: 92%;
+    padding: 28px 24px;
+    gap: 20px;
+  }
+
+  .settings-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .settings-label {
+    font-size: 26px;
+  }
+
+  .settings-value {
+    font-size: 22px;
+    text-align: right;
+    padding-left: 0;
+  }
+
+  .settings-row input[type="range"] {
+    height: 32px;
+  }
+
+  .settings-row select {
+    font-size: 22px;
+    padding: 12px;
+  }
 }
 
 .stage-overlay {

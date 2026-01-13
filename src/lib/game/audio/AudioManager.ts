@@ -13,7 +13,21 @@ type AudioState = {
   bgmPath: string | null;
   bgmVolume: number;
   sfxVolume: number;
+  audioContext: AudioContext | null;
+  sfxGain: GainNode | null;
+  audioNodes: WeakMap<HTMLAudioElement, MediaElementAudioSourceNode>;
+  gainNodes: WeakMap<HTMLAudioElement, GainNode>;
   fadeTimers: Map<HTMLAudioElement, number>;
+};
+
+const isIOSDevice = () => {
+  if (typeof navigator === "undefined") {
+    return false;
+  }
+  return (
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+  );
 };
 
 const getAudioState = (): AudioState => {
@@ -27,6 +41,10 @@ const getAudioState = (): AudioState => {
       bgmPath: null,
       bgmVolume: 1,
       sfxVolume: 1,
+      audioContext: null,
+      sfxGain: null,
+      audioNodes: new WeakMap<HTMLAudioElement, MediaElementAudioSourceNode>(),
+      gainNodes: new WeakMap<HTMLAudioElement, GainNode>(),
       fadeTimers: new Map<HTMLAudioElement, number>(),
     };
   }
@@ -35,6 +53,93 @@ const getAudioState = (): AudioState => {
 
 export class AudioManager {
   private state = getAudioState();
+
+  private shouldUseWebAudio() {
+    return isIOSDevice() && typeof AudioContext !== "undefined";
+  }
+
+  private ensureAudioContext() {
+    if (!this.shouldUseWebAudio()) {
+      return null;
+    }
+    if (!this.state.audioContext) {
+      this.state.audioContext = new AudioContext();
+      this.state.sfxGain = this.state.audioContext.createGain();
+      this.state.sfxGain.gain.value = this.state.sfxVolume;
+      this.state.sfxGain.connect(this.state.audioContext.destination);
+    }
+    return this.state.audioContext;
+  }
+
+  private async resumeAudioContext() {
+    const context = this.ensureAudioContext();
+    if (!context) {
+      return;
+    }
+    if (context.state === "suspended") {
+      try {
+        await context.resume();
+      } catch {
+        // Ignore resume errors.
+      }
+    }
+  }
+
+  private attachBgmAudio(audio: HTMLAudioElement) {
+    const context = this.ensureAudioContext();
+    if (!context) {
+      return;
+    }
+    if (this.state.audioNodes.has(audio)) {
+      return;
+    }
+    const source = context.createMediaElementSource(audio);
+    const gain = context.createGain();
+    gain.gain.value = this.state.bgmVolume;
+    source.connect(gain);
+    gain.connect(context.destination);
+    this.state.audioNodes.set(audio, source);
+    this.state.gainNodes.set(audio, gain);
+  }
+
+  private attachSfxAudio(audio: HTMLAudioElement, baseVolume: number) {
+    const context = this.ensureAudioContext();
+    if (!context) {
+      return;
+    }
+    if (this.state.audioNodes.has(audio)) {
+      return;
+    }
+    const source = context.createMediaElementSource(audio);
+    const gain = context.createGain();
+    gain.gain.value = Math.max(0, Math.min(1, baseVolume));
+    source.connect(gain);
+    if (this.state.sfxGain) {
+      gain.connect(this.state.sfxGain);
+    } else {
+      gain.connect(context.destination);
+    }
+    this.state.audioNodes.set(audio, source);
+    this.state.gainNodes.set(audio, gain);
+  }
+
+  private setAudioOutputVolume(audio: HTMLAudioElement, volume: number) {
+    const clamped = Math.max(0, Math.min(1, volume));
+    const gain = this.state.gainNodes.get(audio);
+    if (gain && this.shouldUseWebAudio()) {
+      gain.gain.value = clamped;
+      return;
+    }
+    audio.volume = clamped;
+  }
+
+  private getAudioOutputVolume(audio: HTMLAudioElement) {
+    const gain = this.state.gainNodes.get(audio);
+    if (gain && this.shouldUseWebAudio()) {
+      return gain.gain.value;
+    }
+    return audio.volume;
+  }
 
   async playBgm(path: string, options: PlayOptions = {}) {
     const loop = options.loop ?? true;
@@ -47,7 +152,8 @@ export class AudioManager {
 
     if (this.state.bgm && this.state.bgmPath === path) {
       if (this.state.bgm.paused) {
-        this.state.bgm.volume = this.state.bgmVolume;
+        this.setAudioOutputVolume(this.state.bgm, this.state.bgmVolume);
+        await this.resumeAudioContext();
         try {
           await this.state.bgm.play();
         } catch {
@@ -62,16 +168,17 @@ export class AudioManager {
       return;
     }
 
-    const audio = this.createAudio(path, loop);
+    const audio = this.createAudio(path, loop, "bgm");
     this.state.bgm = audio;
     this.state.bgmPath = path;
 
     if (fadeInMs > 0) {
-      audio.volume = 0;
+      this.setAudioOutputVolume(audio, 0);
     } else {
-      audio.volume = this.state.bgmVolume;
+      this.setAudioOutputVolume(audio, this.state.bgmVolume);
     }
 
+    await this.resumeAudioContext();
     try {
       await audio.play();
     } catch {
@@ -96,7 +203,8 @@ export class AudioManager {
 
     if (this.state.bgm && this.state.bgmPath === path) {
       if (this.state.bgm.paused) {
-        this.state.bgm.volume = this.state.bgmVolume;
+        this.setAudioOutputVolume(this.state.bgm, this.state.bgmVolume);
+        await this.resumeAudioContext();
         try {
           await this.state.bgm.play();
         } catch {
@@ -106,9 +214,10 @@ export class AudioManager {
       return;
     }
 
-    const next = this.createAudio(path, loop);
-    next.volume = 0;
+    const next = this.createAudio(path, loop, "bgm");
+    this.setAudioOutputVolume(next, 0);
 
+    await this.resumeAudioContext();
     try {
       await next.play();
     } catch {
@@ -151,7 +260,7 @@ export class AudioManager {
   setBgmVolume(volume: number) {
     this.state.bgmVolume = Math.max(0, Math.min(1, volume));
     if (this.state.bgm) {
-      this.state.bgm.volume = this.state.bgmVolume;
+      this.setAudioOutputVolume(this.state.bgm, this.state.bgmVolume);
     }
   }
 
@@ -161,6 +270,9 @@ export class AudioManager {
 
   setSfxVolume(volume: number) {
     this.state.sfxVolume = Math.max(0, Math.min(1, volume));
+    if (this.state.sfxGain && this.shouldUseWebAudio()) {
+      this.state.sfxGain.gain.value = this.state.sfxVolume;
+    }
   }
 
   getSfxVolume() {
@@ -171,18 +283,33 @@ export class AudioManager {
     if (!path) {
       return;
     }
-    const audio = this.createAudio(path, false);
     const base = Math.max(0, Math.min(1, options.volume ?? 1));
-    audio.volume = Math.max(0, Math.min(1, base * this.state.sfxVolume));
+    const audio = this.createAudio(path, false, "sfx", base);
+    if (!this.shouldUseWebAudio()) {
+      audio.volume = Math.max(0, Math.min(1, base * this.state.sfxVolume));
+    }
+    void this.resumeAudioContext();
     void audio.play().catch(() => {
       // Ignore autoplay errors.
     });
   }
 
-  private createAudio(path: string, loop: boolean) {
+  private createAudio(
+    path: string,
+    loop: boolean,
+    channel: "bgm" | "sfx",
+    baseVolume = 1,
+  ) {
     const audio = new Audio(path);
     audio.loop = loop;
     audio.preload = "auto";
+    if (this.shouldUseWebAudio()) {
+      if (channel === "bgm") {
+        this.attachBgmAudio(audio);
+      } else {
+        this.attachSfxAudio(audio, baseVolume);
+      }
+    }
     return audio;
   }
 
@@ -194,14 +321,14 @@ export class AudioManager {
   ) {
     this.clearFade(audio);
     const clampedTarget = Math.max(0, Math.min(1, targetVolume));
-    const startVolume = Math.max(0, Math.min(1, audio.volume));
+    const startVolume = Math.max(0, Math.min(1, this.getAudioOutputVolume(audio)));
     const delta = clampedTarget - startVolume;
     const start = performance.now();
 
     const tick = (now: number) => {
       const progress = Math.min((now - start) / durationMs, 1);
       const nextVolume = startVolume + delta * progress;
-      audio.volume = Math.max(0, Math.min(1, nextVolume));
+      this.setAudioOutputVolume(audio, nextVolume);
       if (progress >= 1) {
         this.clearFade(audio);
         if (onComplete) {
