@@ -40,6 +40,7 @@
     );
     display: flex;
     align-items: center;
+    padding: 1.05rem 0 1.65rem;
     margin-bottom: 1rem;
     z-index: 1000;
     box-sizing: border-box;
@@ -57,9 +58,9 @@
     color: #ffffff;
     border: none;
     font-size: 1.6rem;
-    padding: 0.6rem 2.6rem;
+    padding: 0.4rem 2.2rem;
     min-width: 84px;
-    min-height: 48px;
+    min-height: 40px;
     border-radius: 12px;
     box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
     margin-right: 1rem;
@@ -73,9 +74,9 @@
 
     .backButton {
       font-size: 1.8rem;
-      padding: 0.8rem 3rem;
+      padding: 0.6rem 2.6rem;
       min-width: 96px;
-      min-height: 56px;
+      min-height: 48px;
     }
   }
 
@@ -92,6 +93,8 @@
     color: #1e293b;
     font-family: "Gabarito", "Noto Serif TC", "Noto Sans TC", sans-serif;
     font-weight: 700;
+    margin: 0;
+    line-height: 1.2;
   }
 
   .topbarSubtitle {

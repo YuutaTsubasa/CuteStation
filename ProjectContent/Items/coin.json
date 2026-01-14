@@ -1,0 +1,206 @@
+{
+  "frames": {
+    "coin_00.webp": {
+      "frame": {
+        "x": 0,
+        "y": 0,
+        "w": 360,
+        "h": 360
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 360,
+        "h": 360
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      }
+    },
+    "coin_01.webp": {
+      "frame": {
+        "x": 360,
+        "y": 0,
+        "w": 360,
+        "h": 360
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 360,
+        "h": 360
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      }
+    },
+    "coin_02.webp": {
+      "frame": {
+        "x": 720,
+        "y": 0,
+        "w": 360,
+        "h": 360
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 360,
+        "h": 360
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      }
+    },
+    "coin_03.webp": {
+      "frame": {
+        "x": 0,
+        "y": 360,
+        "w": 360,
+        "h": 360
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 360,
+        "h": 360
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      }
+    },
+    "coin_04.webp": {
+      "frame": {
+        "x": 360,
+        "y": 360,
+        "w": 360,
+        "h": 360
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 360,
+        "h": 360
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      }
+    },
+    "coin_05.webp": {
+      "frame": {
+        "x": 720,
+        "y": 360,
+        "w": 360,
+        "h": 360
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 360,
+        "h": 360
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      }
+    },
+    "coin_06.webp": {
+      "frame": {
+        "x": 0,
+        "y": 720,
+        "w": 360,
+        "h": 360
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 360,
+        "h": 360
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      }
+    },
+    "coin_07.webp": {
+      "frame": {
+        "x": 360,
+        "y": 720,
+        "w": 360,
+        "h": 360
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 360,
+        "h": 360
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      }
+    },
+    "coin_08.webp": {
+      "frame": {
+        "x": 720,
+        "y": 720,
+        "w": 360,
+        "h": 360
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 360,
+        "h": 360
+      },
+      "sourceSize": {
+        "w": 360,
+        "h": 360
+      }
+    }
+  },
+  "animations": {
+    "coin": [
+      "coin_00.webp",
+      "coin_01.webp",
+      "coin_02.webp",
+      "coin_03.webp",
+      "coin_04.webp",
+      "coin_05.webp",
+      "coin_06.webp",
+      "coin_07.webp",
+      "coin_08.webp"
+    ]
+  },
+  "meta": {
+    "image": "coin.webp",
+    "format": "RGBA8888",
+    "size": {
+      "w": 1080,
+      "h": 1080
+    },
+    "scale": "1"
+  }
+}

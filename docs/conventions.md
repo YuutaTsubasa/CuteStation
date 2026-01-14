@@ -13,3 +13,9 @@ Reports are written to:
 
 Run the checker after adding or renaming assets in `ProjectContent/`.
 This includes UI backgrounds, fonts, and audio SFX referenced by `assetManifest.json`.
+
+## Post-task Cleanup
+
+- Run the code convention check.
+- Update `README.md`, `AGENTS.md`, and `docs/*.md` when workflow guidance changes.
+- Commit and push once changes are ready.

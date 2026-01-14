@@ -181,6 +181,7 @@ export class LevelEditorPage extends Page {
       showEnemies: true,
     });
     runtime.attach(world);
+    await runtime.loadCoinAssets();
     this.gridVisible = true;
     this.drawGrid();
     window.requestAnimationFrame(() => this.drawGrid());

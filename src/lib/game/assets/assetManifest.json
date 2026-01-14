@@ -41,6 +41,11 @@
       }
     }
   },
+  "items": {
+    "coin": {
+      "sheet": "/ProjectContent/Items/coin.json"
+    }
+  },
   "audio": {
     "bgm": {
       "menuDefault": "/ProjectContent/Audio/BGM/Menu/default.mp3",

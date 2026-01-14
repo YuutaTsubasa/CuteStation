@@ -252,6 +252,7 @@ export class GamePlayPage extends Page {
       showSpawn: false,
     });
     runtime.attach(world);
+    await runtime.loadCoinAssets();
     this.runtime = runtime;
     this.platforms = runtime.getSolidsWorld();
     this.worldBounds = runtime.getWorldBounds();

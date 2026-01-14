@@ -110,6 +110,12 @@ npm run convention:report
 Reports are written to `reports/convention-report.json` and `reports/convention-report.md`.
 Details live in `docs/conventions.md`.
 
+## Post-task Cleanup
+
+- Run the code convention check.
+- Update `README.md`, `AGENTS.md`, and `docs/*.md` when workflow guidance changes.
+- Commit and push once changes are ready.
+
 ## Current MVP Progress
 
 - Phase 1: PixiJS integration + page system skeleton (Splash/MainMenu/GamePlay) done.

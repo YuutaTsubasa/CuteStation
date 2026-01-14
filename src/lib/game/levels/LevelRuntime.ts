@@ -1,6 +1,14 @@
-import { Container, Graphics } from "pixi.js";
+import {
+  AnimatedSprite,
+  Assets,
+  Container,
+  Graphics,
+  type Spritesheet,
+  type Texture,
+} from "pixi.js";
 import type { LevelData, LevelEnemy, LevelPoint, LevelRect } from "./LevelLoader";
 import type { Rect } from "../systems/Physics";
+import { assetManifest, getSpriteSheetPaths } from "../assets/AssetManifest";
 
 export type LevelRuntimeOptions = {
   worldScale: number;
@@ -35,7 +43,9 @@ export class LevelRuntime {
   private world: Container | null = null;
   private solidsWorld: Rect[] = [];
   private solidGraphics: Graphics[] = [];
-  private coinGraphics = new Map<string, Graphics>();
+  private coinGraphics = new Map<string, Graphics | AnimatedSprite>();
+  private coinFrames: Texture[] | null = null;
+  private readonly coinAnimationSpeed = 0.18;
   private goalGraphic: Graphics | null = null;
   private spawnGraphic: Graphics | null = null;
   private worldBoundsGraphic: Graphics | null = null;
@@ -77,6 +87,7 @@ export class LevelRuntime {
       gfx.destroy();
     }
     this.coinGraphics.clear();
+    this.coinFrames = null;
     for (const gfx of this.enemyGraphics) {
       gfx.destroy();
     }
@@ -123,6 +134,34 @@ export class LevelRuntime {
 
   getLevelData() {
     return this.level;
+  }
+
+  async loadCoinAssets() {
+    if (this.coinFrames) {
+      return;
+    }
+
+    const sheetPath = assetManifest.items.coin.sheet;
+    const { json: jsonPath, image: imagePath } = getSpriteSheetPaths(sheetPath);
+    try {
+      const sheet = (await Assets.load(jsonPath)) as Spritesheet;
+      const frames = this.extractFrames(sheet);
+      if (frames.length > 0) {
+        this.coinFrames = frames;
+        this.rebuildCoins();
+        return;
+      }
+    } catch {
+      // Fallback to single texture if spritesheet JSON is missing.
+    }
+
+    try {
+      const texture = (await Assets.load(imagePath)) as Texture;
+      this.coinFrames = [texture];
+      this.rebuildCoins();
+    } catch {
+      // Ignore coin asset failures; fallback visuals stay.
+    }
   }
 
   collectCoin(id: string) {
@@ -362,6 +401,22 @@ export class LevelRuntime {
     this.updateWorldBounds();
   }
 
+  private rebuildCoins() {
+    for (const gfx of this.coinGraphics.values()) {
+      gfx.destroy();
+    }
+    this.coinGraphics.clear();
+
+    if (!this.world || !this.showCoins) {
+      return;
+    }
+
+    for (const coin of this.level.coins) {
+      const gfx = this.drawCoin(this.toWorldPoint(coin));
+      this.coinGraphics.set(coin.id, gfx);
+    }
+  }
+
   private updateWorldBounds() {
     const worldRect = this.getWorldRect();
     if (worldRect) {
@@ -409,6 +464,24 @@ export class LevelRuntime {
   }
 
   private drawCoin(point: Point) {
+    if (this.coinFrames && this.coinFrames.length > 0) {
+      const sprite = new AnimatedSprite(this.coinFrames);
+      sprite.anchor.set(0.5, 0.5);
+      sprite.animationSpeed = this.coinAnimationSpeed;
+      sprite.play();
+
+      const texture = this.coinFrames[0];
+      const frameSize = texture.orig?.width ?? texture.width;
+      const targetSize = 24 * this.worldScale;
+      const scale = frameSize > 0 ? targetSize / frameSize : 1;
+      sprite.scale.set(scale);
+
+      sprite.x = point.x;
+      sprite.y = point.y;
+      this.world?.addChild(sprite);
+      return sprite;
+    }
+
     const gfx = new Graphics();
     gfx.circle(0, 0, 12 * this.worldScale).fill(0xf5c542);
     gfx.x = point.x;
@@ -432,6 +505,18 @@ export class LevelRuntime {
 
   private getEnemyColor(enemy?: LevelEnemy) {
     return enemy?.enemyType === "patrol" ? 0xff6b6b : 0x6bd6ff;
+  }
+
+  private extractFrames(sheet: Spritesheet) {
+    const animationKeys = Object.keys(sheet.animations);
+    if (animationKeys.length > 0) {
+      const frames = sheet.animations[animationKeys[0]];
+      if (frames) {
+        return frames;
+      }
+    }
+
+    return Object.values(sheet.textures);
   }
 
   private drawGoal(rect: Rect) {
