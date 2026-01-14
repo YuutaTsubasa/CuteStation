@@ -46,6 +46,19 @@
       "sheet": "/ProjectContent/Items/coin.json"
     }
   },
+  "enemies": {
+    "slime": {
+      "sheets": {
+        "run": "/ProjectContent/Enemies/slime/slime_running.json",
+        "hit": "/ProjectContent/Enemies/slime/slime_hit.json"
+      }
+    },
+    "crystal": {
+      "sheets": {
+        "idle": "/ProjectContent/Enemies/crystal/crystal_idle.json"
+      }
+    }
+  },
   "audio": {
     "bgm": {
       "menuDefault": "/ProjectContent/Audio/BGM/Menu/default.mp3",

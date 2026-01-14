@@ -277,6 +277,7 @@ export class GamePlayPage extends Page {
       const enemyType =
         enemyPoint.enemyType ?? (enemyPoint.behavior === "patrol" ? "patrol" : "static");
       const behavior = enemyType === "patrol" ? "patrol" : "idle";
+      const assetId = enemyType === "static" ? "crystal" : "slime";
       const enemy = new Enemy(
         enemyPoint.x,
         enemyPoint.y - spawnOffsetY,
@@ -287,6 +288,7 @@ export class GamePlayPage extends Page {
           patrolSpeed: enemyPoint.patrolSpeed,
           idleDuration: enemyPoint.idleDuration,
           gravityEnabled: enemyPoint.gravityEnabled ?? true,
+          assetId,
         },
       );
       enemy.mount(world);
@@ -296,6 +298,7 @@ export class GamePlayPage extends Page {
     world.addChild(effectsLayer);
     this.centerCameraOnPlayer();
     await player.loadAssets();
+    await Promise.all(this.enemies.map((enemy) => enemy.loadAssets()));
     if (token !== this.enterToken) {
       abort();
       return;

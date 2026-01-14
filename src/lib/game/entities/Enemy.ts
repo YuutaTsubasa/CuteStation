@@ -1,9 +1,34 @@
-import { Container, Graphics } from "pixi.js";
+import {
+  AnimatedSprite,
+  Assets,
+  Container,
+  Graphics,
+  type Spritesheet,
+  type Texture,
+} from "pixi.js";
 import { Physics, type Rect } from "../systems/Physics";
+import { assetManifest, getSpriteSheetPaths } from "../assets/AssetManifest";
 
 export class Enemy {
   private readonly container = new Container();
   private readonly body = new Graphics();
+  private sprite: AnimatedSprite | null = null;
+  private animations: { run: Texture[]; hit: Texture[] } | null = null;
+  private currentAnimation: "run" | "hit" | null = null;
+  private assetsReady = false;
+  private readonly runAnimationSpeed = 0.18;
+  private readonly hitAnimationSpeed = 0.12;
+  private spriteBaseScale = 1;
+  private spriteScaleMultiplier = 1;
+  private visualOffsetY = 0;
+  private hurtFlickerTimer = 0;
+  private readonly hurtFlickerInterval = 0.08;
+  private hurtFlickerOn = false;
+  private hurtFlickerRemaining = 0;
+  private edgeTurnCooldown = 0;
+  private hideOnHitComplete = false;
+  private deathFadeTimer = 0;
+  private deathFadeDuration = 0.35;
   private readonly scale: number;
   private readonly gravity: number;
   private readonly maxFallSpeed: number;
@@ -16,7 +41,9 @@ export class Enemy {
   private readonly patrolMinX: number;
   private readonly patrolMaxX: number;
   private patrolDirection = 1;
+  private facing = 1;
   private readonly behavior: "idle" | "patrol";
+  private readonly assetId: keyof typeof assetManifest.enemies;
   private readonly edgeProbeOffset: number;
 
   readonly width: number;
@@ -38,6 +65,7 @@ export class Enemy {
       patrolSpeed?: number;
       idleDuration?: number;
       gravityEnabled?: boolean;
+      assetId?: keyof typeof assetManifest.enemies;
     } = {},
   ) {
     this.scale = scale;
@@ -47,6 +75,13 @@ export class Enemy {
     this.maxFallSpeed = 900 * this.scale;
     this.gravityEnabled = options.gravityEnabled ?? true;
     this.behavior = options.behavior ?? "patrol";
+    this.assetId = options.assetId ?? "slime";
+    if (this.assetId === "slime") {
+      this.spriteScaleMultiplier = 1.5;
+      this.visualOffsetY = (26 * this.scale) / this.spriteScaleMultiplier;
+    } else if (this.assetId === "crystal") {
+      this.spriteScaleMultiplier = 2;
+    }
     this.patrolSpeed = (options.patrolSpeed ?? 80) * this.scale;
     this.position.x = startX * this.scale;
     this.position.y = startY * this.scale;
@@ -76,19 +111,62 @@ export class Enemy {
     this.container.destroy({ children: true });
   }
 
+  async loadAssets() {
+    if (this.assetsReady) {
+      return;
+    }
+
+    const enemyAssets = assetManifest.enemies[this.assetId];
+    if (!enemyAssets) {
+      return;
+    }
+    const sheets = enemyAssets.sheets as { run?: string; hit?: string; idle?: string };
+    const runPath = sheets.run ?? sheets.idle ?? sheets.hit;
+    const hitPath = sheets.hit ?? sheets.idle ?? sheets.run;
+
+    let runFrames: Texture[] = [];
+    let hitFrames: Texture[] = [];
+    if (runPath) {
+      runFrames = await this.loadFrames(runPath);
+    }
+    if (hitPath) {
+      hitFrames = await this.loadFrames(hitPath);
+    }
+    if (runFrames.length === 0 && hitFrames.length > 0) {
+      runFrames = hitFrames;
+    }
+    if (hitFrames.length === 0 && runFrames.length > 0) {
+      hitFrames = runFrames;
+    }
+
+    this.animations = { run: runFrames, hit: hitFrames };
+    this.assetsReady = true;
+    this.body.visible = false;
+    this.updateAnimationState(true);
+  }
+
   update(deltaSeconds: number, solids: Rect[]) {
     if (this.state === "dead") {
+      this.updateDeathFade(deltaSeconds);
+      this.syncVisual();
       return;
     }
 
     const previousPosition = { ...this.position };
+    if (this.edgeTurnCooldown > 0) {
+      this.edgeTurnCooldown = Math.max(0, this.edgeTurnCooldown - deltaSeconds);
+    }
     if (this.hurtTimer > 0) {
       this.hurtTimer = Math.max(0, this.hurtTimer - deltaSeconds);
       if (this.hurtTimer === 0 && this.state === "hurt") {
         this.state = "idle";
         this.idleTimer = this.idleDuration;
-        this.body.tint = 0xffffff;
       }
+    }
+    this.updateHurtFlicker(deltaSeconds);
+    if (this.state !== "dead" && this.hurtFlickerRemaining <= 0) {
+      this.setTint(0xffffff);
+      this.container.alpha = 1;
     }
 
     this.updateBehavior(deltaSeconds);
@@ -155,6 +233,7 @@ export class Enemy {
       }
     }
 
+    this.updateAnimationState();
     this.syncVisual();
   }
 
@@ -176,9 +255,16 @@ export class Enemy {
     this.velocity.x = knockback.x;
     this.velocity.y = knockback.y;
     this.state = this.health <= 0 ? "dead" : "hurt";
-    this.hurtTimer = this.state === "dead" ? 0 : 0.2;
-    this.body.tint = this.state === "dead" ? 0x6b6b6b : 0xffb3b3;
-    this.container.visible = this.state !== "dead";
+    this.hurtTimer = this.state === "dead" ? 0 : 0.5;
+    this.hurtFlickerTimer = this.hurtFlickerInterval;
+    this.hurtFlickerOn = false;
+    this.hurtFlickerRemaining = 0.5;
+    this.hideOnHitComplete = this.state === "dead";
+    this.container.visible = true;
+    this.container.alpha = 1;
+    this.deathFadeTimer = 0;
+    this.setTint(0xffb3b3);
+    this.updateAnimationState(true);
     return true;
   }
 
@@ -225,10 +311,177 @@ export class Enemy {
 
   private setPatrolDirection(direction: number, pause: boolean) {
     this.patrolDirection = direction >= 0 ? 1 : -1;
+    this.facing = this.patrolDirection;
+    this.applyFacing();
+    this.edgeTurnCooldown = 0.18;
     if (pause) {
       this.state = "idle";
       this.idleTimer = this.idleDuration;
       this.velocity.x = 0;
+    }
+  }
+
+  private updateAnimationState(forceRestart = false) {
+    if (!this.assetsReady || !this.animations) {
+      return;
+    }
+
+    if (this.state === "hurt" || this.state === "dead") {
+      if (this.state === "dead") {
+        this.deathFadeDuration = this.getAnimationDuration(
+          this.animations.hit,
+          this.hitAnimationSpeed,
+        );
+      }
+      this.playAnimation("hit", this.animations.hit, {
+        loop: this.state !== "dead",
+        holdLastFrame: true,
+        speed: this.hitAnimationSpeed,
+        forceRestart,
+        onComplete: () => {
+          if (this.hideOnHitComplete) {
+            this.container.visible = false;
+          }
+        },
+      });
+      return;
+    }
+
+    this.playAnimation("run", this.animations.run, {
+      loop: true,
+      speed: this.runAnimationSpeed,
+      forceRestart,
+    });
+  }
+
+  private playAnimation(
+    name: "run" | "hit",
+    frames: Texture[],
+    options: {
+      loop: boolean;
+      holdLastFrame?: boolean;
+      forceRestart?: boolean;
+      speed?: number;
+      onComplete?: () => void;
+    },
+  ) {
+    if (this.currentAnimation === name && !options.forceRestart) {
+      return;
+    }
+
+    if (!frames || frames.length === 0) {
+      return;
+    }
+
+    this.currentAnimation = name;
+    this.sprite?.removeFromParent();
+    this.sprite?.destroy();
+
+    const sprite = new AnimatedSprite(frames);
+    sprite.anchor.set(0.5, 1);
+    sprite.animationSpeed = options.speed ?? 0.2;
+    sprite.loop = options.loop;
+    if (frames.length === 1) {
+      sprite.gotoAndStop(0);
+    } else if (options.loop) {
+      sprite.play();
+    } else {
+      sprite.play();
+      if (options.holdLastFrame) {
+        sprite.onComplete = () => {
+          sprite.gotoAndStop(frames.length - 1);
+          options.onComplete?.();
+        };
+      } else if (options.onComplete) {
+        sprite.onComplete = options.onComplete;
+      }
+    }
+
+    const frameHeight = frames[0].orig?.height ?? frames[0].height;
+    const baseScale = frameHeight ? this.height / frameHeight : 1;
+    this.spriteBaseScale = baseScale * this.spriteScaleMultiplier;
+    sprite.position.set(this.width * 0.5, this.height + this.visualOffsetY);
+    this.sprite = sprite;
+    this.container.addChild(sprite);
+    this.applyFacing();
+  }
+
+  private async loadFrames(sheetPath: string) {
+    const { json: jsonPath, image: imagePath } = getSpriteSheetPaths(sheetPath);
+    try {
+      const sheet = (await Assets.load(jsonPath)) as Spritesheet;
+      const frames = this.extractFrames(sheet);
+      if (frames.length > 0) {
+        return frames;
+      }
+    } catch {
+      // Fallback to single texture if spritesheet JSON is missing.
+    }
+
+    const texture = (await Assets.load(imagePath)) as Texture;
+    return [texture];
+  }
+
+  private extractFrames(sheet: Spritesheet) {
+    const animationKeys = Object.keys(sheet.animations);
+    if (animationKeys.length > 0) {
+      const frames = sheet.animations[animationKeys[0]];
+      if (frames) {
+        return frames;
+      }
+    }
+
+    return Object.values(sheet.textures);
+  }
+
+  private getAnimationDuration(frames: Texture[], speed: number) {
+    if (!frames || frames.length === 0) {
+      return 0.3;
+    }
+    const framesPerSecond = Math.max(1, 60 * speed);
+    return Math.max(0.1, frames.length / framesPerSecond);
+  }
+
+  private updateHurtFlicker(deltaSeconds: number) {
+    if (this.hurtFlickerRemaining <= 0) {
+      return;
+    }
+
+    this.hurtFlickerRemaining = Math.max(0, this.hurtFlickerRemaining - deltaSeconds);
+    this.hurtFlickerTimer = Math.max(0, this.hurtFlickerTimer - deltaSeconds);
+    if (this.hurtFlickerTimer === 0) {
+      this.hurtFlickerOn = !this.hurtFlickerOn;
+      this.hurtFlickerTimer = this.hurtFlickerInterval;
+    }
+    this.setTint(this.hurtFlickerOn ? 0xffffff : 0xffb3b3);
+  }
+
+  private setTint(tint: number) {
+    if (this.sprite) {
+      this.sprite.tint = tint;
+    } else {
+      this.body.tint = tint;
+    }
+  }
+
+  private applyFacing() {
+    if (!this.sprite) {
+      return;
+    }
+    this.sprite.scale.set(this.spriteBaseScale * this.facing, this.spriteBaseScale);
+  }
+
+  private updateDeathFade(deltaSeconds: number) {
+    if (this.state !== "dead") {
+      return;
+    }
+
+    this.deathFadeTimer += deltaSeconds;
+    const duration = Math.max(0.1, this.deathFadeDuration);
+    const t = Math.min(1, this.deathFadeTimer / duration);
+    this.container.alpha = 1 - t;
+    if (t >= 1) {
+      this.container.visible = false;
     }
   }
 
@@ -238,6 +491,9 @@ export class Enemy {
   }
 
   private shouldTurnAtEdge(solids: Rect[], baseX: number) {
+    if (this.edgeTurnCooldown > 0) {
+      return false;
+    }
     if (!this.grounded) {
       return false;
     }
