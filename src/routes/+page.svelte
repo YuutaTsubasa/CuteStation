@@ -89,18 +89,18 @@
   const frameWidth = 1920;
   const frameHeight = 1080;
 
-  let musicVolume = $state(100);
-  let sfxVolume = $state(100);
+  let musicVolume = $state(50);
+  let sfxVolume = $state(50);
   let selectedLocale = $state(LocalizationStore.getLocale());
   let localeUnsubscribe: (() => void) | null = null;
 
   const availableLocales = LocalizationStore.availableLocales;
 
   const localeLabelMap: Record<string, string> = {
-    "zh-tw": "Traditional Chinese",
+    "zh-tw": "繁體中文",
     en: "English",
-    ja: "Japanese",
-    ko: "Korean",
+    ja: "日本語",
+    ko: "한국어",
   };
 
   const getLocaleLabel = (locale: string) =>
@@ -261,17 +261,29 @@
 
   onMount(() => {
     void LocalizationStore.initialize();
-    const storedBgm = typeof localStorage !== "undefined"
-      ? Number(localStorage.getItem("cutestation.bgmVolume"))
-      : NaN;
-    if (!Number.isNaN(storedBgm)) {
-      audioManager.setBgmVolume(storedBgm);
-    }
-    const storedSfx = typeof localStorage !== "undefined"
-      ? Number(localStorage.getItem("cutestation.sfxVolume"))
-      : NaN;
-    if (!Number.isNaN(storedSfx)) {
-      audioManager.setSfxVolume(storedSfx);
+    const defaultVolume = 0.5;
+    if (typeof localStorage !== "undefined") {
+      const storedBgm = localStorage.getItem("cutestation.bgmVolume");
+      if (storedBgm !== null) {
+        const parsedBgm = Number(storedBgm);
+        if (!Number.isNaN(parsedBgm)) {
+          audioManager.setBgmVolume(parsedBgm);
+        }
+      } else {
+        audioManager.setBgmVolume(defaultVolume);
+      }
+      const storedSfx = localStorage.getItem("cutestation.sfxVolume");
+      if (storedSfx !== null) {
+        const parsedSfx = Number(storedSfx);
+        if (!Number.isNaN(parsedSfx)) {
+          audioManager.setSfxVolume(parsedSfx);
+        }
+      } else {
+        audioManager.setSfxVolume(defaultVolume);
+      }
+    } else {
+      audioManager.setBgmVolume(defaultVolume);
+      audioManager.setSfxVolume(defaultVolume);
     }
     syncVolumesFromAudio();
     localeUnsubscribe = LocalizationStore.locale.subscribe((value) => {
@@ -1357,6 +1369,35 @@
 
 .settings-row input[type="range"] {
   width: 100%;
+  height: 28px;
+  appearance: none;
+  background: rgba(148, 163, 184, 0.4);
+  border-radius: 999px;
+}
+
+.settings-row input[type="range"]::-webkit-slider-thumb {
+  appearance: none;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #0f172a;
+  border: 2px solid #ffffff;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+}
+
+.settings-row input[type="range"]::-moz-range-thumb {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #0f172a;
+  border: 2px solid #ffffff;
+  box-shadow: 0 6px 12px rgba(0, 0, 0, 0.25);
+}
+
+.settings-row input[type="range"]::-moz-range-track {
+  height: 28px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.4);
 }
 
 .settings-row select {
@@ -1365,6 +1406,39 @@
   border: 1px solid #cbd5e1;
   background: #ffffff;
   font-size: 20px;
+}
+
+@media (max-width: 900px) {
+  .settings-panel {
+    margin: 96px auto 0;
+    width: 92%;
+    padding: 28px 24px;
+    gap: 20px;
+  }
+
+  .settings-row {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .settings-label {
+    font-size: 26px;
+  }
+
+  .settings-value {
+    font-size: 22px;
+    text-align: right;
+    padding-left: 0;
+  }
+
+  .settings-row input[type="range"] {
+    height: 32px;
+  }
+
+  .settings-row select {
+    font-size: 22px;
+    padding: 12px;
+  }
 }
 
 .stage-overlay {
