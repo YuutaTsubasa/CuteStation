@@ -17,11 +17,13 @@
 </script>
 
 <div class="topbar" bind:clientHeight={height}>
-  <button class="backButton" on:click={handleBack} type="button">{"<-"}</button>
-  <h1 class="topbarTitle">
-    {primaryTitle}
-    <span class="topbarSubtitle">{secondaryTitle}</span>
-  </h1>
+  <div class="topbar-content">
+    <button class="backButton" on:click={handleBack} type="button">{"<-"}</button>
+    <h1 class="topbarTitle">
+      {primaryTitle}
+      <span class="topbarSubtitle">{secondaryTitle}</span>
+    </h1>
+  </div>
 </div>
 
 <style>
@@ -40,18 +42,41 @@
     align-items: center;
     margin-bottom: 1rem;
     z-index: 1000;
+    box-sizing: border-box;
+  }
+
+  .topbar-content {
+    width: 80%;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
   }
 
   .backButton {
     background-color: #000000;
     color: #ffffff;
     border: none;
-    font-size: 1.5rem;
-    padding: 0 4rem 0 0.5rem;
+    font-size: 1.6rem;
+    padding: 0.6rem 2.6rem;
+    min-width: 84px;
+    min-height: 48px;
+    border-radius: 12px;
     box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-    margin-left: 1rem;
     margin-right: 1rem;
     cursor: pointer;
+  }
+
+  @media (max-width: 900px) {
+    .topbar-content {
+      width: 92%;
+    }
+
+    .backButton {
+      font-size: 1.8rem;
+      padding: 0.8rem 3rem;
+      min-width: 96px;
+      min-height: 56px;
+    }
   }
 
   .backButton:global(.navFocused),

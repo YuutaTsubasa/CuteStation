@@ -266,14 +266,10 @@ export class MainMenuPage extends Page {
 
     if (this.videoElement) {
       this.videoElement.pause();
-      this.videoElement.removeAttribute("src");
-      this.videoElement.load();
-      this.videoElement.remove();
-      this.videoElement = null;
+      this.videoElement.style.display = "none";
     }
     if (this.videoOverlay) {
-      this.videoOverlay.remove();
-      this.videoOverlay = null;
+      this.videoOverlay.style.display = "none";
     }
     if (this.pressStartElement) {
       this.pressStartElement.remove();
@@ -322,6 +318,25 @@ export class MainMenuPage extends Page {
 
   private createVideoBackgroundDom() {
     if (!this.backgroundHost) {
+      return;
+    }
+
+    if (this.videoElement) {
+      if (!this.videoElement.isConnected) {
+        this.backgroundHost.appendChild(this.videoElement);
+      }
+      this.videoElement.style.display = "block";
+      if (this.videoOverlay) {
+        if (!this.videoOverlay.isConnected) {
+          this.backgroundHost.appendChild(this.videoOverlay);
+        }
+        this.videoOverlay.style.display = "block";
+      }
+      if (this.videoElement.paused) {
+        void this.videoElement.play().catch(() => {
+          // Ignore if still blocked.
+        });
+      }
       return;
     }
 
