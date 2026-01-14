@@ -17,7 +17,11 @@
 </script>
 
 <div class="topbar" bind:clientHeight={height}>
-  <button class="backButton" on:click={handleBack} type="button">{"<-"}</button>
+  <button class="backButton" on:click={handleBack} type="button" aria-label="Back">
+    <svg class="backIcon" viewBox="0 0 24 24" aria-hidden="true">
+      <path d="M14 5 6 12l8 7v-4h6v-6h-6V5z" />
+    </svg>
+  </button>
   <h1 class="topbarTitle">
     {primaryTitle}
     <span class="topbarSubtitle">{secondaryTitle}</span>
@@ -30,6 +34,9 @@
     top: 0;
     left: 0;
     width: 100%;
+    min-height: 96px;
+    padding: 16px 32px 20px;
+    box-sizing: border-box;
     background: linear-gradient(
       to bottom,
       rgba(255, 255, 255, 0.9) 0%,
@@ -50,11 +57,19 @@
     padding: 0.6rem 2.6rem;
     min-width: 84px;
     min-height: 48px;
-    border-radius: 12px;
+    border-radius: 0;
     box-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
-    margin-left: 1rem;
-    margin-right: 1rem;
+    margin-right: 1.5rem;
     cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .backIcon {
+    width: 28px;
+    height: 28px;
+    fill: currentColor;
   }
 
   @media (max-width: 900px) {
@@ -63,6 +78,11 @@
       padding: 0.8rem 3rem;
       min-width: 96px;
       min-height: 56px;
+    }
+
+    .topbar {
+      min-height: 110px;
+      padding: 18px 20px 22px;
     }
   }
 

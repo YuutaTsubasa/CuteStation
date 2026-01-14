@@ -263,23 +263,25 @@
     void LocalizationStore.initialize();
     const defaultVolume = 0.5;
     if (typeof localStorage !== "undefined") {
+      const hasInitializedVolume = localStorage.getItem("cutestation.volumeInitialized");
       const storedBgm = localStorage.getItem("cutestation.bgmVolume");
-      if (storedBgm !== null) {
-        const parsedBgm = Number(storedBgm);
+      const storedSfx = localStorage.getItem("cutestation.sfxVolume");
+      const parsedBgm = storedBgm !== null ? Number(storedBgm) : NaN;
+      const parsedSfx = storedSfx !== null ? Number(storedSfx) : NaN;
+
+      if (!hasInitializedVolume) {
+        audioManager.setBgmVolume(defaultVolume);
+        audioManager.setSfxVolume(defaultVolume);
+        localStorage.setItem("cutestation.bgmVolume", defaultVolume.toString());
+        localStorage.setItem("cutestation.sfxVolume", defaultVolume.toString());
+        localStorage.setItem("cutestation.volumeInitialized", "true");
+      } else {
         if (!Number.isNaN(parsedBgm)) {
           audioManager.setBgmVolume(parsedBgm);
         }
-      } else {
-        audioManager.setBgmVolume(defaultVolume);
-      }
-      const storedSfx = localStorage.getItem("cutestation.sfxVolume");
-      if (storedSfx !== null) {
-        const parsedSfx = Number(storedSfx);
         if (!Number.isNaN(parsedSfx)) {
           audioManager.setSfxVolume(parsedSfx);
         }
-      } else {
-        audioManager.setSfxVolume(defaultVolume);
       }
     } else {
       audioManager.setBgmVolume(defaultVolume);
@@ -1333,11 +1335,13 @@
   position: absolute;
   inset: 0;
   pointer-events: auto;
+  padding: 0 64px;
+  box-sizing: border-box;
 }
 
 .settings-panel {
-  margin: 120px auto 0;
-  width: 80%;
+  margin: 140px auto 0;
+  width: min(100%, 1280px);
   background: rgba(255, 255, 255, 0.9);
   border-radius: 16px;
   padding: 24px 32px;
@@ -1409,9 +1413,13 @@
 }
 
 @media (max-width: 900px) {
+  .settings-page {
+    padding: 0 24px;
+  }
+
   .settings-panel {
-    margin: 96px auto 0;
-    width: 92%;
+    margin: 140px auto 0;
+    width: 100%;
     padding: 28px 24px;
     gap: 20px;
   }
