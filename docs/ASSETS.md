@@ -14,6 +14,8 @@ Use a consistent hierarchy so tools and scripts can find assets:
   - Example: `ProjectContent/Levels/whitePalace/1-1.json`
 - `ProjectContent/Levels/{world}/visuals/`
   - Example: `ProjectContent/Levels/whitePalace/visuals/`
+- `ProjectContent/Enemies/{enemyId}/`
+  - Example: `ProjectContent/Enemies/slime/`
 - `ProjectContent/UI/`
   - Example: `ProjectContent/UI/gameBackground.webp`
 - `ProjectContent/Fonts/`
@@ -127,3 +129,16 @@ Files available:
 - `ProjectContent/Characters/knight/knight_hit.webp` + `.json`
 - `ProjectContent/Characters/knight/knight_dead.webp` + `.json`
 - `ProjectContent/Characters/knight/knight_jumping.webp` + `.json`
+
+## Enemy Assets
+
+### Slime
+
+Files available:
+- `ProjectContent/Enemies/slime/slime_running.webp` + `.json`
+- `ProjectContent/Enemies/slime/slime_hit.webp` + `.json`
+
+### Crystal
+
+Files available:
+- `ProjectContent/Enemies/crystal/crystal_idle.webp` + `.json`
