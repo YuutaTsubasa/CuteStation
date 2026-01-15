@@ -14,7 +14,7 @@
   import { VirtualInput } from "$lib/game/input/VirtualInput";
   import { assetManifest } from "$lib/game/assets/AssetManifest";
   import { audioManager } from "$lib/game/audio/AudioManager";
-  import type { LevelEnemy } from "$lib/game/levels/LevelLoader";
+  import { loadEnemyCatalog, type EnemyDefinition } from "$lib/game/entities/EnemyCatalog";
   import { LocalizationStore } from "$lib/systems/LocalizationStore";
   import { t } from "$lib/systems/LocalizationStore";
   import { onDestroy } from "svelte";
@@ -41,12 +41,9 @@
   let showVirtualControls = $state(true);
   const virtualInput = new VirtualInput();
   const gameBackgroundUrl = assetManifest.ui.gameBackground;
-  let selectedEnemy = $state<LevelEnemy | null>(null);
-  let enemyType = $state("static");
-  let enemyPatrolRange = $state(96);
-  let enemyPatrolSpeed = $state(80);
-  let enemyIdleDuration = $state(0.5);
-  let enemyGravityEnabled = $state(true);
+  let enemyCatalog = $state<Record<string, EnemyDefinition> | null>(null);
+  let enemyOptions = $state<{ id: string; label: string }[]>([]);
+  let selectedEnemyId = $state("slime");
   let gameplayHudVisible = $state(false);
   let gameplayTopbarVisible = $state(false);
   let introOverlayOpacity = $state(0);
@@ -77,10 +74,6 @@
   let editorButtonExport = $state<HTMLButtonElement | null>(null);
   let editorButtonBack = $state<HTMLButtonElement | null>(null);
   let editorEnemyTypeSelect = $state<HTMLSelectElement | null>(null);
-  let editorEnemyPatrolRangeInput = $state<HTMLInputElement | null>(null);
-  let editorEnemyPatrolSpeedInput = $state<HTMLInputElement | null>(null);
-  let editorEnemyIdleDurationInput = $state<HTMLInputElement | null>(null);
-  let editorEnemyGravityInput = $state<HTMLInputElement | null>(null);
 
   let uiScale = $state(1);
   let uiOffsetX = $state(0);
@@ -261,6 +254,16 @@
 
   onMount(() => {
     void LocalizationStore.initialize();
+    void loadEnemyCatalog().then((catalog) => {
+      enemyCatalog = catalog;
+      const entries = Object.values(catalog);
+      entries.sort((a, b) => a.displayName.localeCompare(b.displayName));
+      enemyOptions = entries.map((entry) => ({ id: entry.id, label: entry.displayName }));
+      if (!enemyOptions.find((option) => option.id === selectedEnemyId)) {
+        selectedEnemyId = enemyOptions[0]?.id ?? "slime";
+      }
+      editor?.setDefaultEnemyId(selectedEnemyId);
+    });
     const defaultVolume = 0.5;
     if (typeof localStorage !== "undefined") {
       const storedBgm = localStorage.getItem("cutestation.bgmVolume");
@@ -356,18 +359,7 @@
     levelEditor.setHost(pixiFrame);
     levelEditor.setOnRequestExit(() => goTo("MainMenu"));
     levelEditor.setOnRequestPlaytest(() => goTo("GamePlay"));
-    levelEditor.setOnSelectionChange((selection) => {
-      if (selection.type === "enemy") {
-        selectedEnemy = selection.enemy;
-        enemyType = selection.enemy.enemyType ?? "static";
-        enemyPatrolRange = selection.enemy.patrolRange ?? 96;
-        enemyPatrolSpeed = selection.enemy.patrolSpeed ?? 80;
-        enemyIdleDuration = selection.enemy.idleDuration ?? 0.5;
-        enemyGravityEnabled = selection.enemy.gravityEnabled ?? true;
-        return;
-      }
-      selectedEnemy = null;
-    });
+    levelEditor.setDefaultEnemyId(selectedEnemyId);
     editor = levelEditor;
     settings = settingsPage;
 
@@ -543,13 +535,7 @@
     if (editorButtonPlayTest) elements.push(editorButtonPlayTest);
     if (editorButtonExport) elements.push(editorButtonExport);
     if (editorButtonBack) elements.push(editorButtonBack);
-    if (selectedEnemy) {
-      if (editorEnemyTypeSelect) elements.push(editorEnemyTypeSelect);
-      if (editorEnemyPatrolRangeInput) elements.push(editorEnemyPatrolRangeInput);
-      if (editorEnemyPatrolSpeedInput) elements.push(editorEnemyPatrolSpeedInput);
-      if (editorEnemyIdleDurationInput) elements.push(editorEnemyIdleDurationInput);
-      if (editorEnemyGravityInput) elements.push(editorEnemyGravityInput);
-    }
+    if (editorEnemyTypeSelect) elements.push(editorEnemyTypeSelect);
     return elements;
   };
 
@@ -691,9 +677,26 @@
           <Button
             className={`editor-action ${editorUiSelected === editorButtonAddEnemy ? "editor-ui-selected" : ""}`}
             bind:element={editorButtonAddEnemy}
-            on:click={() => editor?.addEnemy()}
+            on:click={() => editor?.addEnemy(selectedEnemyId)}
             >{$t("EDITOR_ADD_ENEMY")}</Button
           >
+          <label class="editor-enemy-select">
+            <span>Enemy</span>
+            <select
+              value={selectedEnemyId}
+              bind:this={editorEnemyTypeSelect}
+              class:editor-ui-selected={editorUiSelected === editorEnemyTypeSelect}
+              onchange={(event) => {
+                const value = (event.target as HTMLSelectElement).value;
+                selectedEnemyId = value;
+                editor?.setDefaultEnemyId(value);
+              }}
+            >
+              {#each enemyOptions as option}
+                <option value={option.id}>{option.label}</option>
+              {/each}
+            </select>
+          </label>
           <Button
             className={`editor-action ${editorUiSelected === editorButtonDelete ? "editor-ui-selected" : ""}`}
             bind:element={editorButtonDelete}
@@ -759,91 +762,6 @@
             >{$t("EDITOR_BACK")}</Button
           >
         </div>
-        {#if selectedEnemy}
-          <div class="editor-panel">
-            <div class="panel-title">Enemy Settings</div>
-            <label class="panel-row">
-              <span>Type</span>
-              <select
-                value={enemyType}
-                bind:this={editorEnemyTypeSelect}
-                class:editor-ui-selected={editorUiSelected === editorEnemyTypeSelect}
-                onchange={(event) => {
-                  const value = (event.target as HTMLSelectElement).value;
-                  enemyType = value;
-                  editor?.updateSelectedEnemy({ enemyType: value as "static" | "patrol" });
-                }}
-              >
-                <option value="static">Static</option>
-                <option value="patrol">Patrol</option>
-              </select>
-            </label>
-            <label class="panel-row">
-              <span>Patrol Range</span>
-              <input
-                type="number"
-                value={enemyPatrolRange}
-                bind:this={editorEnemyPatrolRangeInput}
-                class:editor-ui-selected={editorUiSelected === editorEnemyPatrolRangeInput}
-                min="0"
-                step="1"
-                disabled={enemyType !== "patrol"}
-                onchange={(event) => {
-                  const value = Number((event.target as HTMLInputElement).value);
-                  enemyPatrolRange = value;
-                  editor?.updateSelectedEnemy({ patrolRange: value });
-                }}
-              />
-            </label>
-            <label class="panel-row">
-              <span>Patrol Speed</span>
-              <input
-                type="number"
-                value={enemyPatrolSpeed}
-                bind:this={editorEnemyPatrolSpeedInput}
-                class:editor-ui-selected={editorUiSelected === editorEnemyPatrolSpeedInput}
-                min="0"
-                step="1"
-                disabled={enemyType !== "patrol"}
-                onchange={(event) => {
-                  const value = Number((event.target as HTMLInputElement).value);
-                  enemyPatrolSpeed = value;
-                  editor?.updateSelectedEnemy({ patrolSpeed: value });
-                }}
-              />
-            </label>
-            <label class="panel-row">
-              <span>Idle Duration</span>
-              <input
-                type="number"
-                value={enemyIdleDuration}
-                bind:this={editorEnemyIdleDurationInput}
-                class:editor-ui-selected={editorUiSelected === editorEnemyIdleDurationInput}
-                min="0"
-                step="0.1"
-                onchange={(event) => {
-                  const value = Number((event.target as HTMLInputElement).value);
-                  enemyIdleDuration = value;
-                  editor?.updateSelectedEnemy({ idleDuration: value });
-                }}
-              />
-            </label>
-            <label class="panel-row">
-              <span>Gravity</span>
-              <input
-                type="checkbox"
-                checked={enemyGravityEnabled}
-                bind:this={editorEnemyGravityInput}
-                class:editor-ui-selected={editorUiSelected === editorEnemyGravityInput}
-                onchange={(event) => {
-                  const value = (event.target as HTMLInputElement).checked;
-                  enemyGravityEnabled = value;
-                  editor?.updateSelectedEnemy({ gravityEnabled: value });
-                }}
-              />
-            </label>
-          </div>
-        {/if}
         <div class="editor-hint">
           Mouse: Drag to move. Shift + drag to resize. Space/right click + drag to pan.
           <br />
@@ -1282,6 +1200,24 @@
   pointer-events: auto;
 }
 
+.editor-enemy-select {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #ffffff;
+  font-size: 16px;
+}
+
+.editor-enemy-select select {
+  padding: 6px 10px;
+  border-radius: 10px;
+  border: none;
+  font-size: 16px;
+}
+
 .editor-hint {
   position: absolute;
   bottom: 24px;
@@ -1292,41 +1228,6 @@
   color: #ffffff;
   font-size: 24px;
   pointer-events: auto;
-}
-
-.editor-panel {
-  position: absolute;
-  top: 120px;
-  right: 24px;
-  width: 360px;
-  padding: 16px 20px;
-  border-radius: 16px;
-  background: rgba(0, 0, 0, 0.6);
-  color: #ffffff;
-  display: grid;
-  gap: 12px;
-  pointer-events: auto;
-}
-
-.panel-title {
-  font-size: 24px;
-  font-weight: 700;
-}
-
-.panel-row {
-  display: grid;
-  grid-template-columns: 1fr 140px;
-  align-items: center;
-  gap: 12px;
-  font-size: 20px;
-}
-
-.panel-row input,
-.panel-row select {
-  padding: 8px 10px;
-  border-radius: 10px;
-  border: none;
-  font-size: 18px;
 }
 
 .settings-page {

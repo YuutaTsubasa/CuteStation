@@ -74,56 +74,31 @@
       "id": "enemy-1767992465340",
       "x": 192,
       "y": 352,
-      "enemyType": "patrol",
-      "behavior": "patrol",
-      "patrolRange": 96,
-      "patrolSpeed": 80,
-      "idleDuration": 0.5,
-      "gravityEnabled": true
+      "enemyId": "slime"
     },
     {
       "id": "enemy-1767992473193",
       "x": 448,
       "y": 352,
-      "enemyType": "patrol",
-      "behavior": "patrol",
-      "patrolRange": 96,
-      "patrolSpeed": 80,
-      "idleDuration": 0.5,
-      "gravityEnabled": true
+      "enemyId": "slime"
     },
     {
       "id": "enemy-1767992489504",
       "x": 720,
       "y": 352,
-      "enemyType": "static",
-      "behavior": "idle",
-      "patrolRange": 96,
-      "patrolSpeed": 80,
-      "idleDuration": 0.5,
-      "gravityEnabled": false
+      "enemyId": "crystal"
     },
     {
       "id": "enemy-1767992507822",
       "x": 880,
       "y": 352,
-      "enemyType": "static",
-      "behavior": "idle",
-      "patrolRange": 96,
-      "patrolSpeed": 80,
-      "idleDuration": 0.5,
-      "gravityEnabled": false
+      "enemyId": "crystal"
     },
     {
       "id": "enemy-1767992513837",
       "x": 1040,
       "y": 352,
-      "enemyType": "static",
-      "behavior": "idle",
-      "patrolRange": 96,
-      "patrolSpeed": 80,
-      "idleDuration": 0.5,
-      "gravityEnabled": false
+      "enemyId": "crystal"
     }
   ]
 }

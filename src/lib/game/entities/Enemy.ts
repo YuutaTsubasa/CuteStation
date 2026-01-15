@@ -30,6 +30,8 @@ export class Enemy {
   private deathFadeTimer = 0;
   private deathFadeDuration = 0.35;
   private readonly scale: number;
+  private readonly baseWidth: number;
+  private readonly baseHeight: number;
   private readonly gravity: number;
   private readonly maxFallSpeed: number;
   private readonly gravityEnabled: boolean;
@@ -38,16 +40,16 @@ export class Enemy {
   private idleTimer = 0;
   private readonly idleDuration: number;
   private readonly patrolSpeed: number;
-  private readonly patrolMinX: number;
-  private readonly patrolMaxX: number;
+  private patrolMinX: number;
+  private patrolMaxX: number;
   private patrolDirection = 1;
   private facing = 1;
   private readonly behavior: "idle" | "patrol";
   private readonly assetId: keyof typeof assetManifest.enemies;
   private readonly edgeProbeOffset: number;
 
-  readonly width: number;
-  readonly height: number;
+  width: number;
+  height: number;
 
   position = { x: 0, y: 0 };
   velocity = { x: 0, y: 0 };
@@ -66,25 +68,30 @@ export class Enemy {
       idleDuration?: number;
       gravityEnabled?: boolean;
       assetId?: keyof typeof assetManifest.enemies;
+      hitbox?: { width: number; height: number };
+      spriteScaleMultiplier?: number;
+      visualOffsetY?: number;
     } = {},
   ) {
     this.scale = scale;
-    this.width = 48 * this.scale;
-    this.height = 64 * this.scale;
+    this.baseWidth = 48 * this.scale;
+    this.baseHeight = 64 * this.scale;
+    this.width = (options.hitbox?.width ?? 48) * this.scale;
+    this.height = (options.hitbox?.height ?? 64) * this.scale;
     this.gravity = 1000 * this.scale;
     this.maxFallSpeed = 900 * this.scale;
     this.gravityEnabled = options.gravityEnabled ?? true;
     this.behavior = options.behavior ?? "patrol";
     this.assetId = options.assetId ?? "slime";
-    if (this.assetId === "slime") {
-      this.spriteScaleMultiplier = 1.5;
-      this.visualOffsetY = (26 * this.scale) / this.spriteScaleMultiplier;
-    } else if (this.assetId === "crystal") {
-      this.spriteScaleMultiplier = 2;
-    }
+    this.spriteScaleMultiplier =
+      options.spriteScaleMultiplier ??
+      (this.assetId === "slime" ? 1.5 : this.assetId === "crystal" ? 2 : 1);
+    this.visualOffsetY = (options.visualOffsetY ?? 0) * this.scale;
     this.patrolSpeed = (options.patrolSpeed ?? 80) * this.scale;
-    this.position.x = startX * this.scale;
-    this.position.y = startY * this.scale;
+    const spawnOffsetX = (this.baseWidth - this.width) * 0.5;
+    const spawnOffsetY = this.baseHeight - this.height;
+    this.position.x = startX * this.scale + spawnOffsetX;
+    this.position.y = startY * this.scale + spawnOffsetY;
     const patrolRange = (options.patrolRange ?? 96) * this.scale;
     this.patrolMinX = this.position.x - patrolRange;
     this.patrolMaxX = this.position.x + patrolRange;
@@ -164,7 +171,7 @@ export class Enemy {
       }
     }
     this.updateHurtFlicker(deltaSeconds);
-    if (this.state !== "dead" && this.hurtFlickerRemaining <= 0) {
+    if (this.hurtFlickerRemaining <= 0) {
       this.setTint(0xffffff);
       this.container.alpha = 1;
     }
@@ -398,7 +405,7 @@ export class Enemy {
     }
 
     const frameHeight = frames[0].orig?.height ?? frames[0].height;
-    const baseScale = frameHeight ? this.height / frameHeight : 1;
+    const baseScale = frameHeight ? this.baseHeight / frameHeight : 1;
     this.spriteBaseScale = baseScale * this.spriteScaleMultiplier;
     sprite.position.set(this.width * 0.5, this.height + this.visualOffsetY);
     this.sprite = sprite;

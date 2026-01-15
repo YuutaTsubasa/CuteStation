@@ -59,6 +59,7 @@
       }
     }
   },
+  "enemyConfig": "/ProjectContent/Enemies/enemyConfig.json",
   "audio": {
     "bgm": {
       "menuDefault": "/ProjectContent/Audio/BGM/Menu/default.mp3",

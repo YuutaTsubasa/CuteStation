@@ -1,8 +1,4 @@
-<script lang="ts">
-  import { createEventDispatcher } from "svelte";
-  import { assetManifest } from "$lib/game/assets/AssetManifest";
-  import { audioManager } from "$lib/game/audio/AudioManager";
-
+<script context="module" lang="ts">
   export type ButtonVariant =
     | "default"
     | "secondary"
@@ -10,6 +6,12 @@
     | "outline"
     | "ghost"
     | "toggle";
+</script>
+
+<script lang="ts">
+  import { createEventDispatcher } from "svelte";
+  import { assetManifest } from "$lib/game/assets/AssetManifest";
+  import { audioManager } from "$lib/game/audio/AudioManager";
 
   export let label = "";
   export let variant: ButtonVariant = "default";
@@ -18,7 +20,7 @@
   export let type: "button" | "submit" | "reset" = "button";
   export let active = false;
   export let element: HTMLButtonElement | null = null;
-  export let onClick: (() => void) | undefined;
+  export let onClick: (() => void) | undefined = undefined;
 
   const dispatch = createEventDispatcher();
 

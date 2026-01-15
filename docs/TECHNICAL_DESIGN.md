@@ -51,7 +51,7 @@ src/
 
 ## Level Data
 
-- Enemies include `enemyType` (`static`/`patrol`) and optional `gravityEnabled`.
+- Enemies reference `enemyId` entries defined in `ProjectContent/Enemies/enemyConfig.json`.
 
 ## Asset Pipeline
 

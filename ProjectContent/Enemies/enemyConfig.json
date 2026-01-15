@@ -1,0 +1,34 @@
+{
+  "enemies": {
+    "slime": {
+      "displayName": "Slime",
+      "assetId": "slime",
+      "behavior": "patrol",
+      "patrolRange": 96,
+      "patrolSpeed": 80,
+      "idleDuration": 0.5,
+      "gravityEnabled": true,
+      "hitbox": {
+        "width": 64,
+        "height": 52
+      },
+      "spriteScaleMultiplier": 1.5,
+      "visualOffsetY": 17.3
+    },
+    "crystal": {
+      "displayName": "Crystal",
+      "assetId": "crystal",
+      "behavior": "idle",
+      "patrolRange": 0,
+      "patrolSpeed": 0,
+      "idleDuration": 0.5,
+      "gravityEnabled": false,
+      "hitbox": {
+        "width": 33,
+        "height": 79
+      },
+      "spriteScaleMultiplier": 2,
+      "visualOffsetY": 25
+    }
+  }
+}

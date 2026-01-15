@@ -4,8 +4,8 @@
 
   export let primaryTitle = "";
   export let secondaryTitle = "";
-  export let onHeightChange: ((height: number) => void) | undefined;
-  export let onBack: (() => void) | undefined;
+  export let onHeightChange: ((height: number) => void) | undefined = undefined;
+  export let onBack: (() => void) | undefined = undefined;
 
   let height = 0;
   $: onHeightChange?.(height);

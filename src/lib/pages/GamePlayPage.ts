@@ -6,6 +6,7 @@ import { normalizeVisualsConfig, type VisualsConfig } from "../game/visuals/Visu
 import { Player } from "../game/entities/Player";
 import { Enemy } from "../game/entities/Enemy";
 import { Collectible } from "../game/entities/Collectible";
+import { loadEnemyCatalog } from "../game/entities/EnemyCatalog";
 import { Combat, type CombatHit } from "../game/systems/Combat";
 import { audioManager } from "../game/audio/AudioManager";
 import { whitePalaceBgmPath } from "../game/audio/audioPaths";
@@ -272,23 +273,29 @@ export class GamePlayPage extends Page {
     const player = new Player(level.spawn.x, level.spawn.y - spawnOffsetY, this.worldScale);
     player.mount(world);
     this.player = player;
+    const enemyCatalog = await loadEnemyCatalog();
     const enemies = level.enemies ?? [];
     this.enemies = enemies.map((enemyPoint: LevelEnemy) => {
-      const enemyType =
-        enemyPoint.enemyType ?? (enemyPoint.behavior === "patrol" ? "patrol" : "static");
-      const behavior = enemyType === "patrol" ? "patrol" : "idle";
-      const assetId = enemyType === "static" ? "crystal" : "slime";
+      const inferredId =
+        enemyPoint.enemyId ??
+        (enemyPoint.enemyType === "patrol" || enemyPoint.behavior === "patrol"
+          ? "slime"
+          : "crystal");
+      const definition = enemyCatalog[inferredId] ?? enemyCatalog.slime;
       const enemy = new Enemy(
         enemyPoint.x,
         enemyPoint.y - spawnOffsetY,
         this.worldScale,
         {
-          behavior,
-          patrolRange: enemyPoint.patrolRange,
-          patrolSpeed: enemyPoint.patrolSpeed,
-          idleDuration: enemyPoint.idleDuration,
-          gravityEnabled: enemyPoint.gravityEnabled ?? true,
-          assetId,
+          behavior: definition.behavior,
+          patrolRange: definition.patrolRange,
+          patrolSpeed: definition.patrolSpeed,
+          idleDuration: definition.idleDuration,
+          gravityEnabled: definition.gravityEnabled,
+          assetId: definition.assetId,
+          hitbox: definition.hitbox,
+          spriteScaleMultiplier: definition.spriteScaleMultiplier,
+          visualOffsetY: definition.visualOffsetY,
         },
       );
       enemy.mount(world);
@@ -472,7 +479,7 @@ export class GamePlayPage extends Page {
         this.homingHoldLatch = true;
       }
       const canHoming =
-        !this.player.grounded && this.homingTarget && this.player.canStartAttack();
+        !this.player.grounded && this.homingTarget !== null && this.player.canStartAttack();
       const homingTrigger = this.homingHoldLatch && canHoming;
       const attackTrigger = this.inputEnabled && (mergedInput.attackDown || homingTrigger);
       if (homingTrigger) {
@@ -484,7 +491,7 @@ export class GamePlayPage extends Page {
       } else {
         this.player.setNextAttackType(null);
       }
-      this.inputState.attack = attackTrigger;
+      this.inputState.attack = Boolean(attackTrigger);
 
       this.player.update(deltaSeconds, this.inputState, this.platforms);
       if (!this.levelCleared && this.inputEnabled && this.deathState === "none") {
@@ -629,8 +636,10 @@ export class GamePlayPage extends Page {
     }
     this.slashProjectiles = [];
     for (const trail of this.homingTrails) {
-      trail.sprite.removeFromParent();
-      trail.sprite.destroy();
+      for (const sprite of trail.sprites) {
+        sprite.removeFromParent();
+        sprite.destroy();
+      }
     }
     this.homingTrails = [];
     this.homingAttackTarget = null;

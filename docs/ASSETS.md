@@ -16,6 +16,7 @@ Use a consistent hierarchy so tools and scripts can find assets:
   - Example: `ProjectContent/Levels/whitePalace/visuals/`
 - `ProjectContent/Enemies/{enemyId}/`
   - Example: `ProjectContent/Enemies/slime/`
+- `ProjectContent/Enemies/enemyConfig.json`
 - `ProjectContent/UI/`
   - Example: `ProjectContent/UI/gameBackground.webp`
 - `ProjectContent/Fonts/`
@@ -27,7 +28,7 @@ Use a consistent hierarchy so tools and scripts can find assets:
 
 - `world.width`/`world.height` define the editable bounds (used by editor grid and camera clamps).
 - `spawn`, `solids`, `coins`, `goal` positions are expressed in level coordinates.
-- `enemies` entries can define `enemyType` (`static`/`patrol`) and `gravityEnabled` (true/false).
+- `enemies` entries reference `enemyId` values defined in `ProjectContent/Enemies/enemyConfig.json`.
 
 ## Level Visuals
 

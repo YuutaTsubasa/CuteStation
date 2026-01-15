@@ -504,7 +504,10 @@ export class LevelRuntime {
   }
 
   private getEnemyColor(enemy?: LevelEnemy) {
-    return enemy?.enemyType === "patrol" ? 0xff6b6b : 0x6bd6ff;
+    if (enemy?.enemyId === "slime") {
+      return 0xff6b6b;
+    }
+    return 0x6bd6ff;
   }
 
   private extractFrames(sheet: Spritesheet) {

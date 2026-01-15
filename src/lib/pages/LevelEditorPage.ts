@@ -1,5 +1,6 @@
 import { Application, Container, Graphics, Rectangle } from "pixi.js";
 import { audioManager } from "../game/audio/AudioManager";
+import type { Rect } from "../game/systems/Physics";
 import {
   loadLevel,
   type LevelEnemy,
@@ -79,6 +80,7 @@ export class LevelEditorPage extends Page {
     addEnemy: false,
   };
   private readonly gamepadDeadzone = 0.2;
+  private defaultEnemyId = "slime";
 
   constructor() {
     super("LevelEditor");
@@ -406,7 +408,7 @@ export class LevelEditorPage extends Page {
     this.setSelection({ type: "coin", id });
   }
 
-  addEnemy() {
+  addEnemy(enemyId = this.defaultEnemyId) {
     if (!this.runtime) {
       return;
     }
@@ -417,43 +419,14 @@ export class LevelEditorPage extends Page {
       id,
       x: point.x,
       y: point.y,
-      enemyType: "static",
-      behavior: "idle",
-      patrolRange: 96,
-      patrolSpeed: 80,
-      idleDuration: 0.5,
-      gravityEnabled: true,
+      enemyId,
     };
     const index = this.runtime.addEnemy(enemy);
     this.setSelection({ type: "enemy", index });
   }
 
-  updateSelectedEnemy(update: Partial<LevelEnemy>) {
-    if (!this.runtime || this.selection.type !== "enemy") {
-      return;
-    }
-
-    const index = this.selection.index;
-    const current = this.runtime.level.enemies?.[index];
-    if (!current) {
-      return;
-    }
-
-    const nextType = update.enemyType ?? current.enemyType ?? "static";
-    const nextBehavior =
-      update.behavior ??
-      (update.enemyType ? (nextType === "patrol" ? "patrol" : "idle") : current.behavior) ??
-      (nextType === "patrol" ? "patrol" : "idle");
-
-    const next: LevelEnemy = {
-      ...current,
-      ...update,
-      enemyType: nextType,
-      behavior: nextBehavior,
-    };
-
-    this.runtime.updateEnemy(index, next);
-    this.setSelection({ type: "enemy", index });
+  setDefaultEnemyId(enemyId: string) {
+    this.defaultEnemyId = enemyId;
   }
 
   deleteSelected() {
@@ -545,7 +518,9 @@ export class LevelEditorPage extends Page {
       }
     }
 
-    this.selectionChangeHandler({ type: this.selection.type });
+    if (this.selection.type !== "enemy") {
+      this.selectionChangeHandler({ type: this.selection.type });
+    }
   }
 
   private handlePointerDown(worldPoint: { x: number; y: number }, resizing: boolean) {
