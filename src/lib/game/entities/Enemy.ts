@@ -29,6 +29,7 @@ export class Enemy {
   private hideOnHitComplete = false;
   private deathFadeTimer = 0;
   private deathFadeDuration = 0.35;
+  private readonly deathFadeMultiplier = 0.4;
   private readonly scale: number;
   private readonly baseWidth: number;
   private readonly baseHeight: number;
@@ -338,7 +339,7 @@ export class Enemy {
         this.deathFadeDuration = this.getAnimationDuration(
           this.animations.hit,
           this.hitAnimationSpeed,
-        );
+        ) * this.deathFadeMultiplier;
       }
       this.playAnimation("hit", this.animations.hit, {
         loop: this.state !== "dead",

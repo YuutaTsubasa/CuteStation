@@ -46,6 +46,7 @@ export class GamePlayPage extends Page {
   private readonly worldScale = 3;
   private readonly baseFloorY = 400;
   private readonly worldPadding = { top: 320, right: 0, bottom: 0, left: 0 };
+  private readonly cameraDeadZone = { top: 0.35, bottom: 0.7 };
   private readonly visualsConfigPath =
     assetManifest.levels.whitePalace.visuals.config;
   private app: Application | null = null;
@@ -63,7 +64,7 @@ export class GamePlayPage extends Page {
   private hitEffects: Array<{ graphic: Graphics; ttl: number; duration: number }> =
     [];
   private hitStopTimer = 0;
-  private homingRadius = 180;
+  private homingRadius = 240;
   private homingTarget: Enemy | null = null;
   private homingAttackTarget: Enemy | null = null;
   private homingReticle: Graphics | null = null;
@@ -167,8 +168,41 @@ export class GamePlayPage extends Page {
   override async onEnter() {
     super.onEnter();
 
-    if (!this.host || this.app) {
+    if (!this.host) {
       return;
+    }
+    if (this.app) {
+      const canvas = this.app.canvas;
+      const needsRebuild = !this.gameRoot || !this.world;
+      if (needsRebuild) {
+        this.visuals?.destroy();
+        this.visuals = null;
+        this.runtime?.destroy();
+        this.runtime = null;
+        this.collectibles?.destroy();
+        this.collectibles = null;
+        this.player?.destroy();
+        this.player = null;
+        for (const enemy of this.enemies) {
+          enemy.destroy();
+        }
+        this.enemies = [];
+        this.app.destroy(true);
+        canvas.remove();
+        this.app = null;
+        this.gameRoot = null;
+        this.world = null;
+        this.background = null;
+        this.effectsLayer = null;
+      } else {
+        if (!this.host.contains(canvas)) {
+          this.host.appendChild(canvas);
+        }
+        if (this.gameRoot) {
+          this.gameRoot.visible = true;
+        }
+        return;
+      }
     }
     this.keyboardInput = {
       moveX: 0,
@@ -532,11 +566,10 @@ export class GamePlayPage extends Page {
 
       if (this.world) {
         const viewCenterX = GAME_WIDTH * 0.5;
-        const viewCenterY = GAME_HEIGHT * 0.5;
         const playerCenterX = this.player.position.x + this.player.width * 0.5;
         const playerCenterY = this.player.position.y + this.player.height * 0.5;
         const targetX = -playerCenterX + viewCenterX;
-        const targetY = -playerCenterY + viewCenterY;
+        const targetY = this.getVerticalCameraTarget(playerCenterY, this.player.grounded);
         const clamped = this.clampCamera(targetX, targetY);
 
         this.world.x += (clamped.x - this.world.x) * 0.08;
@@ -710,6 +743,30 @@ export class GamePlayPage extends Page {
     this.world.x = clamped.x;
     this.world.y = clamped.y;
     this.visuals?.update(this.world.x, this.world.y, GAME_WIDTH, GAME_HEIGHT);
+  }
+
+  private getVerticalCameraTarget(playerCenterY: number, grounded: boolean) {
+    if (!this.world) {
+      return -playerCenterY + GAME_HEIGHT * 0.5;
+    }
+
+    if (grounded) {
+      const groundedAnchor = GAME_HEIGHT * this.cameraDeadZone.bottom;
+      return -playerCenterY + groundedAnchor;
+    }
+
+    const topThreshold = GAME_HEIGHT * this.cameraDeadZone.top;
+    const bottomThreshold = GAME_HEIGHT * this.cameraDeadZone.bottom;
+    const playerScreenY = playerCenterY + this.world.y;
+    let targetY = this.world.y;
+
+    if (playerScreenY < topThreshold) {
+      targetY += topThreshold - playerScreenY;
+    } else if (playerScreenY > bottomThreshold) {
+      targetY -= playerScreenY - bottomThreshold;
+    }
+
+    return targetY;
   }
 
   private checkLevelCompletion() {
